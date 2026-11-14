@@ -1,0 +1,384 @@
+26 BUEHLER, GONON, TEICHMANN, AND WOOD
+3
+ 2
+ 1
+ 0 1 2 3
+0
+5000
+10000
+15000
+20000
+25000
+30000 0.99-CVar
+0.5-CVar
+Figure 6. Comparison of 99%-CVar and 50%-CVar optimial-
+ity criterion.
+Mean Loss Realized 0.5-CVar Realized 0.99-CVar
+0.99-CVar 0.2635 0.527 1.8034
+0.5-CVar 0.1514 0.2531 2.3631
+3
+ 2
+ 1
+ 0 1 2
+0
+5000
+10000
+15000
+20000
+25000
+0.99-CVar
+0.5-CVar
+Figure 7. Comparison of 99%-CVar and 50%-CVar optimial-
+ity criterion, normalized to risk-neutral price.
+with strikesK1 andK2 actually aims at hedging a spread with strikes ˜K1 and
+K2 for ˜K1<K 1.
+5.3. Price asymptotics under proportional transaction costs. In Sec-
+tion 5.2 we have seen that in a market without transaction costs, deep hedging
+is able to recover the model hedge and can be used to calculate risk-adjusted
+optimal hedging strategies.
+DEEP HEDGING 27
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.16
+0.18
+Spread Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.05
+0.10
+0.15
+0.20
+0.25
+Model Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.08
+0.06
+0.04
+0.02
+0.00
+0.02
+0.04
+Difference
+Figure 8. Call spread δH,(1) t and neural network approxima-
+tion as a function of (st,vt) for t = 15 days
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.02
+0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+Spread Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.05
+0.10
+0.15
+0.20
+0.25
+Model Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.125
+0.100
+0.075
+0.050
+0.025
+0.000
+0.025
+0.050
+Difference
+Figure 9. Call spread δH,(1) t and neural network approxima-
+tion as a function of (st,vt) for t = 15 days
+The goal of this section is to illustrate the power of the methodology by
+numerically calculating the indiﬀerence price (3.2) in a multi-asset market
+with transaction costs.
+So far, this has been regarded a highly challenging problem, see e.g. the in-
+troduction of [KMK15]. For example, calculating the exponential utility indif-
+ference price for a call option in a Black-Scholes model involves solving a mul-
+tidimensional nonlinear free boundary problem, see e.g. [HN89], [MHADZ93].
+Motivated by this [WW97] have studied asymptotically optimal strategies and
+price asymptotics for small proportional transaction costs, i.e. for
+(5.7) ck(n) =
+d∑
+i=1
+ε|ni|Si k
+and as ε↓ 0. One of the results in the asymptotic analysis is that
+(5.8) pε−p0 =O(ε2/3), as ε↓ 0,
+28 BUEHLER, GONON, TEICHMANN, AND WOOD
+wherepε =pε(Z) is the utility indiﬀerence price ofZ associated to transaction
+costs of sizeε. In fact (5.8) is true in more general one-dimensional models, see
+[KMK15], and the rate 2/3 also emerges in a variety of related problems with
+proportional transaction costs, see e.g. [Rog04], [JMKS17] and the references
+therein.
+Here we numerically verify (5.8) using the deep hedging algorithm, ﬁrst for a
+Black-Scholes model (for which (5.8) is known to hold) and then for a Heston
+model (with d = 2 hedging instruments). For this latter case (or any other
+model with d >1) there have been neither numerical nor theoretical results
+on (5.8) previously in the literature.
+Black-Scholes model. Consider ﬁrst d = 1 and St = s0 exp(−tσ2/2 +σWt),
+whereσ >0 andW is a one-dimensional Brownian motion. We chooseσ = 0.2,
+s0 = 100 and use the explicit form ofS to generate sample trajectories. Setting
+Ik = log(Sk) and proceeding precisely as in the Heston case (see Sections 5.1
+and 5.2), we may use the deep hedging algorithm to calculate the exponential
+utility indiﬀerence price pε for diﬀerent values of ε. Recall that we choose
+proportional transaction costs (5.7) and ρ is the entropic risk measure (3.4)
+(see Lemma 3.6). For the numerical example we takeλ = 1 andZ = (ST−K)+
+with K =s0 and we calculate pεi for εi = 2−i+5, i = 1,..., 5.
+Figure 10 shows the pairs (log(εi), log(pεi−p0)) (in red) and the closest (in
+squared distance) straight line with slope 2/3 (in blue). Thus, in this range of
+ε the relation log(pε−p0) = 2/3 log(ε) +C for some C∈ R indeed holds true
+and hence also (5.8).
+Note that trading is only possible at discrete time-points and so the indiﬀer-
+ence price and the risk-neutral price do not coincide. Since (5.8) is a result for
+continuous-time trading (whereq =p0), we have compared to the risk-neutral
+price q here (thus neglecting the discrete-time friction in pε for ε> 0).
+Heston model. We now consider a Heston model with two hedging instruments,
+i.e. d = 2 and the setting is precisely as in Section 5.2, except that here ρ is
+chosen as (3.4) and proportional transaction costs (5.7) are incurred. Choosing
+λ = 1,Z = (S1 T−K)+ andεi as in the Black-Scholes case above, one can again
+calculate the exponential utility indiﬀerence prices and show the diﬀerence to
+p0 in a log-log plot (see above) in a graph. These are shown as red dots in
+Figure 11. Here the blue line in Figure 11 is the regression line, i.e. the least
+squares ﬁt of the red dots. The rate is very close to 2/3 and so it appears that
+the relation (5.8) also holds in this case.
+5.4. High-dimensional example. As a last example consider a model built
+from 5 separate Heston models, i.e. d = 10 and (Sh,Sh+1) is the price process
+of spot and variance swap in a Heston model (speciﬁed by (5.2) and (5.4))
+for h = 1,..., 5. To have a benchmark at hand the 5 models are assumed
+independent and each of them has parameters as speciﬁed in Section 5.2.
+This choice is of course no restriction for the algorithm and is only made for
+convenience. The payoﬀ is a sum of call options on each of the underlyings, i.e.
+Z =∑5 h=1Zh with Zh = (S2h−1 T −K)+ and K =s0 = 100. In a market with
+continuous-time trading and no transaction costs,Z can be replicated perfectly
+by trading according to strategy (5.6) in each of the models. In particular, this
+DEEP HEDGING 29
+7.0
+ 6.5
+ 6.0
+ 5.5
+ 5.0
+ 4.5
+log( )
+1.25
+1.00
+0.75
+0.50
+0.25
+0.00
+0.25
+0.50
+log(p p0)
+Rate of convergence is 0.67
+Figure 10. Black-Scholes model price asymptotics.
+7.0
+ 6.5
+ 6.0
+ 5.5
+ 5.0
+ 4.5
+log( )
+1.50
+1.25
+1.00
+0.75
+0.50
+0.25
+0.00
+0.25
+0.50
+log(p p0)
+Rate of convergence is 0.71
+Figure 11. Heston model price asymptotics
+strategy is decoupled, i.e. the optimal holdings in ( Sh,Sh+1) only depend on
+(S(h),S (h+1)). While in the present setup trading is only possible at discrete
+time steps and so the strategy optimizing (3.1), whereX =−Z, leads to a non-
+deterministic terminal hedging error (2.1), by independence one still expects
+that the optimal strategy is decoupled as above, at least for certain classes
+of risk measures. To see this most prominently, here we consider variance
+30 BUEHLER, GONON, TEICHMANN, AND WOOD
+optimal hedging : the objective is chosen as (3.3) for 𝓁(x) = x2 and p0 = 5q,
+where q = E[Z1].
+Let δ∈H and write δ(2h−1:2h) := (δ2h−1,δ 2h) for h = 1,..., 5 (and anal-
+ogously for S). If δ is decoupled, i.e. such that δ(2h−1:2h) is independent of
+S(2j−1:2j) forj⁄=h, then by independence and since S is a martingale one has
+(5.9) E
+[
+(−Z +p0 + (δ·S)T )2] = 5∑
+h=1
+Var
+(
+−Zi + (δ(2h−1:2h)·S(2h−1:2h))T
+)
+.
+By building δ from the (discrete-time) variance optimal strategies for each of
+the 5 models, one sees from (5.9) that the minimal value of (3.3) overall δ∈H
+is at most 5 times the minimal value of (3.3) associated to a single Heston
+model. This consideration serves as a guideline for assessing the approximation
+quality of the neural network strategy.
+To assess the scalability of the algorithm, we now calculate the close-to-
+optimal neural network hedging strategy associated to (3.3) in both instances
+(i.e. fornH = 5 models and for a single one, nH = 1) and compare the results.
+Unless speciﬁed otherwise, the parameters are as in Section 5.1. Since for
+nH = 5 we are actually solving 5 problems at once, we allow for a network
+with more hidden nodes by taking N1 = N2 = 12nH. We then train both
+networks for a ﬁxed number of time-steps (here 2 × 105) and measure the
+performance in terms of both training time and realized loss (evaluated on a
+test set of nH× 105 sample paths): the training times on a standard Lenovo
+X1 Carbon laptop are 5.75 and 2.1 hours for nH = 5 andnH = 1, respectively
+and the realized losses are 1.13 and 0.20. In view of the considerations above,
+this indicates that the approximation quality is roughly the same for both
+instances (and close-to-optimal).
+While far from a systematic study, this last example nevertheless demon-
+strates the potential of the algorithm for high-dimensional hedging problems.
+6. Disclaimer
+Opinions and estimates constitute our judgement as of the date of this Material, are for informational
+purposes only and are subject to change without notice. This Material is not the product of J.P. Morgans
+Research Department and therefore, has not been prepared in accordance with legal requirements to pro-
+mote the independence of research, including but not limited to, the prohibition on the dealing ahead of
+the dissemination of investment research. This Material is not intended as research, a recommendation,
+advice, oﬀer or solicitation for the purchase or sale of any ﬁnancial product or service, or to be used in
+any way for evaluating the merits of participating in any transaction. It is not a research report and is not
+intended as such. Past performance is not indicative of future results. Please consult your own advisors
+regarding legal, tax, accounting or any other aspects including suitability implications for your particular
+circumstances. J.P. Morgan disclaims any responsibility or liability whatsoever for the quality, accuracy or
+completeness of the information herein, and for any reliance on, or use of this material in any way.
+Important disclosures at: www.jpmorgan.com/disclosures
+References
+[BK06] M. Broadie and ¨O. Kaya, Exact simulation of stochastic volatility and other
+aﬃne jump diﬀusion processes , Operations Research 54 (2006), no. 2, 217–
+231.
+DEEP HEDGING 31
+[BR06] C. Burgert and L. R¨ uschendorf, Consistent risk measures for portfolio vectors ,
+Insurance: Mathematics and Economics (2006), 289–297.
+[BTT07] A. Ben-Tal and M. Teboulle, An old-new concept of convex risk measures: the
+optimized certainty equivalent , Mathematical Finance 17 (2007), no. 3, 449–
+476.
+[Duf01] D. Dufresne, The integrated square-root process, Centre for Actuarial Studies,
+University of Melbourne, 2001, Research Paper no. 90.
+[Dup94] B. Dupire, Pricing with a smile , Risk 7 (1994), 18–20.
+[DZL09] X. Du, J. Zhai, and K. Lv, Algorithm trading using q-learning and recurrent
+reinforcement learning, arxiv (2009), https://arxiv.org/pdf/1707.07338.pdf.
+[FL00] H. F¨ ollmer and P. Leukert, Eﬃcient hedging: Cost versus shortfall risk , Finance
+and Stochastics 4 (2000), 117–146.
+[FS16] H. F¨ ollmer and A. Schied, Stochastic ﬁnance: An introduction in discrete time ,
+De Gruyter, 2016.
+[Gla04] P. Glasserman, Monte carlo methods in ﬁnancial engineering , Applications of
+mathematics : stochastic modelling and applied probability, Springer, 2004.
+[GS13] J. Gatheral and A. Schied, Dynamical models of market impact and algorithms
+for order execution, Handbook on Systemic Risk (2013), 579–599.
+[Hal17] I. Halperin, Qlbs: Q-learner in the black-scholes (-merton) worlds , arxiv (2017),
+https://arxiv.org/abs/1712.04609.
+[HBP17] G. Kutyniok, H. B¨ olcskei, P. Grohs and P. Petersen, Optimal approxima-
+tion with sparsely connected deep neural networks , Preprint arXiv:1705.01714
+(2017).
+[HMSC95] S. E. Shreve, H. M. Soner and J. Cvitani´ c, There is no nontrivial hedging portfo-
+lio for option pricing with transaction costs , The Annals of Applied Probability
+5 (1995), no. 2, 327–355.
+[HN89] S. Hodges and A. Neuberger, Optimal replication of contingent claims under
+transaction costs, The Review of Futures Markets 8 (1989), no. 2, 222–239.
+[Hor91] K. Hornik, Approximation capabilities of multilayer feedforward networks, Neu-
+ral Networks 4 (1991), no. 2, 251–257.
+[IAR09] M. Jonsson, A. ˙Ilhan and R. Sircar, Optimal static-dynamic hedges for exotic
+options under convex risk measures, Stochastic Processes and their Applications
+119 (2009), no. 10, 3608 – 3632.
+[IGC16] Y. Bengio, I. Goodfellow and A. Courville, Deep learning, MIT Press, 2016,
+http://www.deeplearningbook.org.
+[IS15] S. Ioﬀe and C. Szegedy, Batch normalization: Accelerating deep network train-
+ing by reducing internal covariate shift , Proceedings of the 32nd International
+Conference on Machine Learning, 2015, pp. 448–456.
+[JMKS17] M. Reppen, J. Muhle-Karbe and H. M. Soner, A primer on portfolio choice
+with small transaction costs , Annual Review of Financial Economics 9 (2017),
+no. 1, 301–331.
+[KB15] D. P. Kingma and J. Ba, Adam: a method for stochastic optimization , Pro-
+ceedings of the International Conference on Learning Representations (ICLR)
+(2015).
+[KMK15] J. Kallsen and J. Muhle-Karbe, Option pricing and hedging with small trans-
+action costs, Mathematical Finance 25 (2015), no. 4, 702–723.
+[KS07] S. Kl¨ oppel and M. Schweizer, Dynamic indiﬀerence valuation via convex risk
+measures, Mathematical Finance 17 (2007), no. 4, 599–627.
+[LBAK10] P. J¨ ackel, L. B. G. Andersen and C. Kahl, Simulation of square-root processes,
+Encyclopedia of Quantitative Finance, John Wiley & Sons, Ltd, 2010.
+[Lu17] D. Lu, Agent inspired trading using recurrent reinforcement learning and lstm
+neural networks, arxiv (2017), https://arxiv.org/pdf/1707.07338.pdf.
+[MHADZ93] V. G. Panas, M. H. A. Davis and T. Zariphopoulou, European option pricing
+with transaction costs, SIAM Journal on Control and Optimization 31 (1993),
+no. 2, 470–493.
+32 BUEHLER, GONON, TEICHMANN, AND WOOD
+[MW97] J. Moody and L. Wu, Optimization of trading systems and portfolios , Proceed-
+ings of the IEEE/IAFE 1997 Computational Intelligence for Financial Engi-
+neering (CIFEr) (1997), 300–307.
+[PBV17] H. M. Soner, P. Bank and M. Voß, Hedging with temporary price impact, Math-
+ematics and Financial Economics 11 (2017), no. 2, 215–239.
+[Rog04] L. C. G. Rogers, Why is the eﬀect of proportional transaction costs O(δ2/3),
+Mathematics of Finance (G. Yin and Q. Zhang, eds.), American Mathematical
+Society, Providence, RI, 2004, pp. 303–308.
+[RS10] L. C. G. Rogers and S. Singh, The cost of illiquidity and its eﬀects on hedging ,
+Mathematical Finance 20 (2010), no. 4, 597–615.
+[WW97] A. E. Whalley and P. Wilmott, An asymptotic analysis of an optimal hedging
+model for option pricing with transaction costs, Mathematical Finance 7 (1997),
+no. 3, 307–324.
+[Xu06] M. Xu, Risk measure pricing and hedging in incomplete markets , Annals of
+Finance 2 (2006), no. 1, 51–71.
+[ZJL17] D. Xu, Z. Jiang and J. Liang, A deep reinforcement learning frame-
+work for the ﬁnancial portfolio management problem , arxiv (2017),
+https://arxiv.org/abs/1706.10059.
+Hans B ¨uhler, J.P. Morgan, London
+E-mail address: hans.buehler@jpmorgan.com
+Lukas Gonon, Eidgen ¨ossische Technische Hochschule Z ¨urich, Switzerland
+E-mail address: lukas.gonon@math.ethz.ch
+Josef Teichmann, Eidgen ¨ossische Technische Hochschule Z ¨urich, Switzerland
+E-mail address: josef.teichmann@math.ethz.ch
+Ben Wood, J.P. Morgan, London
+E-mail address: ben.wood@jpmorgan.com

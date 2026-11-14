@@ -1,0 +1,23 @@
+# 只放工具配置：本项目不做 pip 安装，从仓库根目录用 python -m 运行。
+[tool.pytest.ini_options]
+minversion = "8.0"
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = ["slow: 训练/长跑，CI 默认跳过"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests", "scripts"]
+# docs/ 里是带代码块的 markdown，不让 ruff format 去改它。
+# scripts/diagnostics/ 是一次性探针（保留为追溯用），不按包的标准要求它。
+extend-exclude = ["refs", ".venv", "docs", "data", "results", "figures", "scripts/diagnostics"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+# 长中文注释不折行，行宽交给 formatter 管代码。
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"

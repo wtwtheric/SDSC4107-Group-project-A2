@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# 工具缓存
+.pytest_cache/
+.ruff_cache/
+
+# 第三方仓库快照：只读参考，不提交（README 已说明）
+refs/
+
+# 数据与结果（spec §7 / §4）
+data/**
+!data/README.md
+!data/checksums.txt
+results/
+*.npz
+*.pt
+*.pth
+
+# 例外：A1 -> B2 的冻结策略权重要进 git
+!src/policy/weights/*.pt
+
+# 编辑器 / 系统
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db

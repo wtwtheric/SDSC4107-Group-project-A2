@@ -1,0 +1,40 @@
+# E1：Heston d=2，无成本（论文 §5.2）；5 个 seed。
+exp: e1
+kind: e1
+seeds: [0, 1, 2, 3, 4]
+device: auto
+n_steps: 30
+batch: 1024
+eps: 0.0
+alpha: 0.5
+
+policy:
+  name: recurrent
+  hidden: 17          # d + 15
+  recurrent: true
+  norm: layer         # 论文用 BN；BN 的 running stats 在递归下评估失稳，改 LN
+  # 分腿重参数化：δ2 量级 ~500，×100 才让 Adam 学得动；δ1 保持原尺度。
+  # 关键：若两腿都用 100，δ1 腿的输出必须压到 ~0.007，其梯度会以 100 倍
+  # 优势劫持共享主干，把 δ2 的学习压死（实测 2500 iter δ2 只到 31）。见 docs/e1_diagnosis.md。
+  out_scale: [1.0, 100.0]
+
+market:
+  model: heston
+  d: 2
+  s0: 100.0
+  k: 100.0
+  t: 0.08219178082191781   # 30/365
+  kappa: 1.0
+  theta: 0.04
+  sigma: 2.0
+  rho: -0.7
+  v0: 0.04
+
+train:
+  n_iter: 30000
+  lr: 0.005
+  lr_schedule: cosine   # 恒定 lr 在 CVaR 分位数噪声下停在极限环（30k 恒定只到 2.21）
+  lr_min: 5.0e-4
+  eval_paths: 100000
+  eval_seed_offset: 10000
+  log_every: 2500

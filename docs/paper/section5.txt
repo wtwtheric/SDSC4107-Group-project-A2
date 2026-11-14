@@ -1,0 +1,798 @@
+DEEP HEDGING 13
+Lemma 4.4. We may write the constrained problem 3.1 as the modiﬁed un-
+constrained problem as
+(3.1’) π(X) = inf
+δ∈Hu
+ρ(X + (H◦δ·S)T−CT (H◦δ)) .
+Proof. Note that H◦δ =δ for all δ∈H , and H◦δu∈H for all δu∈H u. □
+Recall that the information available in our market at tk is described by
+the observed maximal feature set I0,...,I k. Our trading strategies should
+therefore depend on this information and on our previous position in our
+tradable assets. This gives rise to the following semi-recurrent deep neural
+network structure for our unconstrained trading strategies:
+HM ={(δk)k=0,...,n−1∈H u : δk =Fk(I0,...,I k,δk−1),Fk∈NN M,r(k+1)+d,d}
+(4.1)
+={(δθ k)k=0,...,n−1∈H u : δθ k =Fθk(I0,...,I k,δk−1),θk∈ ΘM,r(k+1)+d,d}
+We now replace the setHu in (3.1’) byHM⊂H u. We aim at calculating
+πM(X) := inf
+δ∈HM
+ρ(X + (H◦δ·S)T−CT (H◦δ)) (4.2)
+= inf
+θ∈ΘM
+ρ(X + (H◦δθ·S)T−CT (H◦δθ)),
+where ΘM = ∏n−1 k=0 ΘM,r(k+1)+d,d. Thus, the inﬁnite-dimensional problem of
+ﬁnding an optimal hedging strategy is reduced to the ﬁnite-dimensional con-
+straint problem of ﬁnding optimal parameters for our neural network.
+Remark 4.5. Our setup becomes truly “recurrent” if we enforce θk = θ0 for
+all k and add “k” as a parameter into the network. Below proof applies with
+few modiﬁcations.
+Remark 4.6. If S is an ( F, P)-Markov process and Z = g(ST ) for g : Rd→ R
+and with simplistic market frictions we may know that the optimal strategy
+in (3.1) is of the simpler form δk =fk(Ik,δk−1) for some fk : Rr+d→ Rd.
+Remark 4.7. We would similarly transform (3.3) into a modiﬁed unconstrained
+problem, optimized overHM.
+Remark 4.8. For practical implementations, handling trading constraints with 4.2
+is not particularly eﬃcient since the gradient of ΘM of our objective outsideH
+vanishes. In the case where H◦δ = δ for δ∈H , this can be addressed by
+variants of
+π(X)≡ inf
+δ∈Hu
+ρ(X + (H◦δ·S)T−CT (δ)−γ‖δ−H◦δ‖1) .
+for Lagrange multipliers γ≫ 0.
+The next proposition shows that thanks to the universal approximation
+theorem, strategies in H are approximated arbitrarily well by strategies in
+HM. Consequently, the neural network price πM(−Z)−πM(0) converges to
+the exact price p(Z).
+Proposition 4.9. DeﬁneHM as in (4.1) and πM as in (4.2). Then for any
+X∈X ,
+lim
+M→∞
+πM(X) =π(X) .
+14 BUEHLER, GONON, TEICHMANN, AND WOOD
+Proof. We ﬁrst note that the argument δk−1 in 4.2 is redundant, since itera-
+tively δk−1 is itself a function of I0,...,I k−1. We may therefore write for the
+purpose of this proof
+(4.1’)
+HM ={(δθ k)k=0,...,n−1∈H u : δθ k =Fk(I0,...,I k),Fk∈NN M,r(k+1),d} .
+SinceHM⊂H M+1⊂H u for allM∈ N it follows thatπM(X)≥πM+1(X)≥
+π(X). Thus it suﬃces to show that for any ε > 0 there exists M ∈ N such
+that πM(X)≤π(X) +ε.
+By deﬁnition, there exists δ∈H u such that
+(4.3) ρ(X + (H◦δ·S)T−CT (H◦δ))≤π(X) +ε 2.
+Since δk isFk-measurable, there exists fk : Rr(k+1)→ Rd measurable such
+thatδk =fk(I0,...,I k) for eachk = 0,...,n −1. Since Ω is ﬁnite,δk is bounded
+and sofi k∈L1(Rr(k+1),µ ) for anyi = 1,...d , whereµ is the law of (I0,...,I k)
+under P. Thus one may use theorem 4.2 to ﬁndFi k,n∈NN ∞,r(k+1),1 such that
+Fi k,n(I0,...,I k) converges to fi k(I0,...,I k) in L1(P) as n→∞ .
+By passing now to a suitable subsequence, convergence holds P-a.s. simul-
+taneously for all i,k . Writing δn k := Fk,n(I0,...,I k) and using P[{ω}] > 0 for
+all ω∈ Ω, this implies
+(4.4) lim
+n→∞
+δn k (ω) =δk(ω) for all ω∈ Ω.
+Continuity ofHk(·)(ω) for a ﬁxedω implies moreover that also limn→∞Hk(ω)◦
+δn k (ω) =Hk(ω)◦δk(ω).
+Since Ω is ﬁnite, ρ can be viewed as a convex function ρ: RN → R. In
+particular, ρ is continuous. Using continuity of ρ in the ﬁrst step and upper
+semi-continuity of ck(·)(ω) for each ω∈ Ω combined with monotonicity of ρ
+in the second step, one obtains
+lim inf
+n→∞
+ρ(X + (H◦δn·S)T−CT (H◦δn))
+≤ ρ(X + (H◦δ·S)T− lim sup
+n→∞
+CT (H◦δn))
+≤ ρ(X + (H◦δ·S)T−CT (H◦δ)).
+Combining this with (4.3), there exists n∈ N (large enough) such that
+(4.5) ρ(X + (H◦δn·S)T−CT (H◦δn))≤π(X) +ε.
+Since δn∈H M for all M large enough, one obtains πM(X)≤ π(X) +ε by
+(4.2) and (4.5), as desired. □
+4.3. Numerical solution for OCE-risk measures. While Theorem 4.2
+and Proposition 4.9 give a theoretical justiﬁcation for using hedging strategies
+built from neural networks, we now turn to computational considerations: how
+can we calculate a (close-to) optimal parameter θ∈ ΘM for (4.2)?
+To explain the key ideas we focus on the case when ρ is an OCE risk
+measure (see (3.5)) and no trading constraints are present, the case of general
+risk measures is treated below.
+DEEP HEDGING 15
+Inserting the deﬁnition of ρ, see (3.5), into (4.2), the optimization problem
+can be rewritten as
+πM(−Z) = inf
+¯θ∈ΘM
+inf
+w∈R
+{
+w + E[𝓁(Z− (δ
+¯θ·S)T +CT (δ ¯θ)−w)] } = inf θ∈Θ J(θ),
+where Θ = R× ΘM and for θ = (w, ¯θ)∈ Θ,
+(4.6) J(θ) :=w + E[𝓁(Z− (δ
+¯θ·S)T +CT (δ ¯θ)−w)].
+Generally, to ﬁnd a local minimum of a diﬀerentiable function J, one may use
+a gradient descent algorithm: Starting with an initial guessθ(0), one iteratively
+deﬁnes
+(4.7) θ(j+1) =θ(j)−ηj∇Jj(θ(j)),
+for some (small)ηj > 0,j∈ N and withJj =J. Under suitable assumptions on
+J and the sequence{ηj}j∈N,θ(j) converges to a local minimum ofJ asj→∞ .
+Of course, the success and feasibility of this algorithm crucially depends on
+two points: Firstly, can one avoid ﬁnding a local minimum instead of a global
+one? Secondly, can∇J be calculated eﬃciently?
+One of the key insights of deep learning is that for cost functions J built
+based on neural networks both of these problems can be dealt with simul-
+taneously by using a variant of stochastic gradient descent and the (error)
+backpropagation algorithm. What this means in our context is that in each
+step j the expectation in (4.6) (which is in fact a weighted sum over all el-
+ements of the ﬁnite, but potentially very large sample space Ω) is replaced
+by an expectation over a randomly (uniformly) chosen subset of Ω of size
+Nbatch≪N, so that Jj used in the update (4.7) is now given as
+Jj(θ) =w+
+Nbatch∑
+m=1
+𝓁(Z(ω(j) m )−(δ ¯θ·S)T (ω(j) m )+CT (δ ¯θ)(ω(j) m )−w) N Nbatch P[{ω(j) m}]
+for some ω(j) 1 ,...,ω (j) Nbatch ∈ Ω. This is the simplest form of the (minibatch) stochastic gradient algorithm. Not only does it make the gradient computation
+a lot more eﬃcient (or possible at all, if N is large), but it also avoids getting
+stuck in local minima: even if θ(j) arrives at a local minimum at some j,
+it moves on afterwards (due to the randomness in the gradient). In order
+to calculate the gradient of Jj for each of the terms in the sum, one may
+now rely on the compositional structure of neural networks. If 𝓁, c and σ are
+suﬃciently diﬀerentiable and the derivatives are available in closed form, then
+one may use the chain rule to calculate the gradient of F ¯θk with respect to
+θ analytically and the same holds for the gradient of Jj. Furthermore, these
+analytical expressions can be evaluated very eﬃciently using the so called
+backpropagation algorithm (see subsequent section).
+While this certainly answers the second question posed above (eﬃciency),
+the ﬁrst one (local minima) is only partially resolved, as there is no general
+result guaranteeing convergence to the global minimum in a reasonable amount
+of time. However, it is common belief that for suﬃciently large neural networks,
+it is possible to arrive at a suﬃciently low value of the cost function in a
+reasonable amount of time, see [IGC16, Chapter 8].
+16 BUEHLER, GONON, TEICHMANN, AND WOOD
+Finally, note that for the experiments in Section 5 below we have used
+Adam, a more reﬁned version of the stochastic gradient algorithm, as intro-
+duced in [KB15] and also discussed in [IGC16, Chapter 8.5.3].
+Remark 4.10. In the experiments in Section 5 below, the functions 𝓁,c andσ
+are continuous, but have only piecewise continuous derivatives. Nevertheless,
+similar techniques can be applied.
+Remark 4.11. Numerically, trading constraints can be handled by introduc-
+ing Lagrange-multipliers or by imposing inﬁnite trading cost outside the al-
+lowed trading range. Certain types of constraints can also be dealt with by
+the choice of activation function: for example, no short-selling constraints can
+be enforced by choosing a non-negative activation function σ. A systematic
+numerical treatment will be left for future research.
+4.4. Certainty Equivalent of Exponential Utility.The entropic risk mea-
+sure (3.4) is a special case of an OCE risk measure, as explained in example 3.8.
+However, when applying the methodology explained in Section 4.3, there is no
+need to minimize over w: we may directly insert (3.4) into (4.2) to write
+πM(−Z) = 1 λ log inf θ∈ΘM J(θ),
+where
+(4.8) J(θ) := E[ exp(−λ[−Z + (δθ·S)T−CT (δθ)]) ].
+A close-to-optimal θ∈ ΘM can then be found numerically as above.
+4.5. Extension to general risk measures. As explained in Section 4.3, for
+OCE risk measures the optimal hedging problem (4.2) is amenable to deep
+learning optimization techniques (i.e. variants of stochastic gradient descent)
+via (4.6). The key ingredient for this is that the objective J satisﬁes
+(ML1) the gradient ofJ decomposes into a sum over the samples, i.e.∇θJ(θ) =∑N
+m=1∇θJ(θ,ωm) and
+(ML2)∇θJ(θ,ωm) can be calculated eﬃciently for each m, i.e. using back-
+propagation.
+The goal of the present section is to show that for a general class of convex
+risk measures (including all coherent ones) one can approximate (3.1) by a
+minimax problem over neural networks and that the objective functional of this
+approximate problem also has these two key properties, making it amenable
+to deep learning optimization techniques.
+Denote byP the set of probability measures on (Ω,F). The following result
+serves as a starting point:
+Theorem 4.12 (Robust representation of convex risk measures) . Suppose
+ρ:X→ R is a convex risk measure. Then ρ can be written as
+(4.9) ρ(X) = max
+Q∈P
+(EQ[−X]−α(Q)), X ∈X ,
+whereα(Q) := supX∈X (EQ[−X]−ρ(X)).
+DEEP HEDGING 17
+Proof. Since for Ω ﬁnite the set of probability measures P coincides with the
+set of ﬁnitely additive, normalized set functions (appearing in [FS16, Theo-
+rem 4.16]), the present statement follows directly from the cited theorem and
+[FS16, Remark 4.17]. □
+The function α:P→ R is called the (minimal) penalty function of the risk
+measure ρ.
+Since Ω is ﬁnite,P can be identiﬁed with the standard N−1 simplex in RN
+and so (4.9) is an optimization overRN. However,N is very large in our context
+and so the representation (4.9) is of little use for numerical calculations. The
+next result shows thatρ(X) can be approximated by an optimization problem
+over a lower-dimensional space. To state it, let us deﬁne the set L⊂X of
+log-likelihoods by
+L :={f∈X : E[exp(f)] = 1},
+deﬁne ¯α:L→ R by ¯α(f) =α(exp(f)dP) for any f∈L and writePeq for the
+set of probability measures on (Ω,F), which are equivalent to P. Furthermore,
+one may view ¯I = (I0,...,I n) as a map Ω → Rr(n+1).
+Theorem 4.13. Suppose
+(i) α(Q)<∞ for some Q∈P eq,
+(ii) ¯α is continuous,
+(iii)F =FT .
+Then for any X∈X , ρ(X) = limM→∞ρM(X), where
+(4.10) ρM(X) := sup
+θ∈ΘM,r(n+1),1
+E[exp(Fθ◦¯I)]=1
+(
+E[−X exp(Fθ◦ ¯I)]− ¯α(Fθ◦ ¯I) ) .
+Proof. We proceed in two steps. In a ﬁrst step we show that for any X∈X
+one may write
+(4.11) ρ(X) = sup
+¯f∈M
+E[exp( ¯f◦¯I)]=1
+(
+E[−X exp( ¯f◦ ¯I)]− ¯α( ¯f◦ ¯I) ) ,
+whereM denotes the set of measurable functions mapping from Rr(n+1)→ R.
+In the second step we rely on (4.11) to prove the statement.
+Step 1: Since P[{ωi}] > 0 for all i,X coincides with L∞(Ω,F, P) and ρ is
+law-invariant. Thus by (i) and [FS16, Theorem 4.43] one may write
+(4.12) ρ(X) = sup
+Q∈Peq
+(EQ[−X]−α(Q)), X ∈X .
+Note thatPeq may be written in terms of L as
+(4.13) Peq ={exp(f)dP : f∈L} .
+Furthermore, using (iii) one obtains
+(4.14) X ={ ¯f◦ ¯I : ¯f∈M}.
+Combining (4.12), (4.13) and the deﬁnition of ¯α one obtains
+ρ(X) = sup
+f∈L
+(E[−X exp(f)]− ¯α(f)),
+which can be rewritten as (4.11) by using (4.14).
+18 BUEHLER, GONON, TEICHMANN, AND WOOD
+Step 2: Note that one may also write (4.10) as
+(4.15) ρM(X) = sup
+f∈NNM,r(n+1),1
+E[exp(f◦¯I)]=1
+(
+E[−X exp(f◦ ¯I)]− ¯α(f◦ ¯I) ) .
+Combining (4.15) with (4.11) and using NN M,r(n+1),1⊂NN M+1,r(n+1),1⊂
+M, one obtains thatρM(X)≤ρM+1(X)≤ρ(X) for allM∈ N. Thus it suﬃces
+to show that for any ε> 0 there exists M∈ N such that ρM(X)≥ρ(X)−ε.
+By (4.11), for any ε> 0 one ﬁnds ¯f∈M such that
+E[exp( ¯f◦ ¯I)] = 1,(4.16)
+ρ(X)− 2ε≤ E[−X exp( ¯f◦ ¯I)]− ¯α( ¯f◦ ¯I).(4.17)
+Precisely as in the proof of Proposition 4.9, one may use Theorem 4.2 to ﬁnd
+f (n)∈NN ∞,r(n+1),1 such that P-a.s., f (n)◦ ¯I converges to ¯f◦ ¯I as n→∞ .
+Combining this with (4.16), one obtains that for all n large enough, cn :=
+log(E[exp(f (n)◦ ¯I)]) is well-deﬁned and that ¯f (n)◦ ¯I also converges P-a.s. to
+¯f◦ ¯I, as n→∞ , where ¯f (n) := f (n)−cn. Using this, (4.17) and assumption
+(ii), for some (in fact all) n∈ N large enough one obtains
+(4.18) ρ(X)−ε≤ E[−X exp( ¯f (n)◦ ¯I)]− ¯α( ¯f (n)◦ ¯I).
+FromNN∞,r(n+1),1−cn =NN∞,r(n+1),1 and from the choice ofNN M,r(n+1),1,
+one has ¯f (n) ∈NN M,r(n+1),1 for M large enough. By combining this with
+(4.18) and the choice of cn one obtains
+ρ(X)−ε≤ρM(X),
+as desired. □
+Combining (4.2) and (4.10), one thus approximates (3.1) for X =−Z by
+solving
+(4.19) inf
+θ0∈ΘM
+sup
+θ1∈ΘM,r(n+1),1
+J(θ),
+where θ = (θ0,θ 1),
+J(θ) := E
+[
+−PL(Z, 0,δθ0) exp(Fθ1◦ ¯I) ] − ¯α(Fθ1◦ ¯I)−λ0(E[exp(Fθ1◦ ¯I)]− 1)
+and λ0 is a Lagrange multiplier.
+We conclude this section by arguing that the objective J in (4.19) indeed
+satisﬁes (ML1) and (ML2). This is standard (c.f. Section 4.3) for all terms in
+the sum except for ¯α(Fθ1◦ ¯I) and so we only consider this term.
+Recall that Ω is ﬁnite and consists of N elements, thusX ={X : Ω→ R}
+can be identiﬁed with RN. As for standard backpropagation the compositional
+structure can be used for eﬃcient computation:
+Proposition 4.14. Suppose ¯α can be extended to ¯α:X →R continuously
+diﬀerentiable, σ is continuously diﬀerentiable and NN M,r(n+1),1 is the set of
+neural networks with a ﬁxed architecture (see Remark 4.3). Then J(θ1) :=
+¯α(Fθ1◦ ¯I), θ1∈ ΘM,r(n+1),1 is continuously diﬀerentiable and satisﬁes (ML1).
+DEEP HEDGING 19
+Proof. Note that F = Fθ1 is parametrized by the matrices A𝓁 and vectors
+b𝓁, 𝓁 = 1,...,L , and that one may consider all partial derivatives separately.
+Given ¯α:X→ R and∇¯α:X→X , one thus aims at calculating ∂A𝓁 i,j ¯α(F◦ ¯I)
+and ∂b𝓁 i ¯α(F◦ ¯I) for 𝓁 = 1,...,L,i = 1,...,N 𝓁,j = 1,...,N 𝓁−1. This can be
+done by the chain rule: For θ∈{A𝓁 i,j,b𝓁 i}, one has
+∂θ ¯α(F◦ ¯I) =
+N∑
+m=1
+∇¯α(F◦ ¯I)(ωm)∂θF (¯I(ωm))
+and in particular (ML1) holds. □
+Furthermore, in the notation of the proof, for any m = 1,...N the deriva-
+tive∂θF (¯I(ωm)) can be calculated using standard backpropagation algorithm
+(preceded by a forward iteration) and so (ML2) holds as well. For the reader’s
+convenience we state it here: One sets x0 = ¯I(ωm), iteratively calculates
+x𝓁 :=F𝓁(x𝓁−1) for𝓁 = 1,...,L −1 andxL :=WL(xL−1). Then (this is the back-
+ward pass) one sets JL := AL and calculates iteratively J𝓁 = J𝓁+1dF𝓁(x𝓁−1)
+for 𝓁 =L− 1,..., 1, where
+dF𝓁(x𝓁−1) = diag(σ′(W𝓁x𝓁−1))A𝓁.
+From this one may use again the chain rule to obtain for any 𝓁 = 1,...L,i =
+1,...,N 𝓁,j = 1,...,N 𝓁−1 the derivatives of F with respect to the parameters
+as
+∂A𝓁 i,j F (¯I(ωm)) =J𝓁+1 i σ′((W𝓁x𝓁−1)i)x𝓁−1 j
+∂b𝓁 i F (¯I(ωm)) =J𝓁+1 i σ′((W𝓁x𝓁−1)i).
+5. Numerical experiments and results
+After having introduced the optimal hedging problem (3.1) in Section 3
+and described in Section 4 how one may numerically approximate the solution
+by (4.2) using neural networks, we now turn to numerical experiments to
+illustrate the feasibility of the approach. We start by explaining in Section 5.1
+the modeling choices in detail. The remainder of this section will then be
+devoted to examining the following three questions:
+• Section 5.2: How does neural network hedging (for diﬀerent risk-preferences)
+compare to the benchmark in a Heston model without transaction
+costs?
+• Section 5.3: What is the eﬀect of proportional transaction costs on the
+exponential utility indiﬀerence price?
+• Section 5.4: Is the numerical method scalable to higher dimensions?
+5.1. Setting and Implementation. For the results presented here we have
+chosen a time horizon of 30 trading days with daily rebalancing. Thus, T =
+30/365, n = 30 and the trading dates are ti = i/365, i = 0,...,n . As ex-
+plained in Section 4 and Remark 4.6, the number of units δti∈ Rd that the
+agent decides to hold in each of the instruments at ti is parametrized by a
+semi-recurrent neural network: we set δθ k =Fθk(Ik,δθ k−1) where Fθk is a feed
+forward neural network with two hidden layers and Ik = Φ(S0,...,S k) for
+20 BUEHLER, GONON, TEICHMANN, AND WOOD
+some Φ: R(k+1)d→ Rd speciﬁed below. More precisely, in the notation of Def-
+inition 4.1, Fθk is a neural network with L = 3, N0 = 2d, N1 =N2 =d + 15,
+N3 =d and the activation function is always chosen as σ(x) = max(x, 0). The
+weight matrices and biases are the parameters to be optimized in (4.2). Note
+that these are diﬀerent for each k.
+Having made these choices, the algorithm outlined in Section 4 can now
+be used for approximate hedging in any market situation : given sample tra-
+jectories of the hedging instruments S(ωm), samples of the payoﬀ Z(ωm) and
+associated weights P[{ωm}] for m = 1,...,N (on a ﬁnite probability space
+Ω = {ω1,...,ω N}), for any choice of transaction cost structure c and any
+risk measure ρ one may now use the algorithm outlined in Section 4 to calcu-
+late close-to optimal hedging strategies and approximate minimal prices. Of
+course, for a path-dependent derivative with payoﬀ Z = G(S0,...,S T ) with
+G: (Rd)n+1→ R one obtains samples of the payoﬀ by simply evaluating G on
+the sample trajectories of S.
+Diﬀerent risk measures ρ, transaction cost functions c and payoﬀs Z will
+be used in the examples and so these are described separately in each of the
+subsequent sections. To illustrate the feasibility of the algorithm and have
+a benchmark at hand for comparison (at least in the absence of transaction
+costs), we have chosen to generate the sample paths of S from a standard
+stochastic volatility model under a risk-neutral measure P. Thus in most of
+the examples below, the processS follows (a discretization of) a Heston model,
+see the beginning of Section 5.2 below. But we stress again that, as explained
+above, the algorithm is model independent in the sense that no information
+about the Heston model is used except for the (weighted) samples of the price
+and variance process.
+The algorithm has been implemented in Python, using Tensorﬂow to build
+and train the neural networks. To allow for a larger learning rate, the tech-
+nique of batch normalization (see [IS15] and [IGC16, Chapter 8.7.1]) is used
+in each layer of each network right before applying the activation function.
+The network parameters are initialized randomly (drawn from uniform and
+normal distribution). For network training the Adam algorithm (see [KB15],
+[IGC16, Chapter 8.5.3]) with a learning rate of 0 .005 and a batch size of 256
+has been used. Finally, the model hedge for the benchmark in Section 5.2 has
+been calculated using Quantlib.
+Remark 5.1. For the numerical experiments in this article the optimality cri-
+teria in (4.6) and (4.8) are speciﬁed under a risk-neutral measure. Thus, an
+optimal hedging strategy is based on market anticipations of future prices.
+Alternatively, one could use a statistical measure. The algorithm presented
+here can be applied also in this case.
+5.2. Benchmark: No transaction costs. As a ﬁrst example, we consider
+hedging without transaction costs in a Heston model. In this example the risk
+measure ρ is chosen as the average value at risk (also called conditional value
+at risk or expected shortfall), deﬁned for any random variable X by
+(5.1) ρ(X) := 1 1−α ∫ 1−α 0 VaRγ(X)dγ
+DEEP HEDGING 21
+for some α∈ [0, 1), where VaR γ(X) := inf {m∈ R : P(X <−m)≤ γ}.
+An alternative representation of ρ of type (3.5) is discussed in Example 3.9.
+We refer to [FS16, Section 4.4] for further details. Note that diﬀerent levels
+of α correspond to diﬀerent levels of risk-aversion, ranging from risk-neutral
+for α close to 0 to very risk-averse for α close to 1. The limiting cases are
+ρ(X) =−E[X] for α = 0 and limα↑1ρ(X) =−essinf(X), see [FS16, p.234 and
+Remark 4.50].
+A brief reminder on the Heston model. Recall that a Heston model is speciﬁed
+by the stochastic diﬀerential equations
+(5.2)
+dS1 t = √ VtS1 t dBt, for t> 0 and S1 0 =s0
+dVt =α(b−Vt)dt +σ
+√
+VtdWt, for t> 0 and V0 =v0,
+where B and W are one-dimensional Brownian motions (under a probability
+measure Q) with correlation ρ∈ [−1, 1] and α, b, σ, v0 and s0 are positive
+constants. Below we have chosen α = 1, b = 0.04, ρ =−0.7, σ = 2, v0 = 0.04
+and s0 = 100, reﬂecting a typical situation in an equity market.
+Here S1 is the price of a liquidly tradeable asset and V is the (stochastic)
+variance process of S1, modeled by a Cox-Ingersoll-Ross (CIR) process. V
+itself is not tradable directly, but only through options on variance. In our
+framework this is modeled by an idealized variance swap with maturity T , i.e.
+we setFH t :=σ((S1 s,Vs) : s∈ [0,t ]) and
+(5.3) S2 t := EQ
+[∫ T
+0
+Vs ds
+⏐⏐⏐⏐FH t ] , t ∈ [0,T ],
+and consider ( S1,S 2) as the prices of liquidly tradeable assets. A standard
+calculation4 shows that (5.3) is given as
+(5.4) S2 t =
+∫ t
+0
+Vs ds +L(t,Vt)
+where
+L(t,v ) = v−b α (1−e−α(T−t)) +b(T−t).
+Consider now a European option with payoﬀg(S1 T ) atT for someg : R→ R.
+Its price (under Q) att∈ [0,T ] is given asHt := EQ[g(S1 T )|FH t ]. By the Markov
+property of (S1,V ), one may write the option price at t as Ht = u(t,S 1 t,Vt)
+for some u: [0,T ]× [0,∞)2→ R. Assuming that u is suﬃciently smooth, one
+may apply Itˆ o’s formula toH and use (5.4) to obtain
+(5.5) g(S1 T ) =q +
+∫ T
+0
+δ1 t dS1 t +
+∫ T
+0
+δ2 t dS2 t
+where q = EQ[g(S1 T )] and
+(5.6) δ1 t :=∂su(t,S 1 t,Vt) and δ2 t := ∂vu(t,S 1 t,Vt) ∂vL(t,Vt) .
+4For example, one may use that (log(S1),V ) is an aﬃne process to see that the conditional
+expectation in (5.3) can be taken only with respect to σ(Vt,s ∈ [0,t ]). This conditional
+expectation can then be calculated by using the SDE for V or by directly inserting the
+expression from e.g. [Duf01, Section 3].
+22 BUEHLER, GONON, TEICHMANN, AND WOOD
+Thus, if continuous-time trading was possible, (5.5) shows that the option pay-
+oﬀ can be replicated perfectly by trading in (S1,S 2) according to the strategy
+(5.6).
+Remark 5.2. The strategy (5.6) depends on Vt. Although not observable di-
+rectly, an estimate can be obtained by estimating
+∫t
+0Vs ds and solving (5.4)
+for Vt.
+Setting: Discretized Heston model. In addition to the setting explained in de-
+tail in Section 5.1, here we setd = 2, consider no transaction costs (i.e.CT≡ 0)
+and generate sample trajectories of the price process of the hedging instru-
+ments from a discretely sampled Heston model. Thus,S = (S0,...,S n) and for
+anyk = 0,...,n ,Sk = (S1 k,S 2 k) is given by (5.2) and (5.4) under Q. The sam-
+ple paths of S are generated by (exact) sampling from the transition density
+of the CIR process (see [Gla04, Section 3.4]) and then using the (simpliﬁed)
+Brodie-Kaya scheme (see [LBAK10] and [BK06]). 5 Generating independent
+samples of S according to this scheme can now be viewed as sampling from
+a uniform distribution on a (huge) ﬁnite probability space Ω. 6 Thus, in the
+notation of Section 5.1 one has P[{ωm}] = 1/N for allm = 1,...,N with each
+S(ωm) corresponding to a sample of the Heston model generated as explained
+above.
+If continuous-time trading was possible, any European option could be repli-
+cated perfectly by following the strategy (5.6). However, in the present setup
+the hedging portfolio can only be adjusted at discrete time-points. Neverthe-
+less one may chooseδH k := (δ1 k,δ 2 k) fork = 0...n −1 withδ1,δ 2 deﬁned by (5.6)
+and charge the risk-neutral price q. This will be referred to as the model-delta
+hedging strategy (or simply model hedge) and serves as a benchmark.
+Finally, in order to compare the neural network strategies to this bench-
+mark, the network input is chosen as Ik = (log(S1 k),Vk). One could also re-
+placeVk byS2 k instead. The network structure at time-step tk is illustrated in
+Figure 1.
+Results. We now compare the model hedge δH to the deep hedging strategies
+δθ corresponding to diﬀerent risk-preferences, captured by diﬀerent levels of α
+in the average value at risk (5.1).
+As a ﬁrst example, consider a European call option, i.e. Z = (S1 T−K)+
+with K = s0. Following the methodology outlined in Section 5.1, we calcu-
+late a (close-to) optimal parameter θ for (4.2) with X =−Z and denote by
+δθ and pθ 0 the (close-to) optimal hedging strategy and value of (4.2), respec-
+tively. By deﬁnition of the indiﬀerence price (3.2), the approximation property
+Proposition 4.9, Proposition 3.10 and ρ(0) = 0, pθ 0 is an approximation to the
+indiﬀerence price p(Z). As an out-of-sample test, one can then simulate an-
+other set of sample trajectories (here 10 6) and evaluate the terminal hedging
+errorsq−Z +(δH·S)T (model hedge) and pθ 0−Z +(δθ·S)T (CVar) on each of
+them. In fact, since the risk-adjusted price pθ 0 is higher than the risk-neutral
+5This corresponds to replacing V in the SDE for S1 in (5.2) by a piecewise constant
+process and the integral in (5.4) by a sum.
+6To be more precise, one replaces the normal distributions appearing in the simulation
+scheme for S by (arbitrarily ﬁne) discrete distributions.
+DEEP HEDGING 23
+log(sti )
+vti
+δ(s) ti−1 Output layer at ti−1
+δ(v) ti−1 Output layer at ti−1
+δ(s) ti Input layer at ti+1
+δ(s) ti Input layer at ti+1
+Hidden
+layer
+I at ti
+Hidden
+layer
+II at ti
+Input
+layer
+at ti
+Output
+layer
+at ti
+Figure 1. Recurrent network structure
+price q = 1.69 (as shown in Proposition 3.10(ii)), for (CVar) we have evalu-
+ated q−Z + (δθ·S)T , i.e. the hedging error from using the optimal strategy
+associated to ρ, but only charging the risk-neutral price q. This is shown in a
+histogram in Figure 2 for α = 0.5, yielding a risk-adjusted price pθ 0 = 1.94. As
+one can see, the hedging performance ofδH andδθ is very similar. In particular
+• for this choice of risk-preferences ( ρ as in (5.1) with α = 0.5) the
+optimal strategy in (3.1) is close to the model hedge δH,
+• the neural network strategyδθ is able to approximate well the optimal
+strategy in (3.1).
+This is also illustrated by Figure 3, where the strategies δθ t and δH t at a ﬁxed
+time-point t are plotted conditional on ( S1 t,Vt) = (s,v ) on a grid of values
+for (s,v ). To make this last comparison fully sensible instead of the recurrent
+network structure δθ k = Fθk(Ik,δθ k−1) here a simpler structure δθ k = Fθk(Ik)
+is used. The hedging performance for this simpler structure is, however, very
+similar, see Figure 4. Of course, this is also expected from (5.6). 7
+A more extreme case is shown in Figure 6, where instead of the model hedge
+the 99%-CVar criterion is used, i.e. α = 0.99. This results in a signiﬁcantly
+higher risk-adjusted price pθ 0 = 3.49. If both the 50% and 99%-CVar optimal
+strategies are used, but only the risk-neutral price is charged (see Figure 7) one
+can clearly see the risk preferences: the 50%-CVar strategy is more centered at
+0 and also has a smaller mean hedging error, but the 99%-expected shortfall
+7For non-zero transaction costs this is not true anymore, i.e. the recurrent network struc-
+ture is needed. For example, Figure 5 is generated for precisely the same parameters as
+Figure 4, except that α = 0.99 and proportional transaction costs are incurred, i.e. (5.7)
+with ε = 0.01.
+24 BUEHLER, GONON, TEICHMANN, AND WOOD
+3
+ 2
+ 1
+ 0 1 2 3
+0
+5000
+10000
+15000
+20000
+25000
+30000
+35000
+0.5-CVar
+Model hedge
+Figure 2. Comparison of model hedge and deep hedge asso-
+ciated to 50%-expected shortfall criterion.
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.2
+0.4
+0.6
+0.8
+Network Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+Model Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.10
+0.08
+0.06
+0.04
+0.02
+0.00
+0.02
+0.04
+Difference
+Figure 3. δH,(1) t and neural network approximation as a func-
+tion of (st,vt) for t = 15 days
+strategy yields smaller extreme losses (c.f. also the realized 99%-CVar loss
+value realized on the test sample, shown in the table below Figure 7).
+To further illustrate the implications of risk-preferences on hedging, as a
+last example we consider selling a call-spread, i.e. Z = [(S1 T−K1)+− (S1 T−
+K2)+]/(K2−K1) for K1 < K2. Here we have chosen K1 = s0, K2 = 101.
+Proceeding as above, we compare the model hedge to the more risk-averse
+hedging strategies associated to α = 0.95 and α = 0.99. The strategies (on a
+grid of values for spot and variance) are shown in Figures 8 and 9. The model
+hedge would again correspond to α = 0.5. As one can see for higher levels of
+risk-aversion, the strategy ﬂattens. From a practical perspective, this precisely
+corresponds to a barrier shift, i.e. a more risk-averse hedge for a call spread
+DEEP HEDGING 25
+3
+ 2
+ 1
+ 0 1 2 3
+0
+5000
+10000
+15000
+20000
+25000
+30000
+recurrent
+simpler
+Figure 4. Comparison of recurrent and simpler network struc-
+ture (no transaction costs).
+Mean Loss Price Realized CVar
+recurrent 0.0018 5.5137 -0.0022
+simpler 0.0022 6.7446 -0.0
+1
+ 0 1 2 3 4 5 6
+0
+2000
+4000
+6000
+8000
+10000
+12000
+14000
+16000
+recurrent
+simpler
+Figure 5. Network architecture matters: Comparison of re-
+current and simpler network structure (with transaction costs
+and 99%-CVar criterion).
+26 BUEHLER, GONON, TEICHMANN, AND WOOD
+3
+ 2
+ 1
+ 0 1 2 3
+0
+5000
+10000
+15000
+20000
+25000
+30000 0.99-CVar
+0.5-CVar
+Figure 6. Comparison of 99%-CVar and 50%-CVar optimial-
+ity criterion.
+Mean Loss Realized 0.5-CVar Realized 0.99-CVar
+0.99-CVar 0.2635 0.527 1.8034
+0.5-CVar 0.1514 0.2531 2.3631
+3
+ 2
+ 1
+ 0 1 2
+0
+5000
+10000
+15000
+20000
+25000
+0.99-CVar
+0.5-CVar
+Figure 7. Comparison of 99%-CVar and 50%-CVar optimial-
+ity criterion, normalized to risk-neutral price.
+with strikesK1 andK2 actually aims at hedging a spread with strikes ˜K1 and
+K2 for ˜K1<K 1.
+5.3. Price asymptotics under proportional transaction costs. In Sec-
+tion 5.2 we have seen that in a market without transaction costs, deep hedging
+is able to recover the model hedge and can be used to calculate risk-adjusted
+optimal hedging strategies.
+DEEP HEDGING 27
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.16
+0.18
+Spread Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.05
+0.10
+0.15
+0.20
+0.25
+Model Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.08
+0.06
+0.04
+0.02
+0.00
+0.02
+0.04
+Difference
+Figure 8. Call spread δH,(1) t and neural network approxima-
+tion as a function of (st,vt) for t = 15 days
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.02
+0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+Spread Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.05
+0.10
+0.15
+0.20
+0.25
+Model Delta
+96
+98
+100
+102 0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.125
+0.100
+0.075
+0.050
+0.025
+0.000
+0.025
+0.050
+Difference
+Figure 9. Call spread δH,(1) t and neural network approxima-
+tion as a function of (st,vt) for t = 15 days
+The goal of this section is to illustrate the power of the methodology by
+numerically calculating the indiﬀerence price (3.2) in a multi-asset market
+with transaction costs.
+So far, this has been regarded a highly challenging problem, see e.g. the in-
+troduction of [KMK15]. For example, calculating the exponential utility indif-
+ference price for a call option in a Black-Scholes model involves solving a mul-
+tidimensional nonlinear free boundary problem, see e.g. [HN89], [MHADZ93].
+Motivated by this [WW97] have studied asymptotically optimal strategies and
+price asymptotics for small proportional transaction costs, i.e. for
+(5.7) ck(n) =
+d∑
+i=1
+ε|ni|Si k
+and as ε↓ 0. One of the results in the asymptotic analysis is that
+(5.8) pε−p0 =O(ε2/3), as ε↓ 0,

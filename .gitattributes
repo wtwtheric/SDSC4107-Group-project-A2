@@ -1,0 +1,10 @@
+# 统一换行：仓库内 LF，Windows 检出也保持 LF（避免 CI 与本地 diff 噪音）
+* text=auto eol=lf
+
+# 二进制
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.npz binary
+*.pt binary

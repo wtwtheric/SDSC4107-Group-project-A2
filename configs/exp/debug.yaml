@@ -1,0 +1,22 @@
+# G0 冒烟：只验证 CLI -> 配置 -> 落盘 -> 指标管线，数字没有实验含义。
+# 真正的 experiment 配置（e1 / e2 / e3 / e4bs ...）在适配层落地后按 spec §3.1 添加。
+exp: debug
+kind: smoke
+seeds: [0]
+device: auto
+out_root: results
+n_steps: 30
+batch: 512
+eps: 0.0002
+alpha: 0.5
+
+market:
+  model: gbm          # 占位；env_heston.py 落地后改 heston
+  s0: 100.0
+  k: 100.0
+  t: 0.0821917808219178   # 30/365
+  sigma: 0.2
+
+policy:
+  name: constant
+  value: 0.5
