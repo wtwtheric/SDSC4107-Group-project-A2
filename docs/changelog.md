@@ -195,3 +195,17 @@ pytest 收集期即 ImportError（exit 2）。`d0024f3` 在 Install 步骤补 `n
 重跑 CI 绿（Install + CI 两步 success）。README 顶部加了 CI badge。
 
 **凭据**：Git Credential Manager 已存 GitHub 凭据，之后 agent 可直接 push。
+
+
+---
+
+# E2 output/evaluation workflow update (2026-11-14)
+
+- Added pathwise positions and explicit hedging-error arrays to the E2 100k output. Positions are archived as float32 to limit file size; terminal losses remain float64.
+- Added a chunked frozen-policy evaluator for a fresh 1,000,000-path common test sample. It records tail diagnostics and per-step position summaries without retaining all pathwise positions.
+- Added canonical Figure 6/7 rendering to repository-root `figures/`, plus a CSV summary in the evaluation directory.
+- Clarified sign conventions: loss is `L = Z - hedge_gain`; Figure 7 plotted hedging error is `q - L`; CVaR is calculated on the upper tail of `L - q`.
+- Added opt-in `backups/` for selected checkpoints, metadata, and datasets. Working `results/` and `data/` remain ignored. Large binary backups use Git LFS; anything committed to this public repository is public.
+- Added Kaggle clone, environment, evaluation, figure-generation, and push instructions in `docs/e2_kaggle.md`.
+
+Validation status: code changes are prepared on `exp/e2-output-eval`. Runtime pytest and Kaggle GPU evaluation must still be run before treating the outputs as validated results.
