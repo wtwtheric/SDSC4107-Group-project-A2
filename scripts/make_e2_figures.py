@@ -48,7 +48,9 @@ def _load_inputs(evaluation_dir: Path) -> tuple[dict[str, Any], np.ndarray, np.n
     metrics = payload.get("metrics", payload)
     with np.load(pnl_path, allow_pickle=False) as archive:
         if "terminal_loss_alpha50" not in archive or "terminal_loss_alpha99" not in archive:
-            raise KeyError("E2 PnL archive must contain terminal_loss_alpha50 and terminal_loss_alpha99")
+            raise KeyError(
+                "E2 PnL archive must contain terminal_loss_alpha50 and terminal_loss_alpha99"
+            )
         loss50 = archive["terminal_loss_alpha50"].astype(np.float64, copy=False)
         loss99 = archive["terminal_loss_alpha99"].astype(np.float64, copy=False)
     if loss50.shape != loss99.shape:
@@ -83,9 +85,11 @@ def _plot_histogram(
         ax.legend(frameon=False)
         ax.grid(axis="y", alpha=0.2)
         fig.text(
-            0.99, 0.01,
+            0.99,
+            0.01,
             "Displayed range: 0.1st–99.9th percentiles; all paths used for metrics.",
-            ha="right", fontsize=8,
+            ha="right",
+            fontsize=8,
         )
         fig.tight_layout(rect=(0, 0.035, 1, 1))
     else:
@@ -104,9 +108,9 @@ def _plot_histogram(
         cell_text = [
             [
                 str(row["strategy"]),
-                f'{float(row["mean_abs_hedging_error"]):.4f}',
-                f'{float(row["realized_cvar_50"]):.4f}',
-                f'{float(row["realized_cvar_99"]):.4f}',
+                f"{float(row['mean_abs_hedging_error']):.4f}",
+                f"{float(row['realized_cvar_50']):.4f}",
+                f"{float(row['realized_cvar_99']):.4f}",
             ]
             for row in table_rows
         ]
@@ -120,9 +124,11 @@ def _plot_histogram(
         table.set_fontsize(8)
         table.scale(1.0, 1.35)
         fig.text(
-            0.99, 0.01,
+            0.99,
+            0.01,
             "Mean |error| = mean(|q − L|); CVaR uses the upper tail of L − q.",
-            ha="right", fontsize=8,
+            ha="right",
+            fontsize=8,
         )
         fig.tight_layout(rect=(0, 0.035, 1, 1))
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -130,9 +136,7 @@ def _plot_histogram(
     plt.close(fig)
 
 
-def make_figures(
-    *, evaluation_dir: Path, figures_dir: Path
-) -> tuple[Path, Path, Path]:
+def make_figures(*, evaluation_dir: Path, figures_dir: Path) -> tuple[Path, Path, Path]:
     # Lazy import lets CI test the summary logic without installing matplotlib.
     import matplotlib
 

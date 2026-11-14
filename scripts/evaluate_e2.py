@@ -91,12 +91,8 @@ def evaluate(
     checkpoint50 = _find_input(run_dir, "policy_alpha50.pt", seed)
     checkpoint99 = _find_input(run_dir, "policy_alpha99.pt", seed)
     world = HestonWorld(market, device=device)
-    policy50 = _load_policy(
-        checkpoint50, cfg, market.n_features, market.d, market.n_steps, device
-    )
-    policy99 = _load_policy(
-        checkpoint99, cfg, market.n_features, market.d, market.n_steps, device
-    )
+    policy50 = _load_policy(checkpoint50, cfg, market.n_features, market.d, market.n_steps, device)
+    policy99 = _load_policy(checkpoint99, cfg, market.n_features, market.d, market.n_steps, device)
 
     q = q_price(world)
     losses50 = np.empty(n_paths, dtype=np.float64)
@@ -221,7 +217,9 @@ def evaluate(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Chunked 1M-path evaluation for frozen E2 policies.")
+    parser = argparse.ArgumentParser(
+        description="Chunked 1M-path evaluation for frozen E2 policies."
+    )
     parser.add_argument("--run-dir", type=Path, default=Path("results/e2/0"))
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--n-paths", type=int, default=1_000_000)
