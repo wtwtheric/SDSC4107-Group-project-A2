@@ -6,7 +6,6 @@ import logging
 
 import pytest
 import torch
-
 from src.replication import e2
 
 
