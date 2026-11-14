@@ -47,7 +47,7 @@ def _cfg() -> dict:
     }
 
 
-def test_e2_runner_returns_required_schema() -> None:
+def test_e2_runner_returns_required_schema_and_positions() -> None:
     payload = e2.run(
         _cfg(),
         seed=0,
@@ -62,18 +62,29 @@ def test_e2_runner_returns_required_schema() -> None:
         "cvar99_own",
         "cvar05_other",
         "cvar99_other",
+        "mean_abs_hedging_error_alpha50",
+        "mean_abs_hedging_error_alpha99",
     }
     assert required <= set(metrics)
     assert all(torch.isfinite(torch.tensor(metrics[key])) for key in required)
-
     assert payload["terminal_loss"].shape == (128,)
     assert set(payload["artifacts"]) == {"policy_alpha50.pt", "policy_alpha99.pt"}
 
     extra = payload["extra_pnl"]
-    assert extra["terminal_loss_alpha50"].shape == (128,)
-    assert extra["terminal_loss_alpha99"].shape == (128,)
-    assert extra["normalized_loss_alpha50"].shape == (128,)
-    assert extra["normalized_loss_alpha99"].shape == (128,)
+    for key in (
+        "terminal_loss_alpha50",
+        "terminal_loss_alpha99",
+        "loss_above_q_alpha50",
+        "loss_above_q_alpha99",
+        "hedging_error_common_q_alpha50",
+        "hedging_error_common_q_alpha99",
+        "hedging_error_own_price_alpha50",
+        "hedging_error_own_price_alpha99",
+    ):
+        assert extra[key].shape == (128,)
+    assert extra["positions_alpha50"].shape == (128, 3, 2)
+    assert extra["positions_alpha99"].shape == (128, 3, 2)
+    assert extra["positions_alpha50"].dtype == "float32"
 
 
 def test_e2_common_premium_translation_identity() -> None:
@@ -85,11 +96,20 @@ def test_e2_common_premium_translation_identity() -> None:
     )
     metrics = payload["metrics"]
 
-    # CVaR is cash-translation invariant. These equalities verify that the
-    # Figure 7 metrics are genuinely normalized to the same risk-neutral q.
+    # CVaR is cash-translation invariant: p_alpha = q + CVaR_alpha(L-q).
     assert metrics["price_alpha99"] == pytest.approx(
         metrics["q"] + metrics["cvar99_own"], abs=1e-10
     )
     assert metrics["price_alpha50"] == pytest.approx(
         metrics["q"] + metrics["cvar05_other"], abs=1e-10
+    )
+
+    extra = payload["extra_pnl"]
+    torch.testing.assert_close(
+        torch.as_tensor(extra["hedging_error_common_q_alpha50"]),
+        -torch.as_tensor(extra["loss_above_q_alpha50"]),
+    )
+    torch.testing.assert_close(
+        torch.as_tensor(extra["hedging_error_own_price_alpha99"]),
+        metrics["price_alpha99"] - torch.as_tensor(extra["terminal_loss_alpha99"]),
     )
