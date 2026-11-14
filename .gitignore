@@ -25,6 +25,12 @@ results/
 # 例外：A1 -> B2 的冻结策略权重要进 git
 !src/policy/weights/*.pt
 
+# 例外：经筛选的备份放在 backups/，大型二进制由 Git LFS 管理
+!backups/
+!backups/**
+!backups/**/*.npz
+!backups/**/*.pt
+
 # 编辑器 / 系统
 .ipynb_checkpoints/
 .DS_Store
