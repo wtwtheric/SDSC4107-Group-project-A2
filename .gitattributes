@@ -8,3 +8,8 @@
 *.jpeg binary
 *.npz binary
 *.pt binary
+
+# 可选备份中的大型文件走 Git LFS（需在提交前执行 git lfs install）
+backups/e2/**/*.npz filter=lfs diff=lfs merge=lfs -text
+backups/e2/**/*.pt filter=lfs diff=lfs merge=lfs -text
+backups/data/** filter=lfs diff=lfs merge=lfs -text
