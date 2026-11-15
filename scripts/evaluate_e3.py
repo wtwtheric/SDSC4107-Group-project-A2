@@ -48,31 +48,35 @@ def _load_policy(
 
 
 @torch.no_grad()
-def _calibrate_policy(
+def _calibrate_policies(
     world: HestonWorld,
-    policy: torch.nn.Module,
+    recurrent: torch.nn.Module,
+    simpler: torch.nn.Module,
     *,
     n_paths: int,
     batch_size: int,
     seed: int,
-    label: str,
-) -> np.ndarray:
-    """Generate fresh calibration losses for a frozen policy."""
+) -> tuple[np.ndarray, np.ndarray]:
+    """Evaluate both frozen policies on exactly the same fresh calibration paths."""
     seed_everything(seed)
-    losses = np.empty(n_paths, dtype=np.float64)
+    recurrent_losses = np.empty(n_paths, dtype=np.float64)
+    simpler_losses = np.empty(n_paths, dtype=np.float64)
     cursor = 0
     while cursor < n_paths:
         size = min(batch_size, n_paths - cursor)
         paths = world.simulate(size)
         features = world.features(paths)
-        positions = policy.forward_path(features)
-        batch_loss = world.terminal_loss(positions, paths)
-        losses[cursor : cursor + size] = batch_loss.detach().cpu().numpy()
-        cursor += size
+        recurrent_positions = recurrent.forward_path(features)
+        simpler_positions = simpler.forward_path(features)
+        recurrent_batch_loss = world.terminal_loss(recurrent_positions, paths)
+        simpler_batch_loss = world.terminal_loss(simpler_positions, paths)
+        stop = cursor + size
+        recurrent_losses[cursor:stop] = recurrent_batch_loss.detach().cpu().numpy()
+        simpler_losses[cursor:stop] = simpler_batch_loss.detach().cpu().numpy()
+        cursor = stop
         if cursor == n_paths or cursor % (batch_size * 4) == 0:
-            print(f"{label} calibration {cursor:,}/{n_paths:,}", flush=True)
-    return losses
-
+            print(f"calibration {cursor:,}/{n_paths:,}", flush=True)
+    return recurrent_losses, simpler_losses
 
 @torch.no_grad()
 def evaluate(
@@ -131,15 +135,11 @@ def evaluate(
     simpler = _load_policy(simpler_path, cfg, market, device, recurrent=False)
     q = q_price(world)
 
-    calibration_r = _calibrate_policy(
-        world, recurrent, n_paths=calibration_paths, batch_size=batch_size,
-        seed=calibration_seed, label="recurrent",
+    calibration_r, calibration_s = _calibrate_policies(
+        world, recurrent, simpler,
+        n_paths=calibration_paths, batch_size=batch_size, seed=calibration_seed,
     )
-    calibration_s = _calibrate_policy(
-        world, simpler, n_paths=calibration_paths, batch_size=batch_size,
-        seed=calibration_seed, label="simpler",
-    )
-    # The helper reseeds before each model, so both use identical fresh calibration paths.
+    # Both frozen policies are evaluated on each same simulated batch.
     summary = build_e3_summary(
         calibration_r, calibration_s, oos_recurrent, oos_simpler, q=q, alpha=alpha
     )
