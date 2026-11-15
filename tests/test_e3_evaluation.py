@@ -25,9 +25,7 @@ def test_oos_realized_cvar_is_lower_tail_of_p_minus_loss() -> None:
     hedging_error = price - losses
     expected = float(torch.mean(torch.tensor([-7.0])))  # worst 20% is the single minimum
     assert result["realized_cvar"] == pytest.approx(expected)
-    assert result["mean_abs_hedging_error"] == pytest.approx(
-        float(np.mean(np.abs(hedging_error)))
-    )
+    assert result["mean_abs_hedging_error"] == pytest.approx(float(np.mean(np.abs(hedging_error))))
 
 
 def test_e3_summary_prices_on_calibration_and_scores_common_oos() -> None:
@@ -35,9 +33,7 @@ def test_e3_summary_prices_on_calibration_and_scores_common_oos() -> None:
     calibration_s = np.array([0.0, 1.0, 2.0, 4.0, 12.0])
     oos_r = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     oos_s = np.array([1.5, 2.5, 3.5, 4.5, 5.5])
-    result = build_e3_summary(
-        calibration_r, calibration_s, oos_r, oos_s, q=1.69, alpha=0.8
-    )
+    result = build_e3_summary(calibration_r, calibration_s, oos_r, oos_s, q=1.69, alpha=0.8)
     assert result["recurrent"]["price"] == pytest.approx(10.0)
     assert result["simpler"]["price"] == pytest.approx(12.0)
     assert result["recurrent"]["realized_cvar"] == pytest.approx(5.0)
@@ -60,7 +56,10 @@ def test_calibration_rejects_empty_or_non_finite_losses(values: np.ndarray) -> N
 def test_summary_rejects_unpaired_oos_lengths() -> None:
     with pytest.raises(ValueError, match="OOS arrays"):
         build_e3_summary(
-            np.array([1.0, 2.0]), np.array([1.0, 2.0]),
-            np.array([1.0, 2.0]), np.array([1.0]),
-            q=1.69, alpha=0.5,
+            np.array([1.0, 2.0]),
+            np.array([1.0, 2.0]),
+            np.array([1.0, 2.0]),
+            np.array([1.0]),
+            q=1.69,
+            alpha=0.5,
         )
