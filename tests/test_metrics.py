@@ -20,6 +20,36 @@ def test_cvar_hand_calc() -> None:
     assert float(cvar(x, 0.5)) == pytest.approx(float(np.mean([9, 8, 7, 6, 5])))
 
 
+def test_cvar_integer_tail_mass() -> None:
+    x = torch.arange(10, dtype=torch.float64)
+    # (1 - 0.8) * 10 = 2 exactly: mean of the two worst losses, 9 and 8.
+    assert float(cvar(x, 0.8)) == pytest.approx(8.5)
+
+
+def test_cvar_fractional_tail_mass() -> None:
+    x = torch.arange(10, dtype=torch.float64)
+    # (1 - 0.85) * 10 = 1.5: 9 has full weight, 8 has weight 0.5.
+    expected = (9.0 + 0.5 * 8.0) / 1.5
+    assert float(cvar(x, 0.85)) == pytest.approx(expected)
+
+
+def test_cvar_fractional_gradient_weights() -> None:
+    x = torch.arange(10, dtype=torch.float64, requires_grad=True)
+    value = cvar(x, 0.85)
+    value.backward()
+
+    expected_grad = torch.zeros_like(x)
+    expected_grad[9] = 1.0 / 1.5
+    expected_grad[8] = 0.5 / 1.5
+    torch.testing.assert_close(x.grad, expected_grad)
+
+
+def test_cvar_translation_invariance() -> None:
+    x = torch.tensor([-2.0, -0.5, 0.2, 1.7, 3.5, 8.0, 13.0], dtype=torch.float64)
+    shift = 4.25
+    assert float(cvar(x + shift, 0.83)) == pytest.approx(float(cvar(x, 0.83)) + shift)
+
+
 def test_capital_requirement() -> None:
     x = torch.arange(100, dtype=torch.float64)
     req = capital_requirement(x)
