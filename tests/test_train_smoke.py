@@ -23,7 +23,8 @@ def test_debug_run_writes_all_artifacts(tmp_path) -> None:
     assert payload["passed"] is True
     assert payload["n_paths"] == 512
     assert payload["runtime_sec"] > 0.0
-    assert payload["device"] == "cpu"
+    expected_device = "cuda" if torch.cuda.is_available() else "cpu"
+    assert payload["device"] == expected_device
     assert {"mean_loss", "cvar50", "cvar99"} <= set(payload["metrics"])
 
     with np.load(run / "pnl.npz") as data:
