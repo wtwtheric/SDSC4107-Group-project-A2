@@ -17,7 +17,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from src.common.config import digest_config, load_config
 from src.common.metrics import cvar, git_provenance
 from src.common.seed import resolve_device, seed_everything
