@@ -49,3 +49,14 @@ def test_model_call_spread_delta_grids_are_finite() -> None:
     assert varswap.shape == (3, 3)
     assert bool(torch.isfinite(torch.as_tensor(stock)).all())
     assert bool(torch.isfinite(torch.as_tensor(varswap)).all())
+
+
+def test_e2cs_paper_state_features_are_spot_and_instantaneous_variance() -> None:
+    world = CallSpreadWorld(HestonMarket(n_steps=1), 100.0, 101.0)
+    paths = _paths([100.5, 101.0])
+    features = world.features(paths)
+    assert features.shape == (2, 1, 2)
+    torch.testing.assert_close(
+        features[:, 0, :],
+        torch.tensor([[100.0, 0.04], [100.0, 0.04]], dtype=torch.float64),
+    )
