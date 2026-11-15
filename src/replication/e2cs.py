@@ -22,7 +22,18 @@ from src.replication.pricing import HestonParams, heston_call_prices
 
 
 class CallSpreadWorld(HestonWorld):
-    """Heston world with the normalized bounded call-spread payoff."""
+    """Heston world with the normalized bounded call-spread payoff.
+
+    The E2CS paper-style simpler policy observes the current (S_k, V_k)
+    state directly, rather than the generic three-feature HestonWorld state.
+    """
+
+    def features(self, paths: HestonPaths) -> torch.Tensor:
+        n = self.market.n_steps
+        return torch.stack(
+            [paths.spot[:, :n], paths.variance[:, :n]],
+            dim=-1,
+        )
 
     def __init__(self, market: HestonMarket, strike1: float, strike2: float, **kwargs: Any):
         if not strike2 > strike1:
@@ -88,6 +99,27 @@ def _model_delta_grids(
     factor = (1.0 - np.exp(-market.kappa * tau)) / market.kappa
     varswap_delta = variance_derivative / factor
     return stock_delta, varswap_delta
+
+
+def _policy_stock_grid(
+    policy: torch.nn.Module,
+    spot_grid: np.ndarray,
+    variance_grid: np.ndarray,
+    step: int,
+    device: torch.device,
+) -> np.ndarray:
+    """Evaluate the simpler policy directly on the paper's (S,V) grid."""
+    ss, vv = np.meshgrid(spot_grid, variance_grid, indexing="ij")
+    state = torch.as_tensor(
+        np.column_stack([ss.ravel(), vv.ravel()]),
+        dtype=torch.float64,
+        device=device,
+    )
+    policy.eval()
+    with torch.no_grad():
+        # recurrent=False: each date has its own F_k(S_k,V_k), no previous delta.
+        output = policy.steps[step](state) * policy.out_scale
+    return output[:, 0].reshape(ss.shape).cpu().numpy()
 
 
 def _eval_pair(
@@ -171,7 +203,14 @@ def run_pair(
         local["alpha"] = alpha
         log.info("training call-spread policy alpha=%.2f", alpha)
         seed_everything(seed)
-        policies[alpha] = train_policy(world, local, device, log, recurrent=True)
+        policies[alpha] = train_policy(
+            world,
+            local,
+            device,
+            log,
+            recurrent=False,
+            n_features_override=2,
+        )
 
     eval_paths = int(train_cfg.get("eval_paths", 1_000_000))
     eval_batch = int(train_cfg.get("eval_batch_size", 25_000))
@@ -203,10 +242,17 @@ def run_pair(
     price95 = float(cvar(loss95, 0.95))
     price99 = float(cvar(loss99, 0.99))
 
-    spot_grid = np.linspace(60.0, 140.0, 81)
-    variance_grid = np.linspace(0.002, 0.60, 61)
+    # Paper Figure 8–9 evaluate the stock hedge on a compact (S,V) state grid.
+    spot_grid = np.linspace(95.0, 103.0, 81)
+    variance_grid = np.linspace(0.03, 0.13, 61)
     model_stock, model_varswap = _model_delta_grids(
         base_market, k1, k2, visual_step, spot_grid, variance_grid
+    )
+    policy_stock95 = _policy_stock_grid(
+        policies[0.95], spot_grid, variance_grid, visual_step, device
+    )
+    policy_stock99 = _policy_stock_grid(
+        policies[0.99], spot_grid, variance_grid, visual_step, device
     )
     metrics = {
         "price_alpha95": price95,
@@ -259,6 +305,7 @@ def run_pair(
                     "model_variance_grid": variance_grid,
                     "model_stock_delta_grid": model_stock,
                     "model_varswap_delta_grid": model_varswap,
+                    "policy_stock_delta_grid": policy_stock95,
                 },
                 "policy": policies[0.95].state_dict(),
             },
@@ -275,6 +322,7 @@ def run_pair(
                     "model_variance_grid": variance_grid,
                     "model_stock_delta_grid": model_stock,
                     "model_varswap_delta_grid": model_varswap,
+                    "policy_stock_delta_grid": policy_stock99,
                 },
                 "policy": policies[0.99].state_dict(),
             },
