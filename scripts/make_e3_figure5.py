@@ -55,11 +55,16 @@ def make_figure5(*, evaluation_dir: Path, figures_dir: Path) -> Path:
     ax.legend(frameon=False)
     ax.grid(axis="y", alpha=0.18)
     ax.text(
-        0.99, 0.97,
+        0.99,
+        0.97,
         f"alpha={payload['calibration']['alpha']:.2f} | "
         f"calibration n={payload['calibration']['n_paths']:,} | "
         f"OOS n={payload['oos']['n_paths']:,}",
-        transform=ax.transAxes, ha="right", va="top", fontsize=8, color="0.3",
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=8,
+        color="0.3",
     )
 
     ax_table = fig.add_subplot(grid[1])
@@ -67,12 +72,14 @@ def make_figure5(*, evaluation_dir: Path, figures_dir: Path) -> Path:
     rows = []
     for label in ("recurrent", "simpler"):
         row = metrics[label]
-        rows.append([
-            label,
-            f"{row['mean_abs_hedging_error']:.4f}",
-            f"{row['price']:.4f}",
-            f"{row['realized_cvar']:.4f}",
-        ])
+        rows.append(
+            [
+                label,
+                f"{row['mean_abs_hedging_error']:.4f}",
+                f"{row['price']:.4f}",
+                f"{row['realized_cvar']:.4f}",
+            ]
+        )
     table = ax_table.table(
         cellText=rows,
         colLabels=("Strategy", "Mean |H|*", "Price", "Realized CVaR"),
@@ -84,11 +91,14 @@ def make_figure5(*, evaluation_dir: Path, figures_dir: Path) -> Path:
     table.scale(1.0, 1.45)
 
     fig.text(
-        0.01, 0.012,
+        0.01,
+        0.012,
         "*Mean |H| is reported as a transparent proxy because the paper's Figure 5 caption "
         "does not define its 'Mean Loss' column. Realized CVaR is the lower-tail CVaR of H. "
         "Histogram displays the 0.1st–99.9th percentile range; all paths enter the metrics.",
-        fontsize=7.2, color="0.25", va="bottom",
+        fontsize=7.2,
+        color="0.25",
+        va="bottom",
     )
     fig.tight_layout(rect=(0, 0.055, 1, 1))
 
@@ -103,7 +113,8 @@ def make_figure5(*, evaluation_dir: Path, figures_dir: Path) -> Path:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Render E3 Figure 5.")
     parser.add_argument(
-        "--evaluation-dir", type=Path,
+        "--evaluation-dir",
+        type=Path,
         default=Path("results/e3/0/independent_evaluation"),
     )
     parser.add_argument("--figures-dir", type=Path, default=REPO_ROOT / "figures")
