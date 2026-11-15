@@ -244,7 +244,7 @@ def run_pair(
 
     # Paper Figure 8–9 evaluate the stock hedge on a compact (S,V) state grid.
     spot_grid = np.linspace(95.0, 103.0, 81)
-    variance_grid = np.linspace(0.03, 0.13, 61)
+    variance_grid = np.linspace(0.02, 0.14, 61)
     model_stock, model_varswap = _model_delta_grids(
         base_market, k1, k2, visual_step, spot_grid, variance_grid
     )
