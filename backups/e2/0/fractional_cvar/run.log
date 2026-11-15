@@ -1,0 +1,17 @@
+03:04:07 INFO    controlled E2 retrain: alpha=0.99, CVaR estimator=fractional_boundary
+03:04:07 INFO    simulator=Andersen QE-M seed=0 batch=1024 n_iter=30000 device=cuda
+03:04:08 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000
+03:06:33 INFO      iter 2500/30000 lr=0.00492 train_cvar=3.2050 (last 2500 avg 4.1070)
+03:08:58 INFO      iter 5000/30000 lr=0.0047 train_cvar=2.8973 (last 2500 avg 3.0906)
+03:11:22 INFO      iter 7500/30000 lr=0.00434 train_cvar=2.9692 (last 2500 avg 2.9558)
+03:13:47 INFO      iter 10000/30000 lr=0.00388 train_cvar=2.8476 (last 2500 avg 2.8929)
+03:16:11 INFO      iter 12500/30000 lr=0.00333 train_cvar=2.9027 (last 2500 avg 2.8408)
+03:18:36 INFO      iter 15000/30000 lr=0.00275 train_cvar=2.7124 (last 2500 avg 2.7982)
+03:21:00 INFO      iter 17500/30000 lr=0.00217 train_cvar=2.7422 (last 2500 avg 2.7618)
+03:23:25 INFO      iter 20000/30000 lr=0.00163 train_cvar=2.7773 (last 2500 avg 2.7264)
+03:25:49 INFO      iter 22500/30000 lr=0.00116 train_cvar=2.8051 (last 2500 avg 2.7022)
+03:28:13 INFO      iter 25000/30000 lr=0.000801 train_cvar=2.6423 (last 2500 avg 2.6752)
+03:30:37 INFO      iter 27500/30000 lr=0.000577 train_cvar=2.7475 (last 2500 avg 2.6608)
+03:33:01 INFO      iter 30000/30000 lr=0.0005 train_cvar=2.6849 (last 2500 avg 2.6543)
+03:33:03 INFO    quick eval p99=2.656547 q=1.691834 cvar99(L-q)=0.964713 mean_loss=1.694058
+03:33:03 INFO    done runtime=28m 54s checkpoint=results/e2_fractional/0/policy_alpha99.pt passed=True

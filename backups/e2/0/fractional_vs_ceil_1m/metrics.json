@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "exp": "e2_fractional_vs_ceil_seed0",
+  "seed": 0,
+  "created_at": "2026-11-15T03:33:23+00:00",
+  "evaluation_paths": 1000000,
+  "batch_size": 25000,
+  "evaluation_seed": 10001,
+  "device": "cuda",
+  "torch_version": "2.11.0+cu130",
+  "simulator": "Andersen QE-M via pfhedge.generate_heston",
+  "evaluation_cvar_estimator": "fractional_boundary",
+  "evaluation_note": "At n=1,000,000 and alpha=0.99 the tail mass is exactly 10,000, so ceil and fractional evaluation coincide.",
+  "q": 1.6918339251106715,
+  "old_training_estimator": "ceil_boundary",
+  "new_training_estimator": "fractional_boundary",
+  "old_config_sha256": "c7fd01801216c047be9e9301dc052309081d0b6b2320f76462d24a35c80552aa",
+  "new_config_sha256": "c7fd01801216c047be9e9301dc052309081d0b6b2320f76462d24a35c80552aa",
+  "old_checkpoint_sha256": "0238b1a7b7c41ab77f13b66e6ef9870587d79395615973cd4851a83883aa8431",
+  "new_checkpoint_sha256": "016e9473955723cad7dc22975434a046f1052dcc33ffdb47b4c6fc2c0006c98a",
+  "git_commit": "3e001cb",
+  "dirty": false,
+  "metrics_old_ceil": {
+    "price_alpha99": 2.6526002499145402,
+    "cvar50_excess": 0.48832818701811587,
+    "cvar99_excess": 0.9607663248038687,
+    "mean_raw_loss": 1.6919638322638395,
+    "std_raw_loss": 0.7441709226746632,
+    "mean_abs_hedging_error": 0.52777953763489
+  },
+  "metrics_new_fractional": {
+    "price_alpha99": 2.6529139698999518,
+    "cvar50_excess": 0.4938845493124124,
+    "cvar99_excess": 0.9610800447892801,
+    "mean_raw_loss": 1.6920854584964204,
+    "std_raw_loss": 0.747725891098938,
+    "mean_abs_hedging_error": 0.5327718780992948
+  },
+  "delta_new_minus_old": {
+    "price_alpha99": 0.00031371998541152024,
+    "cvar50_excess": 0.005556362294296513,
+    "cvar99_excess": 0.0003137199854114092,
+    "mean_raw_loss": 0.0001216262325809403,
+    "std_raw_loss": 0.003554968424274718,
+    "mean_abs_hedging_error": 0.004992340464404776
+  }
+}
