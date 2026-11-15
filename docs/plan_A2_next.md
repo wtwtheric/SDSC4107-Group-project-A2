@@ -215,7 +215,7 @@ configs/exp/e2cs.yaml
 tests/test_e2cs.py
 ```
 
-Use the single `e2cs.yaml` as the shared base configuration and run it twice with α=0.95 and α=0.99 (through an explicit config override or CLI argument recorded in the resolved `config.yaml`). This follows the existing repository config convention. The runner should train the two policies using paired seeds and the same training recipe. Evaluate them on common QE-M paths. Save the recurrent policy checkpoints and the positions required for the strategy-shape figures.
+Use the single `e2cs.yaml` as the shared base configuration and run it twice with α=0.95 and α=0.99 (through an explicit config override or CLI argument recorded in the resolved `config.yaml`). This follows the existing repository config convention. The runner should train the two policies using paired seeds and the same training recipe. Evaluate them on common QE-M paths. Save the simpler (non-recurrent) policy checkpoints and the direct stock-position surfaces required for paper Figures 8–9.
 
 ### 4.4 Required unit tests
 
@@ -248,16 +248,19 @@ Save and compare:
 
 for α=0.95 and α=0.99.
 
-Because the policy is semi-recurrent, its position at time k depends on the preceding policy positions as well as the current market features. Do not construct a plot by feeding an isolated time-k state into the network while silently setting the recurrent input to zero.
+For the paper's Figures 8–9, use the simpler feed-forward policy
+\[
+\delta_k^\theta=F^{\theta_k}(I_k),\qquad I_k=(S_k,V_k),
+\]
+with no previous hedge position as an input. Each trading date has its own network parameters. Evaluate the trained network directly on a regular (S,V) grid at k=15; do not infer the surface by interpolating pathwise conditional medians. This produces the actual policy function and avoids unsupported extrapolation into empty bins.
 
-Preferred extraction:
-1. Generate a fixed QE-M visualisation path set.
-2. Run each complete path through the frozen policy.
-3. At a pre-specified time (initially the midpoint, k=15), examine positions conditional on the same spot and variance-swap-state bins.
-4. Plot conditional medians and dispersion bands, and show the number of observations in each bin.
-5. Use the same paths, bins, and plotting limits for α=0.95 and α=0.99.
+The stock-position figures must be separate:
+- Figure 8: model stock hedge, α=0.95 NN stock hedge, and NN-minus-model difference.
+- Figure 9: model stock hedge, α=0.99 NN stock hedge, and NN-minus-model difference.
 
-A separate visualisation sample (e.g. 100k–200k paths) is acceptable if storing all 1M pathwise positions is unnecessarily expensive. The formal 1M OOS evaluation remains the source for tail-risk metrics.
+Use the same compact state grid, camera angle, diverging red-blue colour map, and comparable colour scales in both figures. Keep path-count plots as supplementary support diagnostics only.
+
+A separate visualisation sample (e.g. 100k–200k paths) remains useful for path-support diagnostics. The formal 1M OOS evaluation remains the source for tail-risk metrics.
 
 The exact quantitative definition of “position band width” should be finalised against the paper's Figures 8–9 before it is used as an acceptance threshold. Do not invent a numerical threshold. Report the visual comparison and a clearly defined width statistic.
 
@@ -274,12 +277,35 @@ Final figures:
 
 ```text
 figures/fig08_e2cs_stock_position.png
-figures/fig09_e2cs_varswap_position.png
+figures/fig09_e2cs_stock_position.png
 ```
 
 The paper's qualitative target is a narrower hedge-position region at α=0.99. There is no separate paper price target specified here. Report prices and risk metrics, but do not claim success from price proximity alone.
 
 ---
+
+
+### 4.7 Independent seed-0 execution
+
+The seed-0 batch runner supports independent experiment selection:
+- `--only e2cs`: train both E2CS policies and generate Figures 8–9.
+- `--only e3`: run E3 only.
+- `--only e4`: run E4-BS and E4-Heston only.
+- `--only e4bs` or `--only e4h`: run one E4 variant.
+- `--only figures`: regenerate Figures 8–9 from existing E2CS outputs.
+
+For example, E2CS can run on a separate GPU while E3/E4 continue in another process:
+
+```bash
+nohup python -u -m scripts.run_a2_seed0_batch \\
+  --seed 0 \\
+  --only e2cs \\
+  --device cuda \\
+  --out results/a2_seed0_formal \\
+  > /root/autodl-tmp/a2_seed0_e2cs.log 2>&1 &
+```
+
+Do not launch two jobs that write to the same experiment output folder at the same time. Independent GPUs are fine when each experiment writes to its intended E2CS/E3/E4 subdirectories and the active source checkout is not modified during execution.
 
 ## 5. Gate C — E3 transaction costs: recurrent vs simpler
 
