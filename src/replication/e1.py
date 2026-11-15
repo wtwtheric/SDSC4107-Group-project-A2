@@ -45,11 +45,17 @@ def market_from_cfg(cfg: dict[str, Any]) -> HestonMarket:
 
 
 def policy_from_cfg(
-    cfg: dict[str, Any], n_features: int, d: int, device: torch.device, recurrent: bool = True
+    cfg: dict[str, Any],
+    n_features: int,
+    d: int,
+    device: torch.device,
+    recurrent: bool = True,
+    n_features_override: int | None = None,
 ) -> SemiRecurrentPolicy:
     hidden = cfg["policy"].get("hidden")
+    input_features = n_features if n_features_override is None else int(n_features_override)
     policy = SemiRecurrentPolicy(
-        n_features=n_features,
+        n_features=input_features,
         d=d,
         n_steps=int(cfg["n_steps"]),
         hidden=int(hidden) if hidden is not None else d + 15,
@@ -78,9 +84,17 @@ def train_policy(
     device: torch.device,
     log: logging.Logger,
     recurrent: bool = True,
+    n_features_override: int | None = None,
 ) -> SemiRecurrentPolicy:
     m = world.market
-    policy = policy_from_cfg(cfg, m.n_features, m.d, device, recurrent=recurrent)
+    policy = policy_from_cfg(
+        cfg,
+        m.n_features,
+        m.d,
+        device,
+        recurrent=recurrent,
+        n_features_override=n_features_override,
+    )
     train_cfg = cfg.get("train", {}) or {}
     n_iter = int(train_cfg.get("n_iter", 5000))
     lr = float(train_cfg.get("lr", 0.005))
