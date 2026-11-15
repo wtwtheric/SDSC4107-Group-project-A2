@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 
 import numpy as np
+import torch
 from src.common.config import REPO_ROOT
 from src.replication.train import main
-import torch
 
 
 def test_debug_run_writes_all_artifacts(tmp_path) -> None:
