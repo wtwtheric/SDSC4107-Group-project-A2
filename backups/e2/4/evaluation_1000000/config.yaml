@@ -1,0 +1,39 @@
+exp: e2
+kind: e2
+seeds:
+- 4
+device: auto
+out_root: results
+n_steps: 30
+batch: 1024
+eps: 0.0
+alpha: 0.99
+policy:
+  name: recurrent
+  value: 0.0
+  hidden: 17
+  recurrent: true
+  norm: layer
+  out_scale:
+  - 1.0
+  - 100.0
+market:
+  model: heston
+  s0: 100.0
+  k: 100.0
+  t: 0.0821917808219178
+  sigma: 2.0
+  d: 2
+  kappa: 1.0
+  theta: 0.04
+  rho: -0.7
+  v0: 0.04
+compare_alpha: 0.5
+train:
+  n_iter: 30000
+  lr: 0.005
+  lr_schedule: cosine
+  lr_min: 0.0005
+  eval_paths: 100000
+  eval_seed_offset: 10000
+  log_every: 2500

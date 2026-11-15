@@ -1,0 +1,51 @@
+{
+  "started_at": "2026-11-15T15:06:53+08:00",
+  "status": "complete",
+  "pinned_commit": "85bdcbcafb25d94bc24f08b17d5feb70fa85d51e",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "n_paths": 1000000,
+  "batch_size": 25000,
+  "git_commit": "85bdcbcafb25d94bc24f08b17d5feb70fa85d51e",
+  "environment": {
+    "python": "3.12.3 | packaged by Anaconda, Inc. | (main, May  6 2024, 19:46:43) [GCC 11.2.0]",
+    "platform": "Linux-5.15.0-86-generic-x86_64-with-glibc2.35",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "torch": "2.8.0+cu128",
+    "torch_cuda_runtime": "12.8",
+    "cuda_available": true,
+    "gpu": "Tesla V100S-PCIE-32GB",
+    "gpu_count": 1,
+    "pfhedge": "0.23.0",
+    "pyyaml": "6.0.3"
+  },
+  "seed0_platform_validation": {
+    "price_alpha50": 1.943641059821988,
+    "price_alpha99": 2.6605514751675257,
+    "baseline_alpha50": 1.9424986928035923,
+    "baseline_alpha99": 2.6529139698999518,
+    "delta_alpha50": 0.0011423670183956514,
+    "delta_alpha99": 0.007637505267573896,
+    "within_alpha50_tolerance": true,
+    "within_alpha99_tolerance": true,
+    "cvar50_tradeoff": true,
+    "cvar99_tradeoff": true,
+    "price_translation_alpha50": true,
+    "price_translation_alpha99": true,
+    "mean_loss_alpha50_near_q": true,
+    "mean_loss_alpha99_near_q": true,
+    "passed": true
+  },
+  "summary": {
+    "all_cvar50_tradeoff": true,
+    "all_cvar99_tradeoff": true
+  },
+  "runtime_sec": 16353.029713116586,
+  "finished_at": "2026-11-15T19:39:26+08:00"
+}

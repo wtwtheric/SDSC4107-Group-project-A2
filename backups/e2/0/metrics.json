@@ -2,25 +2,27 @@
   "schema_version": "1.0",
   "exp": "e2",
   "seed": 0,
-  "git_commit": null,
-  "dirty": true,
-  "created_at": "2026-11-14T10:44:44+00:00",
-  "runtime_sec": 3527.632,
+  "git_commit": "85bdcbc",
+  "dirty": false,
+  "created_at": "2026-11-15T16:02:44+08:00",
+  "runtime_sec": 3278.949,
   "device": "cuda",
-  "torch_version": "2.11.0+cu130",
+  "torch_version": "2.8.0+cu128",
   "n_paths": 100000,
   "config_sha256": "c7fd01801216c047be9e9301dc052309081d0b6b2320f76462d24a35c80552aa",
   "metrics": {
-    "price": 2.6618563703970732,
-    "cvar05_own": 0.4901747905638963,
-    "cvar99_own": 0.9700224452864016,
-    "cvar05_other": 0.2531448747036295,
-    "cvar99_other": 1.9593217266400584,
+    "price": 2.6588197727939398,
+    "cvar05_own": 0.489825597046934,
+    "cvar99_own": 0.9669858476832682,
+    "cvar05_other": 0.2513747684048145,
+    "cvar99_other": 1.8758190446299476,
     "q": 1.6918339251106715,
-    "price_alpha50": 1.944978799814301,
-    "price_alpha99": 2.6618563703970732,
-    "mean_raw_loss_alpha50": 1.6928194632629248,
-    "mean_raw_loss_alpha99": 1.6942335781487279
+    "price_alpha50": 1.9432086935154862,
+    "price_alpha99": 2.6588197727939398,
+    "mean_raw_loss_alpha50": 1.6922718890096984,
+    "mean_raw_loss_alpha99": 1.6928540349895418,
+    "mean_abs_hedging_error_alpha50": 0.25164971236100453,
+    "mean_abs_hedging_error_alpha99": 0.5290964198313637
   },
   "checks": {
     "price99_band": false,
@@ -28,7 +30,9 @@
     "cvar50_tradeoff": true,
     "cvar99_tradeoff": true,
     "mean_loss_alpha50_near_q": true,
-    "mean_loss_alpha99_near_q": true
+    "mean_loss_alpha99_near_q": true,
+    "price_translation_alpha50": true,
+    "price_translation_alpha99": true
   },
   "passed": false
 }
