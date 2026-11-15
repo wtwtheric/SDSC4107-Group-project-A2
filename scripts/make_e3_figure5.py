@@ -7,9 +7,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
 from src.common.config import REPO_ROOT
+
+import numpy as np
 
 
 def make_figure5(*, evaluation_dir: Path, figures_dir: Path) -> Path:
