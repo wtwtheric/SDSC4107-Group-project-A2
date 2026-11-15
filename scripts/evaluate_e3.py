@@ -12,7 +12,7 @@ from typing import Any
 import numpy as np
 import torch
 
-from src.common.config import digest_config, load_config
+from src.common.config import load_config
 from src.common.metrics import git_provenance
 from src.common.seed import resolve_device, seed_everything
 from src.replication.e1 import market_from_cfg, policy_from_cfg, q_price
@@ -55,8 +55,6 @@ def _calibrate_policy(
     n_paths: int,
     batch_size: int,
     seed: int,
-    alpha: float,
-    q: float,
     label: str,
 ) -> np.ndarray:
     """Generate fresh calibration losses for a frozen policy."""
@@ -74,20 +72,6 @@ def _calibrate_policy(
         if cursor == n_paths or cursor % (batch_size * 4) == 0:
             print(f"{label} calibration {cursor:,}/{n_paths:,}", flush=True)
     return losses
-
-
-def _oos_metrics(loss: np.ndarray, price: float, alpha: float) -> dict[str, float]:
-    """Compute paper-style H=p-L diagnostics on the original common OOS paths."""
-    hedging_error = float(price) - np.asarray(loss, dtype=np.float64)
-    return {
-        # The paper's table does not define Mean Loss; report this transparent proxy.
-        "mean_abs_hedging_error": float(np.mean(np.abs(hedging_error))),
-        "price": float(price),
-        # Lower-tail CVaR of H, expressed with the project's upper-tail loss function.
-        "realized_cvar": float(-cvar(torch.from_numpy(-hedging_error), alpha)),
-        "mean_hedging_error": float(np.mean(hedging_error)),
-        "mean_oos_terminal_loss": float(np.mean(loss)),
-    }
 
 
 @torch.no_grad()
@@ -120,6 +104,9 @@ def evaluate(
     alpha = float(cfg["alpha"])
     if not 0.0 < alpha < 1.0:
         raise ValueError(f"alpha must be in (0, 1), got {alpha}")
+    source_eval_seed = int((cfg.get("train", {}) or {}).get("eval_seed", 314159))
+    if calibration_seed == source_eval_seed:
+        raise ValueError("calibration_seed must differ from the original E3 OOS eval_seed")
 
     source_metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
     with np.load(pnl_path, allow_pickle=False) as archive:
@@ -146,11 +133,11 @@ def evaluate(
 
     calibration_r = _calibrate_policy(
         world, recurrent, n_paths=calibration_paths, batch_size=batch_size,
-        seed=calibration_seed, alpha=alpha, q=q, label="recurrent",
+        seed=calibration_seed, label="recurrent",
     )
     calibration_s = _calibrate_policy(
         world, simpler, n_paths=calibration_paths, batch_size=batch_size,
-        seed=calibration_seed, alpha=alpha, q=q, label="simpler",
+        seed=calibration_seed, label="simpler",
     )
     # The helper reseeds before each model, so both use identical fresh calibration paths.
     summary = build_e3_summary(
@@ -224,7 +211,7 @@ def evaluate(
         "checks": {
             "finite_prices": bool(np.isfinite([price_r, price_s]).all()),
             "independent_calibration_and_oos_seed": bool(
-                calibration_seed != int((cfg.get("train", {}) or {}).get("eval_seed", 314159))
+                calibration_seed != source_eval_seed
             ),
             "common_oos_path_count": len(oos_recurrent) == len(oos_simpler),
             "common_calibration_paths": len(calibration_r) == len(calibration_s),
