@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import numpy as np
-import pytest
-import torch
-
 from src.common.metrics import cvar
 from src.replication.e3_evaluation import (
     build_e3_summary,
     estimate_indifference_price,
     summarize_oos,
 )
+
+import numpy as np
+import pytest
+import torch
 
 
 def test_indifference_price_uses_calibration_distribution() -> None:
