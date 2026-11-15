@@ -1,4 +1,5 @@
 """E2 call-spread payoff and runner contract tests."""
+
 from __future__ import annotations
 
 import pytest
@@ -8,7 +9,7 @@ from src.replication.env_heston import HestonMarket, HestonPaths
 
 
 def _paths(terminal: list[float]) -> HestonPaths:
-    len(terminal)# n = len(terminal)
+    len(terminal)  # n = len(terminal)
     spot = torch.tensor([[100.0, x] for x in terminal], dtype=torch.float64)
     variance = torch.full_like(spot, 0.04)
     varswap = torch.full_like(spot, 0.04 * (30.0 / 365.0))

@@ -1,4 +1,5 @@
 """Bundle completed A2 Seed-0 outputs into one downloadable ZIP archive."""
+
 from __future__ import annotations
 
 import argparse
@@ -21,8 +22,11 @@ def main() -> int:
     output = Path(args.output) if args.output else results / f"A2_seed_{seed}_bundle.zip"
 
     files: list[Path] = []
-    required_dirs = [results / "e2cs" / "0.95" / seed, results / "e2cs" / "0.99" / seed,
-                     results / "e3" / seed]
+    required_dirs = [
+        results / "e2cs" / "0.95" / seed,
+        results / "e2cs" / "0.99" / seed,
+        results / "e3" / seed,
+    ]
     for folder in required_dirs:
         if not (folder / "metrics.json").exists():
             raise FileNotFoundError(f"Missing completed result folder: {folder}")

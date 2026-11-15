@@ -4,6 +4,7 @@ This module deliberately subclasses HestonWorld rather than changing its shared
 European-call default. It is therefore safe to add to the current A2 repository
 without altering E1/E2 behaviour.
 """
+
 from __future__ import annotations
 
 import copy
@@ -234,7 +235,11 @@ def run_pair(
     log.info(
         "E2CS eval q=%.5f price95=%.5f price99=%.5f | "
         "CVaR99(95-policy)=%.5f CVaR99(99-policy)=%.5f",
-        q, price95, price99, metrics["cvar99_alpha95"], metrics["cvar99_alpha99"]
+        q,
+        price95,
+        price99,
+        metrics["cvar99_alpha95"],
+        metrics["cvar99_alpha99"],
     )
     return {
         "metrics": metrics,

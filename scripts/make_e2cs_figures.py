@@ -1,4 +1,5 @@
 """Create 3D surfaces and 2D heatmaps for the E2 call-spread strategy shapes."""
+
 from __future__ import annotations
 
 import argparse
@@ -102,19 +103,31 @@ def main() -> int:
     ]
     _plot_3d(
         figure_root / "fig08_e2cs_stock_position.png",
-        "E2 Call Spread: Stock Hedge Surface", sg, vg, stock_surfaces,
+        "E2 Call Spread: Stock Hedge Surface",
+        sg,
+        vg,
+        stock_surfaces,
     )
     _plot_3d(
         figure_root / "fig09_e2cs_varswap_position.png",
-        "E2 Call Spread: Variance-Swap Hedge Surface", sg, vg, var_surfaces,
+        "E2 Call Spread: Variance-Swap Hedge Surface",
+        sg,
+        vg,
+        var_surfaces,
     )
     _plot_heatmaps(
         figure_root / "fig08_e2cs_stock_position_heatmap.png",
-        "E2 Call Spread: Stock Hedge Heatmaps", sg, vg, stock_surfaces,
+        "E2 Call Spread: Stock Hedge Heatmaps",
+        sg,
+        vg,
+        stock_surfaces,
     )
     _plot_heatmaps(
         figure_root / "fig09_e2cs_varswap_position_heatmap.png",
-        "E2 Call Spread: Variance-Swap Hedge Heatmaps", sg, vg, var_surfaces,
+        "E2 Call Spread: Variance-Swap Hedge Heatmaps",
+        sg,
+        vg,
+        var_surfaces,
     )
     count_path = figure_root / "e2cs_surface_bin_counts.npz"
     np.savez_compressed(

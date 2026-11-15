@@ -1,4 +1,5 @@
 """Run one E3 seed using the common A2 QE-M simulator and paired OOS paths."""
+
 from __future__ import annotations
 
 import argparse
@@ -41,9 +42,15 @@ def main() -> int:
     for name, state in result.get("artifacts", {}).items():
         torch.save(state, folder / name)
     record = write_metrics(
-        folder / "metrics.json", exp="e3", seed=args.seed, cfg=cfg,
-        metrics=result["metrics"], checks=result["checks"],
-        runtime_sec=time.perf_counter() - started, device=device, n_paths=result["n_paths"],
+        folder / "metrics.json",
+        exp="e3",
+        seed=args.seed,
+        cfg=cfg,
+        metrics=result["metrics"],
+        checks=result["checks"],
+        runtime_sec=time.perf_counter() - started,
+        device=device,
+        n_paths=result["n_paths"],
     )
     log.info(
         "E3 completed runtime=%s passed=%s",

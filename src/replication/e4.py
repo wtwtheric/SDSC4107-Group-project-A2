@@ -1,4 +1,5 @@
 """E4: entropic-risk deep hedging for BS d=1 and Heston d=2."""
+
 from __future__ import annotations
 
 import logging
@@ -42,8 +43,14 @@ def _zero_cost_price(world: Any) -> float:
     if isinstance(world, BSWorld):
         return float(bs_call(m.s0, m.strike, m.maturity, m.sigma))
     params = HestonParams(
-        kappa=m.kappa, theta=m.theta, sigma=m.sigma, rho=m.rho,
-        v0=m.v0, s0=m.s0, strike=m.strike, maturity=m.maturity,
+        kappa=m.kappa,
+        theta=m.theta,
+        sigma=m.sigma,
+        rho=m.rho,
+        v0=m.v0,
+        s0=m.s0,
+        strike=m.strike,
+        maturity=m.maturity,
     )
     return float(heston_call_prices(np.array([m.s0]), np.array([m.v0]), m.maturity, params)[0])
 
@@ -71,7 +78,11 @@ def run_one(
     optimizer = torch.optim.Adam(policy.parameters(), lr=lr)
     log.info(
         "E4 train exp=%s eps=%.8g lambda=%.4g batch=%d n_iter=%d",
-        cfg["exp"], eps, lam, batch, n_iter,
+        cfg["exp"],
+        eps,
+        lam,
+        batch,
+        n_iter,
     )
     running = 0.0
     window_count = 0
@@ -95,7 +106,11 @@ def run_one(
         if iteration % log_every == 0 or iteration == n_iter:
             log.info(
                 "  iter %d/%d lr=%.4g train_entropic=%.6f avg=%.6f",
-                iteration, n_iter, lr_now, float(objective.detach()), running / window_count
+                iteration,
+                n_iter,
+                lr_now,
+                float(objective.detach()),
+                running / window_count,
             )
             running = 0.0
             window_count = 0

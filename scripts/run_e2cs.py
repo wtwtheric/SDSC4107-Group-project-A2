@@ -1,4 +1,5 @@
 """Run the paired E2 call-spread experiment and write per-alpha result folders."""
+
 from __future__ import annotations
 
 import argparse
@@ -53,15 +54,25 @@ def main() -> int:
         save_pnl(folder / "pnl.npz", payload["terminal_loss"], **payload["extra_pnl"])
         torch.save(payload["policy"], folder / "policy.pt")
         write_metrics(
-            folder / "metrics.json", exp="e2cs", seed=args.seed, cfg=local_cfg,
-            metrics=result["metrics"], checks=result["checks"],
-            runtime_sec=time.perf_counter() - started, device=device, n_paths=result["n_paths"],
+            folder / "metrics.json",
+            exp="e2cs",
+            seed=args.seed,
+            cfg=local_cfg,
+            metrics=result["metrics"],
+            checks=result["checks"],
+            runtime_sec=time.perf_counter() - started,
+            device=device,
+            n_paths=result["n_paths"],
         )
         shutil.copy2(master_log, folder / "run.log")
     summary = {
-        "exp": "e2cs", "seed": args.seed, "device": str(device),
-        "n_paths": result["n_paths"], "metrics": result["metrics"],
-        "checks": result["checks"], "runtime_sec": time.perf_counter() - started,
+        "exp": "e2cs",
+        "seed": args.seed,
+        "device": str(device),
+        "n_paths": result["n_paths"],
+        "metrics": result["metrics"],
+        "checks": result["checks"],
+        "runtime_sec": time.perf_counter() - started,
     }
     summary_path = root / "e2cs" / f"seed_{args.seed}_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")

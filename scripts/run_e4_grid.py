@@ -1,4 +1,5 @@
 """Run an E4 epsilon grid; each epsilon/seed gets its own result directory."""
+
 from __future__ import annotations
 
 import argparse
@@ -57,13 +58,24 @@ def main() -> int:
         for name, state in result.get("artifacts", {}).items():
             torch.save(state, folder / name)
         record = write_metrics(
-            metrics_path, exp=exp, seed=args.seed, cfg=cfg,
-            metrics=result["metrics"], checks=result["checks"],
-            runtime_sec=time.perf_counter() - started, device=device, n_paths=result["n_paths"],
+            metrics_path,
+            exp=exp,
+            seed=args.seed,
+            cfg=cfg,
+            metrics=result["metrics"],
+            checks=result["checks"],
+            runtime_sec=time.perf_counter() - started,
+            device=device,
+            n_paths=result["n_paths"],
         )
         summaries.append(record)
-        log.info("%s eps=%g completed runtime=%s passed=%s", exp, eps,
-                 human_secs(time.perf_counter() - started), record["passed"])
+        log.info(
+            "%s eps=%g completed runtime=%s passed=%s",
+            exp,
+            eps,
+            human_secs(time.perf_counter() - started),
+            record["passed"],
+        )
     summary_path = Path(args.out) / exp / f"seed_{args.seed}_epsilon_summary.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(json.dumps(summaries, indent=2) + "\n", encoding="utf-8")

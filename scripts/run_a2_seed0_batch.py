@@ -3,6 +3,7 @@
 The script is intentionally sequential: one GPU is used by one experiment at a
 time. Completed experiment outputs are skipped with --resume.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -24,26 +25,75 @@ def main() -> int:
     py = sys.executable
     resume = ["--resume"]
 
+    figure_dir = str(Path(args.out) / "figures")
+
     jobs = {
         "e2cs": [
-            py, "-m", "scripts.run_e2cs", "--config", "configs/exp/e2cs.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e2cs",
+            "--config",
+            "configs/exp/e2cs.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "e3": [
-            py, "-m", "scripts.run_e3", "--config", "configs/exp/e3.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e3",
+            "--config",
+            "configs/exp/e3.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "e4bs": [
-            py, "-m", "scripts.run_e4_grid", "--config", "configs/exp/e4bs.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e4_grid",
+            "--config",
+            "configs/exp/e4bs.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "e4h": [
-            py, "-m", "scripts.run_e4_grid", "--config", "configs/exp/e4h.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e4_grid",
+            "--config",
+            "configs/exp/e4h.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "figures": [
-            py, "-m", "scripts.make_e2cs_figures", "--results",
-            str(Path(args.out) / "e2cs"), "--figures", "figures", "--seed", str(args.seed),
+            py,
+            "-m",
+            "scripts.make_e2cs_figures",
+            "--results",
+            str(Path(args.out) / "e2cs"),
+            "--figures",
+            figure_dir,
+            "--seed",
+            str(args.seed),
         ],
     }
     order = ["e2cs", "figures", "e3", "e4bs", "e4h"] if args.only == "all" else [args.only]
@@ -53,8 +103,15 @@ def main() -> int:
         subprocess.run(jobs[name], cwd=root, check=True)
     if args.only == "all":
         archive_cmd = [
-            py, "-m", "scripts.archive_a2_seed0", "--results", args.out,
-            "--figures", "figures", "--seed", str(args.seed),
+            py,
+            "-m",
+            "scripts.archive_a2_seed0",
+            "--results",
+            args.out,
+            "--figures",
+            figure_dir,
+            "--seed",
+            str(args.seed),
         ]
         print("\n>>>", " ".join(archive_cmd), flush=True)
         subprocess.run(archive_cmd, cwd=root, check=True)

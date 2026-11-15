@@ -1,4 +1,5 @@
 """E3: proportional transaction costs, recurrent versus simpler policy."""
+
 from __future__ import annotations
 
 import logging
@@ -48,7 +49,12 @@ def run(
     r_turnovers: list[np.ndarray] = []
     s_turnovers: list[np.ndarray] = []
     visual: dict[str, list[np.ndarray]] = {
-        "spot": [], "variance": [], "r_stock": [], "s_stock": [], "r_varswap": [], "s_varswap": []
+        "spot": [],
+        "variance": [],
+        "r_stock": [],
+        "s_stock": [],
+        "r_varswap": [],
+        "s_varswap": [],
     }
     remaining_visual = min(int(train_cfg.get("visual_paths", 200_000)), n_paths)
     recurrent.eval()
@@ -135,8 +141,10 @@ def run(
     }
     log.info(
         "E3 result recurrent=%.5f simpler=%.5f | costs recurrent=%.5f simpler=%.5f",
-        metrics["price_recurrent"], metrics["price_simpler"],
-        metrics["mean_cost_recurrent"], metrics["mean_cost_simpler"]
+        metrics["price_recurrent"],
+        metrics["price_simpler"],
+        metrics["mean_cost_recurrent"],
+        metrics["mean_cost_simpler"],
     )
     return {
         "metrics": metrics,
