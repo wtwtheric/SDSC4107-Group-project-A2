@@ -28,8 +28,9 @@ results/
 # 例外：经筛选的备份放在 backups/，大型二进制由 Git LFS 管理
 !backups/
 !backups/**
-!backups/**/*.npz
+backups/**/*.npz
 !backups/**/*.pt
+readme-autodl.md
 
 # 编辑器 / 系统
 .ipynb_checkpoints/
