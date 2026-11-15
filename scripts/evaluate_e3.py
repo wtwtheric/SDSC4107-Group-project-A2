@@ -13,10 +13,11 @@ import numpy as np
 import torch
 
 from src.common.config import digest_config, load_config
-from src.common.metrics import cvar, git_provenance, indifference_price
+from src.common.metrics import git_provenance
 from src.common.seed import resolve_device, seed_everything
 from src.replication.e1 import market_from_cfg, policy_from_cfg, q_price
 from src.replication.env_heston import HestonWorld
+from src.replication.e3_evaluation import build_e3_summary
 
 
 def _sha256(path: Path) -> str:
@@ -57,8 +58,8 @@ def _calibrate_policy(
     alpha: float,
     q: float,
     label: str,
-) -> tuple[float, np.ndarray]:
-    """Estimate the indifference price on fresh paths; return price and calibration losses."""
+) -> np.ndarray:
+    """Generate fresh calibration losses for a frozen policy."""
     seed_everything(seed)
     losses = np.empty(n_paths, dtype=np.float64)
     cursor = 0
@@ -72,8 +73,7 @@ def _calibrate_policy(
         cursor += size
         if cursor == n_paths or cursor % (batch_size * 4) == 0:
             print(f"{label} calibration {cursor:,}/{n_paths:,}", flush=True)
-    price = indifference_price(q, torch.from_numpy(losses), alpha)
-    return price, losses
+    return losses
 
 
 def _oos_metrics(loss: np.ndarray, price: float, alpha: float) -> dict[str, float]:
@@ -144,22 +144,20 @@ def evaluate(
     simpler = _load_policy(simpler_path, cfg, market, device, recurrent=False)
     q = q_price(world)
 
-    price_r, calibration_r = _calibrate_policy(
+    calibration_r = _calibrate_policy(
         world, recurrent, n_paths=calibration_paths, batch_size=batch_size,
         seed=calibration_seed, alpha=alpha, q=q, label="recurrent",
     )
-    price_s, calibration_s = _calibrate_policy(
+    calibration_s = _calibrate_policy(
         world, simpler, n_paths=calibration_paths, batch_size=batch_size,
         seed=calibration_seed, alpha=alpha, q=q, label="simpler",
     )
-    # Both policies deliberately share exactly the same fresh calibration paths.
-    # Reset the RNG once and evaluate both policies path-by-path in the same helper seed.
-    # The helper reseeds before each model, so deterministic simulation yields paired paths.
-
-    summary = {
-        "recurrent": _oos_metrics(oos_recurrent, price_r, alpha),
-        "simpler": _oos_metrics(oos_simpler, price_s, alpha),
-    }
+    # The helper reseeds before each model, so both use identical fresh calibration paths.
+    summary = build_e3_summary(
+        calibration_r, calibration_s, oos_recurrent, oos_simpler, q=q, alpha=alpha
+    )
+    price_r = summary["recurrent"]["price"]
+    price_s = summary["simpler"]["price"]
     summary["comparison"] = {
         "price_difference_simpler_minus_recurrent": float(price_s - price_r),
         "price_difference_pct_of_simpler": float((price_s - price_r) / price_s * 100.0),
