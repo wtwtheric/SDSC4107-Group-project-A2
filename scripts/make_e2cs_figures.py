@@ -4,6 +4,7 @@ Figure 8 is the model hedge vs alpha=.95 simpler NN hedge.
 Figure 9 is the model hedge vs alpha=.99 simpler NN hedge.
 The NN surfaces are evaluated directly on (S,V), not interpolated from paths.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,11 +24,15 @@ def _three_surfaces(data: dict[str, np.ndarray], alpha: str):
         raise ValueError(f"Unexpected surface shapes: model={model.shape}, policy={policy.shape}")
     if not (np.isfinite(model).all() and np.isfinite(policy).all()):
         raise ValueError("Non-finite values in E2CS stock hedge surface")
-    return s, v, [
-        ("Model hedge", model),
-        (f"Neural-network hedge (CVaR {alpha}%)", policy),
-        ("Difference: NN − model", policy - model),
-    ]
+    return (
+        s,
+        v,
+        [
+            ("Model hedge", model),
+            (f"Neural-network hedge (CVaR {alpha}%)", policy),
+            ("Difference: NN − model", policy - model),
+        ],
+    )
 
 
 def _symmetric_norm(values: list[np.ndarray]) -> TwoSlopeNorm:
@@ -45,8 +50,15 @@ def _plot_3d(out: Path, alpha: str, s: np.ndarray, v: np.ndarray, surfaces) -> N
         ax = fig.add_subplot(1, 3, idx, projection="3d")
         norm = difference_norm if idx == 3 else comparable_norm
         ax.plot_surface(
-            ss, vv, z, cmap="coolwarm", norm=norm,
-            linewidth=0, antialiased=True, rstride=1, cstride=1,
+            ss,
+            vv,
+            z,
+            cmap="coolwarm",
+            norm=norm,
+            linewidth=0,
+            antialiased=True,
+            rstride=1,
+            cstride=1,
         )
         ax.set_title(label, fontsize=11)
         ax.set_xlabel("Spot price S")
@@ -98,17 +110,24 @@ def main() -> int:
         s, v, surfaces = _three_surfaces(data, str(int(float(alpha) * 100)))
         _plot_3d(
             figure_root / f"fig{number}_e2cs_stock_position.png",
-            str(int(float(alpha) * 100)), s, v, surfaces,
+            str(int(float(alpha) * 100)),
+            s,
+            v,
+            surfaces,
         )
         _plot_heatmaps(
             figure_root / f"fig{number}_e2cs_stock_position_heatmap.png",
-            str(int(float(alpha) * 100)), s, v, surfaces,
+            str(int(float(alpha) * 100)),
+            s,
+            v,
+            surfaces,
         )
 
     # Keep a separate path-support diagnostic; it does not define/interpolate the NN surface.
     with np.load(result_root / "0.95" / str(args.seed) / "pnl.npz") as data95:
         counts, _, _ = np.histogram2d(
-            data95["visual_spot"], data95["visual_variance"],
+            data95["visual_spot"],
+            data95["visual_variance"],
             bins=[data95["model_spot_grid"], data95["model_variance_grid"]],
         )
         s = data95["model_spot_grid"]

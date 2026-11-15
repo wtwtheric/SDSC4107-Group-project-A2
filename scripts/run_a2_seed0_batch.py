@@ -3,6 +3,7 @@
 Use --only to run one experiment family independently. E4 means both E4-BS
 and E4-Heston. The default 'all' mode retains the sequential one-GPU workflow.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,25 +31,71 @@ def main() -> int:
 
     jobs = {
         "e2cs": [
-            py, "-m", "scripts.run_e2cs", "--config", "configs/exp/e2cs.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e2cs",
+            "--config",
+            "configs/exp/e2cs.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "e3": [
-            py, "-m", "scripts.run_e3", "--config", "configs/exp/e3.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e3",
+            "--config",
+            "configs/exp/e3.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "e4bs": [
-            py, "-m", "scripts.run_e4_grid", "--config", "configs/exp/e4bs.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e4_grid",
+            "--config",
+            "configs/exp/e4bs.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "e4h": [
-            py, "-m", "scripts.run_e4_grid", "--config", "configs/exp/e4h.yaml",
-            "--seed", str(args.seed), "--out", args.out, "--device", args.device, *resume,
+            py,
+            "-m",
+            "scripts.run_e4_grid",
+            "--config",
+            "configs/exp/e4h.yaml",
+            "--seed",
+            str(args.seed),
+            "--out",
+            args.out,
+            "--device",
+            args.device,
+            *resume,
         ],
         "figures": [
-            py, "-m", "scripts.make_e2cs_figures",
-            "--results", str(Path(args.out) / "e2cs"),
-            "--figures", figure_dir, "--seed", str(args.seed),
+            py,
+            "-m",
+            "scripts.make_e2cs_figures",
+            "--results",
+            str(Path(args.out) / "e2cs"),
+            "--figures",
+            figure_dir,
+            "--seed",
+            str(args.seed),
         ],
     }
 
@@ -71,8 +118,15 @@ def main() -> int:
 
     if args.only == "all":
         archive_cmd = [
-            py, "-m", "scripts.archive_a2_seed0",
-            "--results", args.out, "--figures", figure_dir, "--seed", str(args.seed),
+            py,
+            "-m",
+            "scripts.archive_a2_seed0",
+            "--results",
+            args.out,
+            "--figures",
+            figure_dir,
+            "--seed",
+            str(args.seed),
         ]
         print("\n>>> " + " ".join(archive_cmd), flush=True)
         subprocess.run(archive_cmd, cwd=root, check=True)
