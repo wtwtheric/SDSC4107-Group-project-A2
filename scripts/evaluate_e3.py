@@ -16,8 +16,8 @@ from src.common.config import load_config
 from src.common.metrics import git_provenance
 from src.common.seed import resolve_device, seed_everything
 from src.replication.e1 import market_from_cfg, policy_from_cfg, q_price
-from src.replication.env_heston import HestonWorld
 from src.replication.e3_evaluation import build_e3_summary
+from src.replication.env_heston import HestonWorld
 
 
 def _sha256(path: Path) -> str:
