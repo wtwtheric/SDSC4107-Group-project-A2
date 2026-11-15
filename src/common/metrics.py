@@ -18,7 +18,12 @@ from src.common.types import Tensor
 
 
 def cvar(x: Tensor, alpha: float) -> Tensor:
-    """平均 VaR / CVaR：最差 (1-alpha) 比例的均值；alpha 是置信水平（0.5 / 0.95 / 0.99）。"""
+    """平均 VaR / CVaR：最差 (1-alpha) 比例的经验尾部均值。
+
+    当 (1-alpha)*n 不是整数时，对边界样本做分数加权，使经验分布上的
+    CVaR 与 quantile-integral 定义一致。例如 n=1024, alpha=0.99 时，
+    使用最差 10 个完整样本加第 11 个样本的 0.24 权重，而不是向上取整为 11 个。
+    """
     if not 0.0 < alpha < 1.0:
         raise ValueError(f"alpha must be in (0, 1), got {alpha}")
     if not isinstance(x, torch.Tensor):  # 便利：也接受 ndarray / list
@@ -27,8 +32,25 @@ def cvar(x: Tensor, alpha: float) -> Tensor:
     n = flat.numel()
     if n == 0:
         raise ValueError("cvar() got an empty tensor")
-    k = max(1, math.ceil((1.0 - alpha) * n - 1e-12))
-    return torch.topk(flat, k, largest=True).values.mean()
+
+    tail_mass = (1.0 - alpha) * n
+    full_count = int(math.floor(tail_mass))
+    fraction = tail_mass - full_count
+
+    # 浮点数在本应为整数的 tail mass 附近可能产生 1e-15 级误差。
+    tol = 1e-12 * max(1.0, tail_mass)
+    if fraction <= tol:
+        fraction = 0.0
+    elif 1.0 - fraction <= tol:
+        full_count += 1
+        fraction = 0.0
+
+    if fraction == 0.0:
+        return torch.topk(flat, full_count, largest=True).values.mean()
+
+    values = torch.topk(flat, full_count + 1, largest=True).values
+    weighted_sum = values[:full_count].sum() + fraction * values[full_count]
+    return weighted_sum / tail_mass
 
 
 def capital_requirement(loss: Tensor) -> dict[str, float]:
