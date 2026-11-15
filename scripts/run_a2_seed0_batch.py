@@ -66,7 +66,7 @@ def main() -> int:
         flush=True,
     )
     for name in order:
-        print("\\n>>> " + " ".join(jobs[name]), flush=True)
+        print("\n>>> " + " ".join(jobs[name]), flush=True)
         subprocess.run(jobs[name], cwd=root, check=True)
 
     if args.only == "all":
@@ -74,7 +74,7 @@ def main() -> int:
             py, "-m", "scripts.archive_a2_seed0",
             "--results", args.out, "--figures", figure_dir, "--seed", str(args.seed),
         ]
-        print("\\n>>> " + " ".join(archive_cmd), flush=True)
+        print("\n>>> " + " ".join(archive_cmd), flush=True)
         subprocess.run(archive_cmd, cwd=root, check=True)
 
     print(f"Selected A2 task '{args.only}' completed.", flush=True)
