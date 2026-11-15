@@ -35,9 +35,7 @@ def _load_policy(
     *,
     recurrent: bool,
 ) -> torch.nn.Module:
-    policy = policy_from_cfg(
-        cfg, market.n_features, market.d, device, recurrent=recurrent
-    )
+    policy = policy_from_cfg(cfg, market.n_features, market.d, device, recurrent=recurrent)
     state = torch.load(checkpoint, map_location=device, weights_only=True)
     policy.load_state_dict(state)
     policy.eval()
@@ -135,8 +133,12 @@ def evaluate(
     q = q_price(world)
 
     calibration_r, calibration_s = _calibrate_policies(
-        world, recurrent, simpler,
-        n_paths=calibration_paths, batch_size=batch_size, seed=calibration_seed,
+        world,
+        recurrent,
+        simpler,
+        n_paths=calibration_paths,
+        batch_size=batch_size,
+        seed=calibration_seed,
     )
     # Both frozen policies are evaluated on each same simulated batch.
     summary = build_e3_summary(
@@ -148,9 +150,12 @@ def evaluate(
         "price_difference_simpler_minus_recurrent": float(price_s - price_r),
         "price_difference_pct_of_simpler": float((price_s - price_r) / price_s * 100.0),
         "mean_abs_error_reduction_pct": float(
-            (summary["simpler"]["mean_abs_hedging_error"]
-             - summary["recurrent"]["mean_abs_hedging_error"])
-            / summary["simpler"]["mean_abs_hedging_error"] * 100.0
+            (
+                summary["simpler"]["mean_abs_hedging_error"]
+                - summary["recurrent"]["mean_abs_hedging_error"]
+            )
+            / summary["simpler"]["mean_abs_hedging_error"]
+            * 100.0
         ),
         "realized_cvar_recurrent_minus_simpler": float(
             summary["recurrent"]["realized_cvar"] - summary["simpler"]["realized_cvar"]
@@ -209,18 +214,18 @@ def evaluate(
         "metrics": summary,
         "checks": {
             "finite_prices": bool(np.isfinite([price_r, price_s]).all()),
-            "independent_calibration_and_oos_seed": bool(
-                calibration_seed != source_eval_seed
-            ),
+            "independent_calibration_and_oos_seed": bool(calibration_seed != source_eval_seed),
             "common_oos_path_count": len(oos_recurrent) == len(oos_simpler),
             "common_calibration_paths": len(calibration_r) == len(calibration_s),
             "finite_oos_metrics": bool(
-                np.isfinite([
-                    summary["recurrent"]["mean_abs_hedging_error"],
-                    summary["recurrent"]["realized_cvar"],
-                    summary["simpler"]["mean_abs_hedging_error"],
-                    summary["simpler"]["realized_cvar"],
-                ]).all()
+                np.isfinite(
+                    [
+                        summary["recurrent"]["mean_abs_hedging_error"],
+                        summary["recurrent"]["realized_cvar"],
+                        summary["simpler"]["mean_abs_hedging_error"],
+                        summary["simpler"]["realized_cvar"],
+                    ]
+                ).all()
             ),
         },
     }
