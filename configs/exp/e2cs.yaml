@@ -11,11 +11,12 @@ payoff:
   type: normalized_call_spread
   strike1: 100.0
   strike2: 101.0
+# Paper Figures 8-9 use the simpler per-date feed-forward hedge F_k(S_k,V_k).
 policy:
-  name: recurrent
+  name: simpler
   hidden: 17
-  recurrent: true
-  norm: layer
+  recurrent: false
+  norm: batch
   out_scale: [1.0, 100.0]
 market:
   model: heston
