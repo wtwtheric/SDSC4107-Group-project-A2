@@ -52,7 +52,7 @@ The calibration and OOS samples are independent by seed and shared between recur
 
 ## Current replication status
 
-The existing seed-0 result has recurrent price 4.1707 and simpler price 4.2261, below the plan's target bands [5.2, 5.8] and [6.4, 7.1]. The recurrent policy has lower OOS mean loss and OOS CVaR in this run, but the price gap is small. The result is therefore a valid evaluation run, not yet a quantitative reproduction of the paper's Figure 5 target values.
+The existing seed-0 result has recurrent price 4.1707 and simpler price 4.2261, below the plan's target bands [5.2, 5.8] and [6.4, 7.1]. The uncentered OOS raw mean losses are 2.8704 and 2.9323, respectively. Under the signed terminal-loss convention above, the Figure 5 Mean Loss values are -1.3002 and -1.2938. The realized CVaR shortfalls are -0.0040 and -0.0027. The recurrent policy has a slightly lower price and raw mean loss, while the simpler policy has a slightly lower (more negative) realized CVaR shortfall. The price gap remains small. The result is therefore a valid evaluation run, not yet a quantitative reproduction of the paper's Figure 5 target values.
 
 ## Replication assessment framework
 
