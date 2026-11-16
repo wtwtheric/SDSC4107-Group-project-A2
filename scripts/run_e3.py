@@ -142,23 +142,24 @@ def make_figure(
 
     table_ax = fig.add_subplot(grid[1])
     table_ax.axis("off")
-    columns = [
-        "Model",
-        "Mean OOS loss",
-        "Indifference price",
-        f"Realized CVaR{alpha:.2f} shortfall",
+    columns = ["Metric", "Recurrent", "Simpler"]
+    rows = [
+        [
+            "Mean loss",
+            f'{metrics["recurrent"]["oos_mean_loss"]:.4f}',
+            f'{metrics["simpler"]["oos_mean_loss"]:.4f}',
+        ],
+        [
+            "Indifference price",
+            f'{metrics["recurrent"]["indifference_price"]:.4f}',
+            f'{metrics["simpler"]["indifference_price"]:.4f}',
+        ],
+        [
+            f"Realized CVaR{alpha:.2f}",
+            f'{metrics["recurrent"]["oos_realized_cvar_shortfall"]:.4f}',
+            f'{metrics["simpler"]["oos_realized_cvar_shortfall"]:.4f}',
+        ],
     ]
-    rows = []
-    for key, label in [("recurrent", "Recurrent"), ("simpler", "Simpler")]:
-        item = metrics[key]
-        rows.append(
-            [
-                label,
-                f'{item["oos_mean_loss"]:.4f}',
-                f'{item["indifference_price"]:.4f}',
-                f'{item["oos_realized_cvar_shortfall"]:.4f}',
-            ]
-        )
     table = table_ax.table(
         cellText=rows,
         colLabels=columns,
