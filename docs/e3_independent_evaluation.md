@@ -26,6 +26,16 @@ python -m scripts.run_e3 \
 
 The run directory must contain `config.yaml`, `pnl.npz`, `policy_recurrent.pt`, `policy_simpler.pt`, and `metrics.json`. The original OOS loss arrays are reused; their seed is read from the saved config (`train.eval_seed`, 314159 in the current run). New calibration paths use a distinct seed (271828 by default). Both policies receive identical paths within each sample.
 
+## Recover a completed evaluation without rerunning Monte Carlo
+
+If the independent evaluation already wrote `evaluation.json` and the Figure 5 PNG, but updating `metrics.json` subsequently failed, use:
+
+```bash
+python -m scripts.run_e3 --finalize-only --run-dir results/e3/0
+```
+
+This reads the existing `evaluation.json`, preserves the original training provenance and existing metrics, and updates only `metrics.json`. It does not simulate calibration/validation paths, load model checkpoints, modify the figure, or retrain. Use it only after checking that `evaluation.json` belongs to the same seed-0 run and includes the `fixed_validation` object.
+
 ## Outputs
 
 The run directory contains:
