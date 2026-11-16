@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import sys
 
 import numpy as np
 from scripts.run_e3 import (
     apply_evaluation_to_metrics,
+    main,
     summarize,
     update_metrics_file,
 )
@@ -144,3 +146,35 @@ def test_e3_status_distinguishes_execution_from_paper_targets(tmp_path) -> None:
         "recurrent_mean_positive_loss_proxy_lower_than_simpler"
     ] is False
     assert all(saved["checks"].values())
+
+
+def test_e3_plot_only_reuses_saved_losses_without_training(tmp_path, monkeypatch) -> None:
+    """The proxy table can be regenerated from existing saved samples alone."""
+    np.savez_compressed(
+        tmp_path / "pnl.npz",
+        terminal_loss=np.array([1.0, 3.0, 5.0, 8.0]),
+        terminal_loss_simpler=np.array([1.0, 3.2, 5.4, 8.1]),
+    )
+    (tmp_path / "evaluation.json").write_text(
+        json.dumps({
+            "alpha": 0.99,
+            "metrics": {
+                "recurrent": {
+                    "indifference_price": 5.0,
+                    "oos_mean_excess_loss_diagnostic": 0.75,
+                    "oos_realized_cvar_shortfall": 3.0,
+                },
+                "simpler": {
+                    "indifference_price": 5.3,
+                    "oos_mean_excess_loss_diagnostic": 0.7,
+                    "oos_realized_cvar_shortfall": 2.8,
+                },
+            },
+        }), encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["run_e3", "--plot-only", "--run-dir", str(tmp_path), "--bins", "8"]
+    )
+    assert main() == 0
+    assert (tmp_path / "fig_05_e3.png").stat().st_size > 0
+    assert not (tmp_path / "metrics.json").exists()
