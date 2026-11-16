@@ -35,3 +35,7 @@ train:
   eval_seed: 314159
   visual_paths: 200000
   visual_step: 15
+  # Optional diagnostics for future training runs; existing seed-0 checkpoints are unchanged.
+  validation_paths: 10000
+  validation_batch_size: 4096
+  validation_seed: 8675309
