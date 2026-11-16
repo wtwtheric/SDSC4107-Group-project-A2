@@ -140,17 +140,17 @@ def make_figure(
 
     table_ax = fig.add_subplot(grid[1])
     table_ax.axis("off")
-    columns = ["Model", "Mean Loss", "Price", "Realized CVaR"]
+    columns = ["Model", "Mean Loss*", "Price", "Realized CVaR"]
     rows = [
         [
             "Recurrent",
-            f"{metrics['recurrent']['oos_signed_terminal_hedging_loss']:.4f}",
+            f"{metrics['recurrent']['oos_mean_excess_loss_diagnostic']:.4f}",
             f"{metrics['recurrent']['indifference_price']:.4f}",
             f"{metrics['recurrent']['oos_realized_cvar_shortfall']:.4f}",
         ],
         [
             "Simpler",
-            f"{metrics['simpler']['oos_signed_terminal_hedging_loss']:.4f}",
+            f"{metrics['simpler']['oos_mean_excess_loss_diagnostic']:.4f}",
             f"{metrics['simpler']['indifference_price']:.4f}",
             f"{metrics['simpler']['oos_realized_cvar_shortfall']:.4f}",
         ],
@@ -168,7 +168,7 @@ def make_figure(
     table_ax.text(
         0.5,
         0.04,
-        "Mean Loss = E[L_T]; see documentation for the operational interpretation.",
+        "* Mean Loss proxy: E[max(L_raw - p0, 0)]; not confirmed as the paper's Mean Loss.",
         ha="center",
         va="bottom",
         fontsize=7,
@@ -357,6 +357,12 @@ def run_independent_evaluation(
             "realized_cvar_shortfall": (
                 "CVaR_alpha(OOS terminal_loss - calibration indifference_price)"
             ),
+            "oos_mean_raw_loss": "E[L_raw] on the OOS sample",
+            "oos_signed_terminal_hedging_loss": "E[L_raw - p0] on the OOS sample",
+            "figure5_mean_loss_proxy": (
+                "E[max(L_raw - p0, 0)] on the OOS sample; a reconstructed "
+                "positive-part proxy, NOT a verified definition from the paper"
+            ),
         },
     }
     (run_dir / "evaluation.json").write_text(
@@ -366,10 +372,12 @@ def run_independent_evaluation(
     log.info("E3 independent evaluation complete")
     for name, values in metrics.items():
         log.info(
-            "%s price=%.6f mean_raw_loss=%.6f mean_excess_candidate=%.6f realized_cvar_shortfall=%.6f",
+            "%s price=%.6f mean_raw_loss=%.6f mean_positive_loss_proxy=%.6f "
+            "mean_signed_terminal_loss=%.6f realized_cvar_shortfall=%.6f",
             name,
             values["indifference_price"],
             values["oos_mean_raw_loss"],
+            values["oos_mean_excess_loss_diagnostic"],
             values["oos_signed_terminal_hedging_loss"],
             values["oos_realized_cvar_shortfall"],
         )
@@ -400,14 +408,16 @@ def apply_evaluation_to_metrics(
             "price_simpler": simpler["indifference_price"],
             "cvar_recurrent": recurrent["oos_realized_cvar_loss"],
             "cvar_simpler": simpler["oos_realized_cvar_loss"],
-            "mean_loss_recurrent": recurrent["oos_signed_terminal_hedging_loss"],
-            "mean_loss_simpler": simpler["oos_signed_terminal_hedging_loss"],
+            "mean_loss_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
+            "mean_loss_simpler": simpler["oos_mean_excess_loss_diagnostic"],
             "raw_mean_loss_recurrent": recurrent["oos_mean_raw_loss"],
             "raw_mean_loss_simpler": simpler["oos_mean_raw_loss"],
             "mean_excess_loss_diagnostic_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
             "mean_excess_loss_diagnostic_simpler": simpler["oos_mean_excess_loss_diagnostic"],
-            "figure5_mean_loss_recurrent": recurrent["oos_signed_terminal_hedging_loss"],
-            "figure5_mean_loss_simpler": simpler["oos_signed_terminal_hedging_loss"],
+            "figure5_mean_loss_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
+            "figure5_mean_loss_simpler": simpler["oos_mean_excess_loss_diagnostic"],
+            "figure5_mean_loss_proxy_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
+            "figure5_mean_loss_proxy_simpler": simpler["oos_mean_excess_loss_diagnostic"],
             "signed_terminal_hedging_loss_recurrent": recurrent["oos_signed_terminal_hedging_loss"],
             "signed_terminal_hedging_loss_simpler": simpler["oos_signed_terminal_hedging_loss"],
             "cvar_shortfall_recurrent": recurrent["oos_realized_cvar_shortfall"],
