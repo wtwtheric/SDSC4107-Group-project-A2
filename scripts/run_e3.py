@@ -619,7 +619,7 @@ def main() -> int:
     result["metrics"], result["checks"] = apply_evaluation_to_metrics(
         result["metrics"], result["checks"], evaluation["report"]
     )
-    record = write_metrics(
+    write_metrics(
         folder / "metrics.json",
         exp="e3",
         seed=args.seed,
