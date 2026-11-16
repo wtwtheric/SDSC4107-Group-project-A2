@@ -1,0 +1,132 @@
+{
+  "implementation_compared": "local mirror of src.common.metrics.cvar",
+  "seed": 20261115,
+  "alpha": 0.99,
+  "batch_size": 1024,
+  "tail_mass": 10.240000000000009,
+  "tail_count_current_ceil": 11,
+  "tail_count_fractional_full_weight": 10,
+  "fractional_boundary_weight": 0.2400000000000091,
+  "ordered_sample": {
+    "current_ceil_cvar": 1019.0,
+    "fractional_cvar": 1019.37109375,
+    "absolute_difference": 0.37109375,
+    "relative_difference_pct": 0.036404186098199336
+  },
+  "gradient_weights": {
+    "current_ceil_each_of_top_11": 0.09090909090909091,
+    "fractional_each_of_top_10": 0.09765624999999992,
+    "fractional_11th_observation": 0.023437500000000867,
+    "current_ceil_11th_observation": 0.09090909090909091
+  },
+  "integer_tail_checks": {
+    "n=1024,alpha=0.5": {
+      "tail_mass": 512.0,
+      "is_integer": true
+    },
+    "n=100000,alpha=0.99": {
+      "tail_mass": 1000.0000000000009,
+      "is_integer": true
+    },
+    "n=1000000,alpha=0.99": {
+      "tail_mass": 10000.00000000001,
+      "is_integer": true
+    },
+    "n=100000,alpha=0.95": {
+      "tail_mass": 5000.000000000005,
+      "is_integer": true
+    }
+  },
+  "noninteger_training_tail_masses": {
+    "n=1024,alpha=0.99": 10.240000000000009,
+    "n=1024,alpha=0.95": 51.200000000000045
+  },
+  "synthetic_normal_batches": {
+    "ceil": {
+      "mean": 2.6269372470271737,
+      "median": 2.622443197876381,
+      "std": 0.1396101574316868,
+      "p05": 2.4054197504023445,
+      "p95": 2.8639343833253794,
+      "min": 2.1747591619697135,
+      "max": 3.1976893304683855
+    },
+    "fractional": {
+      "mean": 2.6499885904792975,
+      "median": 2.6453276002505453,
+      "std": 0.14362075477317676,
+      "p05": 2.420674399543752,
+      "p95": 2.893650840959975,
+      "min": 2.1827172738890837,
+      "max": 3.218833188435988
+    },
+    "fractional_minus_ceil": {
+      "mean": 0.023051343452123767,
+      "median": 0.022444993470952745,
+      "std": 0.006798817897174496,
+      "p05": 0.013025527157109473,
+      "p95": 0.0353011959695549,
+      "min": 0.004933253988932851,
+      "max": 0.06084205364985795
+    },
+    "relative_difference_pct": {
+      "mean": 0.8640373415282862,
+      "median": 0.8476087855097904,
+      "std": 0.2288467766038375,
+      "p05": 0.5137708184446232,
+      "p95": 1.2629852782859277,
+      "min": 0.20813968062534885,
+      "max": 2.0368747217989482
+    },
+    "mean_gap_as_fraction_of_ceil_batch_std": 0.16511222303723216
+  },
+  "synthetic_right_skewed_batches": {
+    "ceil": {
+      "mean": 1.966300808070426,
+      "median": 1.9548949932072388,
+      "std": 0.14697870511107528,
+      "p05": 1.7530510523372644,
+      "p95": 2.2248611562769325,
+      "min": 1.612424784606677,
+      "max": 2.8074647364363554
+    },
+    "fractional": {
+      "mean": 1.9878797153968562,
+      "median": 1.9744910056711473,
+      "std": 0.15351666550542128,
+      "p05": 1.7668509379082071,
+      "p95": 2.2591574124104,
+      "min": 1.6225657890730674,
+      "max": 2.865871297926331
+    },
+    "fractional_minus_ceil": {
+      "mean": 0.021578907326429458,
+      "median": 0.02035411678183574,
+      "std": 0.008191245526176134,
+      "p05": 0.010824251705591259,
+      "p95": 0.03702664813455825,
+      "min": 0.005298116788903684,
+      "max": 0.0741788071077143
+    },
+    "relative_difference_pct": {
+      "mean": 1.067437656683588,
+      "median": 1.0377072134576921,
+      "std": 0.331264152250871,
+      "p05": 0.5882999359490766,
+      "p95": 1.6775987568829696,
+      "min": 0.2957074602705893,
+      "max": 2.760431270126642
+    },
+    "mean_gap_as_fraction_of_ceil_batch_std": 0.14681655624957213
+  },
+  "single_right_skewed_batch": {
+    "current_ceil_cvar": 1.7204048497162807,
+    "fractional_cvar": 1.7358072983103734,
+    "absolute_difference": 0.015402448594092677
+  },
+  "limitations": [
+    "Synthetic losses are illustrative and are not actual E2 training minibatches.",
+    "No actual E2 training minibatch-loss archive was present in the repository snapshot.",
+    "This diagnostic does not modify metrics.cvar or retrain any policy."
+  ]
+}

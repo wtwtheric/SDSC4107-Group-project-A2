@@ -1,0 +1,147 @@
+[
+  {
+    "schema_version": "1.0",
+    "exp": "e4h",
+    "seed": 0,
+    "git_commit": "feb6c7b",
+    "dirty": false,
+    "created_at": "2026-11-16T03:27:23+08:00",
+    "runtime_sec": 1792.773,
+    "device": "cuda",
+    "torch_version": "2.8.0+cu128",
+    "n_paths": 100000,
+    "config_sha256": "62265b782072951e6ee7be4b5fdc16de0b69e00111d92ee0a2e4ef5c8913152f",
+    "metrics": {
+      "eps": 0.015625,
+      "lambda": 1.0,
+      "price_eps": 3.0993718012849545,
+      "price0": 1.6918339251106715,
+      "price_increment": 1.407537876174283,
+      "mean_loss": 2.657353122005482,
+      "std_loss": 0.8800397250466657,
+      "eval_seed": 271828.0
+    },
+    "checks": {
+      "finite_price": true,
+      "positive_price_increment": true,
+      "evaluation_path_count": true
+    },
+    "passed": true
+  },
+  {
+    "schema_version": "1.0",
+    "exp": "e4h",
+    "seed": 0,
+    "git_commit": "feb6c7b",
+    "dirty": false,
+    "created_at": "2026-11-16T03:57:18+08:00",
+    "runtime_sec": 1794.722,
+    "device": "cuda",
+    "torch_version": "2.8.0+cu128",
+    "n_paths": 100000,
+    "config_sha256": "ed2b81755b877e2f8f7c1a31f39d0a35ce21c9158e46bb57c49d311cac4cb386",
+    "metrics": {
+      "eps": 0.0078125,
+      "lambda": 1.0,
+      "price_eps": 2.548164088120396,
+      "price0": 1.6918339251106715,
+      "price_increment": 0.8563301630097246,
+      "mean_loss": 2.2718062344586336,
+      "std_loss": 0.7253882875489445,
+      "eval_seed": 271828.0
+    },
+    "checks": {
+      "finite_price": true,
+      "positive_price_increment": true,
+      "evaluation_path_count": true
+    },
+    "passed": true
+  },
+  {
+    "schema_version": "1.0",
+    "exp": "e4h",
+    "seed": 0,
+    "git_commit": "feb6c7b",
+    "dirty": false,
+    "created_at": "2026-11-16T04:27:32+08:00",
+    "runtime_sec": 1813.838,
+    "device": "cuda",
+    "torch_version": "2.8.0+cu128",
+    "n_paths": 100000,
+    "config_sha256": "3abb191893269d6c17451e998ca46fb52b32611b130b8b5aff56105f9bf78a6b",
+    "metrics": {
+      "eps": 0.00390625,
+      "lambda": 1.0,
+      "price_eps": 2.225660351838007,
+      "price0": 1.6918339251106715,
+      "price_increment": 0.5338264267273356,
+      "mean_loss": 2.038753982548822,
+      "std_loss": 0.610272516077715,
+      "eval_seed": 271828.0
+    },
+    "checks": {
+      "finite_price": true,
+      "positive_price_increment": true,
+      "evaluation_path_count": true
+    },
+    "passed": true
+  },
+  {
+    "schema_version": "1.0",
+    "exp": "e4h",
+    "seed": 0,
+    "git_commit": "feb6c7b",
+    "dirty": false,
+    "created_at": "2026-11-16T04:57:33+08:00",
+    "runtime_sec": 1801.389,
+    "device": "cuda",
+    "torch_version": "2.8.0+cu128",
+    "n_paths": 100000,
+    "config_sha256": "40540550e5cb5027d8f0d37ba9b1548ef58196a8058d6b64c40b203922e3c4ce",
+    "metrics": {
+      "eps": 0.001953125,
+      "lambda": 1.0,
+      "price_eps": 2.034952241765298,
+      "price0": 1.6918339251106715,
+      "price_increment": 0.34311831665462655,
+      "mean_loss": 1.8971600723522284,
+      "std_loss": 0.5349077935684687,
+      "eval_seed": 271828.0
+    },
+    "checks": {
+      "finite_price": true,
+      "positive_price_increment": true,
+      "evaluation_path_count": true
+    },
+    "passed": true
+  },
+  {
+    "schema_version": "1.0",
+    "exp": "e4h",
+    "seed": 0,
+    "git_commit": "feb6c7b",
+    "dirty": false,
+    "created_at": "2026-11-16T05:27:44+08:00",
+    "runtime_sec": 1810.927,
+    "device": "cuda",
+    "torch_version": "2.8.0+cu128",
+    "n_paths": 100000,
+    "config_sha256": "75680d7449a048e95dc652cecbe0ed9a9746743c348ffcdc0519dd0eac82f55f",
+    "metrics": {
+      "eps": 0.0009765625,
+      "lambda": 1.0,
+      "price_eps": 1.9228542232282155,
+      "price0": 1.6918339251106715,
+      "price_increment": 0.231020298117544,
+      "mean_loss": 1.8122229877543317,
+      "std_loss": 0.4833008051154903,
+      "eval_seed": 271828.0
+    },
+    "checks": {
+      "finite_price": true,
+      "positive_price_increment": true,
+      "evaluation_path_count": true
+    },
+    "passed": true
+  }
+]

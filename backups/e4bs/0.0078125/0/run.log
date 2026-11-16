@@ -1,0 +1,18 @@
+01:18:19 INFO    e4bs seed=0 eps=0.0078125 device=cuda
+01:18:19 INFO    E4 train exp=e4bs eps=0.0078125 lambda=1 batch=1024 n_iter=30000
+01:20:25 INFO      iter 2500/30000 lr=0.004923 train_entropic=3.460124 avg=3.630897
+01:22:31 INFO      iter 5000/30000 lr=0.004699 train_entropic=3.421312 avg=3.410241
+01:24:37 INFO      iter 7500/30000 lr=0.004341 train_entropic=3.378482 avg=3.401919
+01:26:41 INFO      iter 10000/30000 lr=0.003875 train_entropic=3.399364 avg=3.392919
+01:28:46 INFO      iter 12500/30000 lr=0.003332 train_entropic=3.303388 avg=3.382335
+01:30:52 INFO      iter 15000/30000 lr=0.00275 train_entropic=3.377073 avg=3.375698
+01:32:49 INFO      iter 17500/30000 lr=0.002168 train_entropic=3.390019 avg=3.367032
+01:34:47 INFO      iter 20000/30000 lr=0.001625 train_entropic=3.384011 avg=3.359563
+01:36:51 INFO      iter 22500/30000 lr=0.001159 train_entropic=3.305505 avg=3.352665
+01:38:51 INFO      iter 25000/30000 lr=0.0008015 train_entropic=3.308233 avg=3.346730
+01:40:55 INFO      iter 27500/30000 lr=0.0005767 train_entropic=3.344288 avg=3.341846
+01:43:00 INFO      iter 30000/30000 lr=0.0005 train_entropic=3.333055 avg=3.339143
+01:43:00 INFO      E4 OOS evaluation 50000/100000
+01:43:00 INFO      E4 OOS evaluation 100000/100000
+01:43:00 INFO    E4 eval eps=0.0078125 p_eps=3.33940629 p0=2.28715063 increment=1.0522557
+01:43:00 INFO    e4bs eps=0.0078125 completed runtime=24m 41s passed=True
