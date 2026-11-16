@@ -144,13 +144,13 @@ def make_figure(
     rows = [
         [
             "Recurrent",
-            f"{metrics['recurrent']['oos_mean_excess_loss_diagnostic']:.4f}",
+            f"{metrics['recurrent']['oos_mean_excess_loss_diagnostic']:.6f}",
             f"{metrics['recurrent']['indifference_price']:.4f}",
             f"{metrics['recurrent']['oos_realized_cvar_shortfall']:.4f}",
         ],
         [
             "Simpler",
-            f"{metrics['simpler']['oos_mean_excess_loss_diagnostic']:.4f}",
+            f"{metrics['simpler']['oos_mean_excess_loss_diagnostic']:.6f}",
             f"{metrics['simpler']['indifference_price']:.4f}",
             f"{metrics['simpler']['oos_realized_cvar_shortfall']:.4f}",
         ],
