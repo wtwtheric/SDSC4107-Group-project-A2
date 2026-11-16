@@ -530,6 +530,11 @@ def main() -> int:
         action="store_true",
         help="Update metrics.json from an already saved evaluation.json without recalibration or training.",
     )
+    parser.add_argument(
+        "--plot-only",
+        action="store_true",
+        help="Rebuild Figure 5 from saved evaluation.json and pnl.npz without running models.",
+    )
     parser.add_argument("--calibration-paths", type=int, default=None)
     parser.add_argument("--calibration-batch-size", type=int, default=None)
     parser.add_argument("--calibration-seed", type=int, default=None)
@@ -537,9 +542,35 @@ def main() -> int:
     args = parser.parse_args()
 
     folder = args.run_dir or (Path(args.out) / "e3" / str(args.seed))
+    if sum((args.finalize_only, args.eval_only, args.plot_only)) > 1:
+        parser.error("--finalize-only, --plot-only, and --eval-only are mutually exclusive")
+    if args.plot_only:
+        report_path = folder / "evaluation.json"
+        pnl_path = folder / "pnl.npz"
+        if not report_path.is_file() or not pnl_path.is_file():
+            raise FileNotFoundError(
+                "Plot-only requires evaluation.json and pnl.npz in the run directory"
+            )
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        with np.load(pnl_path) as saved:
+            losses_recurrent = np.asarray(saved["terminal_loss"], dtype=np.float64)
+            losses_simpler = np.asarray(saved["terminal_loss_simpler"], dtype=np.float64)
+        if losses_recurrent.ndim != 1 or losses_recurrent.shape != losses_simpler.shape:
+            raise ValueError("Plot-only requires paired one-dimensional OOS loss arrays")
+        if not np.isfinite(losses_recurrent).all() or not np.isfinite(losses_simpler).all():
+            raise ValueError("Plot-only OOS losses contain non-finite values")
+        summary = report["metrics"]
+        make_figure(
+            summary["recurrent"]["indifference_price"] - losses_recurrent,
+            summary["simpler"]["indifference_price"] - losses_simpler,
+            summary,
+            float(report["alpha"]),
+            folder / "fig_05_e3.png",
+            args.bins,
+        )
+        print(f"E3 Figure 5 regenerated: {folder / 'fig_05_e3.png'}")
+        return 0
     if args.finalize_only:
-        if args.eval_only:
-            parser.error("--finalize-only and --eval-only are mutually exclusive")
         report_path = folder / "evaluation.json"
         metrics_path = folder / "metrics.json"
         if not report_path.is_file() or not metrics_path.is_file():
