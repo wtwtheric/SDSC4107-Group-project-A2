@@ -378,8 +378,13 @@ def apply_evaluation_to_metrics(
     return metrics, checks
 
 
-def update_metrics_file(run_dir: Path, metrics: dict[str, float], checks: dict[str, bool]) -> None:
-    """Update an existing metrics record after eval-only without changing training provenance."""
+def update_metrics_file(
+    run_dir: Path,
+    metrics: dict[str, float],
+    checks: dict[str, bool],
+    evaluation: dict[str, Any],
+) -> None:
+    """Update metrics after eval-only while preserving the original training provenance."""
     path = run_dir / "metrics.json"
     if not path.is_file():
         raise FileNotFoundError(f"Cannot update missing metrics file: {path}")
@@ -388,8 +393,12 @@ def update_metrics_file(run_dir: Path, metrics: dict[str, float], checks: dict[s
     payload.setdefault("checks", {}).update(checks)
     payload["passed"] = bool(payload["checks"]) and all(payload["checks"].values())
     payload["independent_evaluation"] = {
-        "calibration_paths": None,
-        "note": "See evaluation.json for independent calibration and OOS sample metadata.",
+        "calibration_paths": evaluation["calibration_paths"],
+        "calibration_seed": evaluation["calibration_seed"],
+        "oos_paths": evaluation["oos_paths"],
+        "oos_seed": evaluation["oos_seed"],
+        "device": evaluation["device"],
+        "runtime_sec": evaluation["runtime_sec"],
     }
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -445,7 +454,7 @@ def main() -> int:
             payload.get("checks", {}),
             evaluation["report"],
         )
-        update_metrics_file(folder, metrics, checks)
+        update_metrics_file(folder, metrics, checks, evaluation["report"])
         log.info("E3 eval-only completed runtime=%s", human_secs(time.perf_counter() - started))
         return 0
 
