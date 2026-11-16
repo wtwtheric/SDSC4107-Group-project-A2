@@ -58,9 +58,7 @@ def test_eval_only_metadata_uses_nested_fixed_validation(tmp_path) -> None:
         },
     }
 
-    update_metrics_file(
-        tmp_path, {"price_recurrent": 4.17}, {"independent_seeds": True}, report
-    )
+    update_metrics_file(tmp_path, {"price_recurrent": 4.17}, {"independent_seeds": True}, report)
 
     saved = json.loads(metrics_path.read_text(encoding="utf-8"))
     assert saved["seed"] == 0
@@ -126,12 +124,15 @@ def test_e3_status_distinguishes_execution_from_paper_targets(tmp_path) -> None:
 
     path = tmp_path / "metrics.json"
     path.write_text(
-        json.dumps({
-            "git_commit": "feb6c7b",
-            "metrics": {"original": 123},
-            "checks": original_checks,
-            "passed": False,
-        }), encoding="utf-8",
+        json.dumps(
+            {
+                "git_commit": "feb6c7b",
+                "metrics": {"original": 123},
+                "checks": original_checks,
+                "passed": False,
+            }
+        ),
+        encoding="utf-8",
     )
     update_metrics_file(tmp_path, metrics, checks, report)
     saved = json.loads(path.read_text(encoding="utf-8"))
@@ -142,9 +143,10 @@ def test_e3_status_distinguishes_execution_from_paper_targets(tmp_path) -> None:
     assert saved["paper_target_passed"] is False
     assert saved["paper_target_checks"]["recurrent_price_in_paper_band"] is False
     assert saved["economic_direction_checks"]["recurrent_price_lower_than_simpler"] is True
-    assert saved["economic_direction_checks"][
-        "recurrent_mean_positive_loss_proxy_lower_than_simpler"
-    ] is False
+    assert (
+        saved["economic_direction_checks"]["recurrent_mean_positive_loss_proxy_lower_than_simpler"]
+        is False
+    )
     assert all(saved["checks"].values())
 
 
@@ -156,21 +158,24 @@ def test_e3_plot_only_reuses_saved_losses_without_training(tmp_path, monkeypatch
         terminal_loss_simpler=np.array([1.0, 3.2, 5.4, 8.1]),
     )
     (tmp_path / "evaluation.json").write_text(
-        json.dumps({
-            "alpha": 0.99,
-            "metrics": {
-                "recurrent": {
-                    "indifference_price": 5.0,
-                    "oos_mean_excess_loss_diagnostic": 0.75,
-                    "oos_realized_cvar_shortfall": 3.0,
+        json.dumps(
+            {
+                "alpha": 0.99,
+                "metrics": {
+                    "recurrent": {
+                        "indifference_price": 5.0,
+                        "oos_mean_excess_loss_diagnostic": 0.75,
+                        "oos_realized_cvar_shortfall": 3.0,
+                    },
+                    "simpler": {
+                        "indifference_price": 5.3,
+                        "oos_mean_excess_loss_diagnostic": 0.7,
+                        "oos_realized_cvar_shortfall": 2.8,
+                    },
                 },
-                "simpler": {
-                    "indifference_price": 5.3,
-                    "oos_mean_excess_loss_diagnostic": 0.7,
-                    "oos_realized_cvar_shortfall": 2.8,
-                },
-            },
-        }), encoding="utf-8",
+            }
+        ),
+        encoding="utf-8",
     )
     monkeypatch.setattr(
         sys, "argv", ["run_e3", "--plot-only", "--run-dir", str(tmp_path), "--bins", "8"]
