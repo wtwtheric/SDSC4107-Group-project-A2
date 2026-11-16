@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "exp": "e3",
+  "seed": 0,
+  "git_commit": "feb6c7b",
+  "dirty": false,
+  "created_at": "2026-11-16T00:53:11+08:00",
+  "runtime_sec": 3503.489,
+  "device": "cuda",
+  "torch_version": "2.8.0+cu128",
+  "n_paths": 1000000,
+  "config_sha256": "2c2d8661fe5714d78cff90ff2ff72c2daa0566092f5ced874d1e010a1ce99f3d",
+  "metrics": {
+    "price_recurrent": 4.166624664326665,
+    "price_simpler": 4.223412251076901,
+    "cvar_recurrent": 4.166624664326665,
+    "cvar_simpler": 4.223412251076901,
+    "mean_loss_recurrent": 2.8704213893219577,
+    "mean_loss_simpler": 2.9323338987415415,
+    "mean_cost_recurrent": 1.1763041425900373,
+    "mean_cost_simpler": 1.237800603335336,
+    "mean_stock_cost_recurrent": 1.1196353717430991,
+    "mean_varswap_cost_recurrent": 0.05666877084693778,
+    "mean_stock_cost_simpler": 1.167945099592893,
+    "mean_varswap_cost_simpler": 0.06985550374244202,
+    "mean_turnover_recurrent": 2425.600785758088,
+    "mean_turnover_simpler": 2580.616671869856,
+    "q_zero_cost_reference": 1.6918339251106715,
+    "visual_step": 15.0,
+    "visual_paths": 200000.0
+  },
+  "checks": {
+    "finite_prices": true,
+    "nonnegative_transaction_costs": true,
+    "common_oos_path_count": true
+  },
+  "passed": true
+}
