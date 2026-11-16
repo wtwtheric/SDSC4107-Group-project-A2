@@ -19,6 +19,6 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           # pfhedge 是 env_heston 的顶层依赖；它要求 numpy<2，而 numpy>=2 的
           # scipy（>=1.18）与之互斥，所以两者按 requirements.lock.txt 钉版本。
-          pip install "numpy==1.26.4" "scipy==1.13.1" "pfhedge==0.23.0" pytest ruff pyyaml
+          pip install "numpy==1.26.4" "scipy==1.13.1" "pfhedge==0.23.0" matplotlib pytest ruff pyyaml
       - name: CI
         run: python scripts/ci.py
