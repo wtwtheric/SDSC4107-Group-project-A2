@@ -79,8 +79,9 @@ def calibration_losses(
     batch_size: int,
     seed: int,
     log: logging.Logger,
+    sample_label: str = "calibration",
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Evaluate both frozen policies on common, independently seeded calibration paths."""
+    """Evaluate both frozen policies on common paths generated from the supplied seed."""
     seed_everything(seed)
     recurrent_parts: list[np.ndarray] = []
     simpler_parts: list[np.ndarray] = []
@@ -99,7 +100,7 @@ def calibration_losses(
         )
         done += size
         if done % max(batch_size * 4, batch_size) == 0 or done == n_paths:
-            log.info("calibration paths %d/%d", done, n_paths)
+            log.info("%s paths %d/%d", sample_label, done, n_paths)
     return np.concatenate(recurrent_parts), np.concatenate(simpler_parts)
 
 
@@ -267,11 +268,44 @@ def run_independent_evaluation(
         batch_size,
         calibration_seed,
         log,
+        sample_label="calibration",
     )
     if not np.isfinite(calibration_recurrent).all() or not np.isfinite(
         calibration_simpler
     ).all():
         raise ValueError("Calibration losses contain non-finite values")
+
+    validation_paths = int(train_cfg.get("validation_paths", 10_000))
+    validation_batch = int(train_cfg.get("validation_batch_size", 4_096))
+    validation_seed = int(train_cfg.get("validation_seed", 8_675_309))
+    if validation_paths < 1 or validation_batch < 1:
+        raise ValueError("Validation path count and batch size must be positive")
+    if validation_seed in {calibration_seed, oos_seed}:
+        raise ValueError("Validation, calibration, and OOS seeds must all be distinct")
+    validation_recurrent, validation_simpler = calibration_losses(
+        world,
+        recurrent,
+        simpler,
+        validation_paths,
+        validation_batch,
+        validation_seed,
+        log,
+        sample_label="fixed validation",
+    )
+    if not np.isfinite(validation_recurrent).all() or not np.isfinite(
+        validation_simpler
+    ).all():
+        raise ValueError("Validation losses contain non-finite values")
+    validation_metrics = {
+        "recurrent": {
+            "mean_raw_loss": float(validation_recurrent.mean()),
+            "cvar": empirical_cvar(validation_recurrent, alpha),
+        },
+        "simpler": {
+            "mean_raw_loss": float(validation_simpler.mean()),
+            "cvar": empirical_cvar(validation_simpler, alpha),
+        },
+    }
 
     metrics = {
         "recurrent": summarize(calibration_recurrent, oos_recurrent, alpha),
@@ -309,6 +343,12 @@ def run_independent_evaluation(
         "device": str(device),
         "runtime_sec": round(time.perf_counter() - started, 3),
         "metrics": metrics,
+        "fixed_validation": {
+            "paths": validation_paths,
+            "seed": validation_seed,
+            "metrics": validation_metrics,
+            "interpretation": "one-off final-checkpoint diagnostic, not a historical training curve",
+        },
         "definitions": {
             "indifference_price": (
                 "CVaR_alpha(terminal_loss) estimated on independent calibration paths"
@@ -340,6 +380,9 @@ def run_independent_evaluation(
         "calibration_seed": calibration_seed,
         "oos_seed": oos_seed,
         "oos_paths": int(len(oos_recurrent)),
+        "validation_paths": validation_paths,
+        "validation_seed": validation_seed,
+        "validation_metrics": validation_metrics,
     }
 
 
@@ -414,6 +457,9 @@ def update_metrics_file(
         "oos_seed": evaluation["oos_seed"],
         "device": evaluation["device"],
         "runtime_sec": evaluation["runtime_sec"],
+        "validation_paths": evaluation["validation_paths"],
+        "validation_seed": evaluation["validation_seed"],
+        "validation_metrics": evaluation["validation_metrics"],
     }
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
