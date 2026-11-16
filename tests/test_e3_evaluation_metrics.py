@@ -14,12 +14,8 @@ def test_e3_summary_separates_raw_and_centered_terminal_loss() -> None:
     price = result["indifference_price"]
 
     assert result["oos_mean_raw_loss"] == pytest.approx(float(oos.mean()))
-    assert result["oos_signed_terminal_hedging_loss"] == pytest.approx(
-        float((oos - price).mean())
-    )
-    assert result["oos_mean_hedging_error"] == pytest.approx(
-        float((price - oos).mean())
-    )
+    assert result["oos_signed_terminal_hedging_loss"] == pytest.approx(float((oos - price).mean()))
+    assert result["oos_mean_hedging_error"] == pytest.approx(float((price - oos).mean()))
     assert result["oos_mean_hedging_error"] == pytest.approx(
         -result["oos_signed_terminal_hedging_loss"]
     )

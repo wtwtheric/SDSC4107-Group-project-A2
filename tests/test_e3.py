@@ -9,7 +9,9 @@ import torch
 from src.replication.e3 import run
 
 
-def test_e3_runner_returns_cost_breakdown_and_paired_losses(caplog: pytest.LogCaptureFixture) -> None:
+def test_e3_runner_returns_cost_breakdown_and_paired_losses(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     caplog.set_level(logging.INFO)
     cfg = {
         "exp": "e3",

@@ -141,7 +141,13 @@ def train_policy(
 
     log.info(
         "  lr_schedule=%s lr=%g->%g batch=%d n_iter=%d validation_paths=%d validation_seed=%d",
-        schedule, lr, lr_min, batch, n_iter, validation_count, validation_seed,
+        schedule,
+        lr,
+        lr_min,
+        batch,
+        n_iter,
+        validation_count,
+        validation_seed,
     )
 
     running = 0.0
@@ -162,15 +168,24 @@ def train_policy(
             if validation_paths is not None:
                 validation_cvar = evaluate_fixed_validation()
                 log.info(
-                    "  iter %d/%d lr=%.3g train_cvar=%.4f (last %d avg %.4f) "
-                    "validation_cvar=%.4f",
-                    it, n_iter, lr_t, float(loss.detach()), log_every,
-                    running / log_every, validation_cvar,
+                    "  iter %d/%d lr=%.3g train_cvar=%.4f (last %d avg %.4f) validation_cvar=%.4f",
+                    it,
+                    n_iter,
+                    lr_t,
+                    float(loss.detach()),
+                    log_every,
+                    running / log_every,
+                    validation_cvar,
                 )
             else:
                 log.info(
                     "  iter %d/%d lr=%.3g train_cvar=%.4f (last %d avg %.4f)",
-                    it, n_iter, lr_t, float(loss.detach()), log_every, running / log_every,
+                    it,
+                    n_iter,
+                    lr_t,
+                    float(loss.detach()),
+                    log_every,
+                    running / log_every,
                 )
             running = 0.0
     return policy

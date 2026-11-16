@@ -29,9 +29,7 @@ def empirical_cvar(values: np.ndarray, alpha: float) -> float:
     return float(cvar(torch.as_tensor(values, dtype=torch.float64), alpha))
 
 
-def summarize(
-    calibration_loss: np.ndarray, oos_loss: np.ndarray, alpha: float
-) -> dict[str, float]:
+def summarize(calibration_loss: np.ndarray, oos_loss: np.ndarray, alpha: float) -> dict[str, float]:
     """Calibrate price on one sample and assess realized risk on an independent sample."""
     price = empirical_cvar(calibration_loss, alpha)
     oos_cvar = empirical_cvar(oos_loss, alpha)
@@ -92,12 +90,8 @@ def calibration_losses(
         features = world.features(paths)
         recurrent_positions = recurrent.forward_path(features)
         simpler_positions = simpler.forward_path(features)
-        recurrent_parts.append(
-            world.terminal_loss(recurrent_positions, paths).cpu().numpy()
-        )
-        simpler_parts.append(
-            world.terminal_loss(simpler_positions, paths).cpu().numpy()
-        )
+        recurrent_parts.append(world.terminal_loss(recurrent_positions, paths).cpu().numpy())
+        simpler_parts.append(world.terminal_loss(simpler_positions, paths).cpu().numpy())
         done += size
         if done % max(batch_size * 4, batch_size) == 0 or done == n_paths:
             log.info("%s paths %d/%d", sample_label, done, n_paths)
@@ -125,7 +119,7 @@ def make_figure(
     ax.hist(
         recurrent_error,
         bins=edges,
-        alpha=0.62,
+        alpha=0.55,
         label="recurrent",
         color="#4472C4",
         edgecolor="none",
@@ -133,13 +127,13 @@ def make_figure(
     ax.hist(
         simpler_error,
         bins=edges,
-        alpha=0.52,
+        alpha=0.55,
         label="simpler",
-        color="#808080",
+        color="#ed7c31",
         edgecolor="none",
     )
-    ax.axvline(0.0, color="black", linewidth=0.9, linestyle="--", alpha=0.7)
-    ax.set_xlabel(r"Terminal hedging error  $p_0 - L_{\\mathrm{raw}}$")
+    ax.axvline(0.0, color="black", linewidth=1.0, linestyle="--", alpha=0.7)
+    ax.set_xlabel(r"Terminal hedging error  $p_0 - L_{\mathrm{raw}}$")
     ax.set_ylabel("Number of OOS paths")
     ax.legend(frameon=True)
     ax.grid(axis="y", alpha=0.2)
@@ -150,15 +144,15 @@ def make_figure(
     rows = [
         [
             "Recurrent",
-            f'{metrics["recurrent"]["oos_signed_terminal_hedging_loss"]:.4f}',
-            f'{metrics["recurrent"]["indifference_price"]:.4f}',
-            f'{metrics["recurrent"]["oos_realized_cvar_shortfall"]:.4f}',
+            f"{metrics['recurrent']['oos_signed_terminal_hedging_loss']:.4f}",
+            f"{metrics['recurrent']['indifference_price']:.4f}",
+            f"{metrics['recurrent']['oos_realized_cvar_shortfall']:.4f}",
         ],
         [
             "Simpler",
-            f'{metrics["simpler"]["oos_signed_terminal_hedging_loss"]:.4f}',
-            f'{metrics["simpler"]["indifference_price"]:.4f}',
-            f'{metrics["simpler"]["oos_realized_cvar_shortfall"]:.4f}',
+            f"{metrics['simpler']['oos_signed_terminal_hedging_loss']:.4f}",
+            f"{metrics['simpler']['indifference_price']:.4f}",
+            f"{metrics['simpler']['oos_realized_cvar_shortfall']:.4f}",
         ],
     ]
     table = table_ax.table(
@@ -172,9 +166,13 @@ def make_figure(
     table.set_fontsize(9)
     table.scale(1.0, 1.55)
     table_ax.text(
-        0.5, 0.04,
+        0.5,
+        0.04,
         "Mean Loss = E[L_T]; see documentation for the operational interpretation.",
-        ha="center", va="bottom", fontsize=7, transform=table_ax.transAxes,
+        ha="center",
+        va="bottom",
+        fontsize=7,
+        transform=table_ax.transAxes,
     )
     fig.savefig(output, dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -274,9 +272,7 @@ def run_independent_evaluation(
         log,
         sample_label="calibration",
     )
-    if not np.isfinite(calibration_recurrent).all() or not np.isfinite(
-        calibration_simpler
-    ).all():
+    if not np.isfinite(calibration_recurrent).all() or not np.isfinite(calibration_simpler).all():
         raise ValueError("Calibration losses contain non-finite values")
 
     validation_paths = int(train_cfg.get("validation_paths", 10_000))
@@ -296,9 +292,7 @@ def run_independent_evaluation(
         log,
         sample_label="fixed validation",
     )
-    if not np.isfinite(validation_recurrent).all() or not np.isfinite(
-        validation_simpler
-    ).all():
+    if not np.isfinite(validation_recurrent).all() or not np.isfinite(validation_simpler).all():
         raise ValueError("Validation losses contain non-finite values")
     validation_metrics = {
         "recurrent": {
@@ -422,15 +416,9 @@ def apply_evaluation_to_metrics(
     )
     checks.update(
         {
-            "independent_calibration_oos_seeds": (
-                report["calibration_seed"] != report["oos_seed"]
-            ),
-            "recurrent_price_in_paper_band": (
-                5.2 <= recurrent["indifference_price"] <= 5.8
-            ),
-            "simpler_price_in_paper_band": (
-                6.4 <= simpler["indifference_price"] <= 7.1
-            ),
+            "independent_calibration_oos_seeds": (report["calibration_seed"] != report["oos_seed"]),
+            "recurrent_price_in_paper_band": (5.2 <= recurrent["indifference_price"] <= 5.8),
+            "simpler_price_in_paper_band": (6.4 <= simpler["indifference_price"] <= 7.1),
             "recurrent_price_lower_than_simpler": (
                 recurrent["indifference_price"] < simpler["indifference_price"]
             ),
