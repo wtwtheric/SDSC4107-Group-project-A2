@@ -36,6 +36,15 @@ python -m scripts.run_e3 --finalize-only --run-dir results/e3/0
 
 This reads the existing `evaluation.json`, preserves the original training provenance and existing metrics, and updates only `metrics.json`. It does not simulate calibration/validation paths, load model checkpoints, modify the figure, or retrain. Use it only after checking that `evaluation.json` belongs to the same seed-0 run and includes the `fixed_validation` object.
 
+## Regenerate the corrected Figure 5 without recalibration
+
+```bash
+python -m scripts.run_e3 --plot-only --run-dir results-e3
+python -m scripts.run_e3 --finalize-only --run-dir results-e3
+```
+
+The first command reads existing `evaluation.json` and `pnl.npz`, regenerates the figure with the provisional Mean Loss* proxy, and does not load models or change samples. The second refreshes `metrics.json` to separate operational from paper-target status. Both commands preserve the existing seed-0 checkpoints and do not rerun the million-path calibration.
+
 ## Outputs
 
 The run directory contains:
@@ -134,4 +143,4 @@ The E3 config enables 10,000 fixed validation paths for future training runs. Th
 - `paper_target_checks` and `paper_target_passed`: the pre-specified quantitative price bands (recurrent 5.2-5.8, simpler 6.4-7.1). For this seed-0 run the expected result is `false`.
 - `economic_direction_checks`: relative recurrent-vs-simpler price, OOS CVaR, and positive-part proxy comparisons. These are diagnostic interpretations, never operational pass/fail gates.
 
-Existing artifacts can be updated without simulation or retraining using `python -m scripts.run_e3 --finalize-only --run-dir results-e3`, after refreshing this branch. This updates `metrics.json` only. To regenerate Figure 5, use the existing `pnl.npz` hedging-error arrays and `evaluation.json` metrics for a plotting-only update; do not rerun the 1M-path calibration solely to change the label.
+Existing artifacts can be updated without simulation or retraining using `python -m scripts.run_e3 --finalize-only --run-dir results-e3`, after refreshing this branch. This updates `metrics.json` only. Regenerate the figure with `--plot-only`; do not rerun the 1M-path calibration solely to change the label.
