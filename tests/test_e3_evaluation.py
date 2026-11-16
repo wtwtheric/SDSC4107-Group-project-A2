@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from scripts.run_e3 import summarize
 
 
@@ -11,7 +10,8 @@ def test_summarize_uses_independent_calibration_price_and_oos_shortfall() -> Non
     result = summarize(calibration, oos, alpha=0.8)
 
     assert result["indifference_price"] == 4.0
-    assert result["oos_mean_loss"] == 2.0
+    assert result["oos_mean_raw_loss"] == 2.0
+    assert result["oos_signed_terminal_hedging_loss"] == -2.0
     assert result["oos_mean_hedging_error"] == 2.0
     assert result["oos_realized_cvar_shortfall"] == 0.0
 
