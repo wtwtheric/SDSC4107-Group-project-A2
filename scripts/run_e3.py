@@ -44,7 +44,7 @@ def summarize(
         "oos_mean_raw_loss": float(oos_loss.mean()),
         "oos_signed_terminal_hedging_loss": float(centered_loss.mean()),
         "oos_mean_hedging_error": float(hedging_error.mean()),
-        "oos_mean_excess_loss_candidate": float(np.maximum(centered_loss, 0.0).mean()),
+        "oos_mean_excess_loss_diagnostic": float(np.maximum(centered_loss, 0.0).mean()),
         "oos_mean_positive_hedging_error": float(np.maximum(hedging_error, 0.0).mean()),
         "oos_realized_cvar_loss": oos_cvar,
         "oos_realized_cvar_shortfall": empirical_cvar(oos_loss - price, alpha),
@@ -146,17 +146,17 @@ def make_figure(
 
     table_ax = fig.add_subplot(grid[1])
     table_ax.axis("off")
-    columns = ["Model", "Mean Loss*", "Price", "Realized CVaR"]
+    columns = ["Model", "Mean Loss", "Price", "Realized CVaR"]
     rows = [
         [
             "Recurrent",
-            f'{metrics["recurrent"]["oos_mean_excess_loss_candidate"]:.4f}',
+            f'{metrics["recurrent"]["oos_signed_terminal_hedging_loss"]:.4f}',
             f'{metrics["recurrent"]["indifference_price"]:.4f}',
             f'{metrics["recurrent"]["oos_realized_cvar_shortfall"]:.4f}',
         ],
         [
             "Simpler",
-            f'{metrics["simpler"]["oos_mean_excess_loss_candidate"]:.4f}',
+            f'{metrics["simpler"]["oos_signed_terminal_hedging_loss"]:.4f}',
             f'{metrics["simpler"]["indifference_price"]:.4f}',
             f'{metrics["simpler"]["oos_realized_cvar_shortfall"]:.4f}',
         ],
@@ -173,7 +173,7 @@ def make_figure(
     table.scale(1.0, 1.55)
     table_ax.text(
         0.5, 0.04,
-        "*Provisional diagnostic: E[(L_T - p_0)^+]; the paper does not explicitly define this table entry.",
+        "Mean Loss = E[L_T - p_0]; see documentation for the operational interpretation.",
         ha="center", va="bottom", fontsize=7, transform=table_ax.transAxes,
     )
     fig.savefig(output, dpi=300, bbox_inches="tight")
@@ -331,7 +331,7 @@ def run_independent_evaluation(
             name,
             values["indifference_price"],
             values["oos_mean_raw_loss"],
-            values["oos_mean_excess_loss_candidate"],
+            values["oos_signed_terminal_hedging_loss"],
             values["oos_realized_cvar_shortfall"],
         )
     log.info("Figure: %s", run_dir / "fig_05_e3.png")
@@ -360,8 +360,8 @@ def apply_evaluation_to_metrics(
             "cvar_simpler": simpler["oos_realized_cvar_loss"],
             "mean_loss_recurrent": recurrent["oos_mean_raw_loss"],
             "mean_loss_simpler": simpler["oos_mean_raw_loss"],
-            "figure5_mean_loss_candidate_recurrent": recurrent["oos_mean_excess_loss_candidate"],
-            "figure5_mean_loss_candidate_simpler": simpler["oos_mean_excess_loss_candidate"],
+            "figure5_mean_loss_recurrent": recurrent["oos_signed_terminal_hedging_loss"],
+            "figure5_mean_loss_simpler": simpler["oos_signed_terminal_hedging_loss"],
             "signed_terminal_hedging_loss_recurrent": recurrent["oos_signed_terminal_hedging_loss"],
             "signed_terminal_hedging_loss_simpler": simpler["oos_signed_terminal_hedging_loss"],
             "cvar_shortfall_recurrent": recurrent["oos_realized_cvar_shortfall"],
