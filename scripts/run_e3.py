@@ -138,7 +138,7 @@ def make_figure(
         edgecolor="none",
     )
     ax.axvline(0.0, color="black", linewidth=0.9, linestyle="--", alpha=0.7)
-    ax.set_xlabel(r"Terminal hedging error  $p_0 - L_T$")
+    ax.set_xlabel(r"Terminal hedging error  $p_0 - L_{\\mathrm{raw}}$")
     ax.set_ylabel("Number of OOS paths")
     ax.legend(frameon=True)
     ax.grid(axis="y", alpha=0.2)
