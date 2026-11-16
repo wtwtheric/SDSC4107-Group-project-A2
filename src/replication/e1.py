@@ -18,6 +18,7 @@ from typing import Any
 
 import numpy as np
 import torch
+from torch import Tensor
 
 from src.common.metrics import cvar
 from src.replication.benchmark import HestonBenchmark
@@ -125,8 +126,6 @@ def train_policy(
                 stop = min(start + validation_batch, validation_count)
                 # Slice the NamedTuple fields consistently to avoid copying the full
                 # validation sample into a second set of tensors.
-                from src.replication.env_heston import HestonPaths
-
                 paths_batch = HestonPaths(
                     spot=validation_paths.spot[start:stop],
                     variance=validation_paths.variance[start:stop],
