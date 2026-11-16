@@ -9,7 +9,10 @@ import torch
 from src.replication.e3 import run
 
 
-def test_e3_runner_returns_cost_breakdown_and_paired_losses() -> None:
+def test_e3_runner_returns_cost_breakdown_and_paired_losses(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO)
     cfg = {
         "exp": "e3",
         "n_steps": 3,
@@ -38,6 +41,9 @@ def test_e3_runner_returns_cost_breakdown_and_paired_losses() -> None:
             "eval_seed": 123,
             "visual_paths": 32,
             "visual_step": 1,
+            "validation_paths": 16,
+            "validation_batch_size": 8,
+            "validation_seed": 777,
         },
     }
     result = run(cfg, 0, torch.device("cpu"), logging.getLogger("test.e3"))
@@ -53,3 +59,4 @@ def test_e3_runner_returns_cost_breakdown_and_paired_losses() -> None:
         abs=1e-10,
     )
     assert set(result["artifacts"]) == {"policy_recurrent.pt", "policy_simpler.pt"}
+    assert "validation_cvar=" in caplog.text

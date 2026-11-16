@@ -26,12 +26,31 @@ python -m scripts.run_e3 \
 
 The run directory must contain `config.yaml`, `pnl.npz`, `policy_recurrent.pt`, `policy_simpler.pt`, and `metrics.json`. The original OOS loss arrays are reused; their seed is read from the saved config (`train.eval_seed`, 314159 in the current run). New calibration paths use a distinct seed (271828 by default). Both policies receive identical paths within each sample.
 
+## Recover a completed evaluation without rerunning Monte Carlo
+
+If the independent evaluation already wrote `evaluation.json` and the Figure 5 PNG, but updating `metrics.json` subsequently failed, use:
+
+```bash
+python -m scripts.run_e3 --finalize-only --run-dir results/e3/0
+```
+
+This reads the existing `evaluation.json`, preserves the original training provenance and existing metrics, and updates only `metrics.json`. It does not simulate calibration/validation paths, load model checkpoints, modify the figure, or retrain. Use it only after checking that `evaluation.json` belongs to the same seed-0 run and includes the `fixed_validation` object.
+
+## Regenerate the corrected Figure 5 without recalibration
+
+```bash
+python -m scripts.run_e3 --plot-only --run-dir results-e3
+python -m scripts.run_e3 --finalize-only --run-dir results-e3
+```
+
+The first command reads existing `evaluation.json` and `pnl.npz`, regenerates the figure with the provisional Mean Loss* proxy, and does not load models or change samples. The second refreshes `metrics.json` to separate operational from paper-target status. Both commands preserve the existing seed-0 checkpoints and do not rerun the million-path calibration.
+
 ## Outputs
 
 The run directory contains:
 
 - `metrics.json`: original training provenance plus independent calibration/OOS metrics and checks.
-- `pnl.npz`: original arrays plus calibration losses and centered OOS hedging errors.
+- `pnl.npz`: original arrays plus calibration losses, fixed-validation losses, and centered OOS hedging errors.
 - `evaluation.json`: sample counts, seeds, metric definitions, and independent-evaluation results.
 - `fig_05_e3.png`: overlaid terminal hedging-error histogram and comparison table, saved at 300 dpi without an in-plot title.
 - `evaluation.log`: created for evaluation-only mode; full runs log to `run.log`.
@@ -42,14 +61,17 @@ Let L be the terminal loss from the Heston environment, including proportional t
 
 1. **Indifference price**: p0 = CVaR_alpha(L_cal), estimated on fresh calibration paths.
 2. **Figure 5 terminal hedging error**: p0 - L_OOS.
-3. **OOS realized CVaR shortfall**: CVaR_alpha(L_OOS - p0). Lower is better.
-4. **Mean OOS loss**: arithmetic mean of uncentered L_OOS.
+3. **OOS realized CVaR shortfall**: CVaR_alpha(L_raw,OOS - p0). Lower is better.
+4. **Raw mean loss**: E[L_raw] on the uncentered OOS sample. This is retained as a diagnostic and is not the Figure 5 table's Mean Loss.
+5. **Signed terminal hedging loss**: define L_T = Z - p0 - (delta · S)_T + C_T(delta) = L_raw - p0. E[L_T] is retained as a diagnostic but is NOT the Figure 5 Mean Loss.
+6. **Positive-part excess loss proxy (Figure 5 table)**: E[(L_raw - p0)^+] = E[max(L_T,0)], measured on the OOS sample. This is a reconstructed proxy, NOT the confirmed formula for the paper's Mean Loss. It is labeled Mean Loss* with an explicit footnote and is also stored under `oos_mean_excess_loss_diagnostic`.
+7. **Figure 5 histogram**: p0 - L_raw,OOS, matching the sign/order in the paper's caption.
 
 The calibration and OOS samples are independent by seed and shared between recurrent and simpler policies. This provides an independent-price/OOS-risk estimate but does not guarantee exact numerical agreement with the paper.
 
 ## Current replication status
 
-The existing seed-0 result has recurrent price 4.1707 and simpler price 4.2261, below the plan's target bands [5.2, 5.8] and [6.4, 7.1]. The recurrent policy has lower OOS mean loss and OOS CVaR in this run, but the price gap is small. The result is therefore a valid evaluation run, not yet a quantitative reproduction of the paper's Figure 5 target values.
+The existing seed-0 result has recurrent price 4.1707 and simpler price 4.2261, below the plan's target bands [5.2, 5.8] and [6.4, 7.1]. The uncentered OOS raw mean losses are 2.8704 and 2.9323, respectively. The signed mean terminal losses are -1.3002 and -1.2938. The provisional Figure 5 Mean Loss* positive-part proxies are 0.000770 and 0.000753 (recurrent and simpler respectively). The realized CVaR shortfalls are -0.0040 and -0.0027. The recurrent policy has a slightly lower price and raw mean loss, while the simpler policy has a slightly lower (more negative) realized CVaR shortfall. The price gap remains small. The result is therefore a valid evaluation run, not yet a quantitative reproduction of the paper's Figure 5 target values.
 
 ## Replication assessment framework
 
@@ -86,3 +108,39 @@ Explain what the comparison says about hedging performance under transaction cos
 - If the recurrent and simpler results are close, report that the recurrent advantage is small in this run. Do not force a strong architectural conclusion from one seed.
 
 These three levels support a transparent replication report: implementation fidelity explains what was reproduced, numerical replication quantifies agreement with Figure 5, and economic interpretation explains the observed differences and their limits.
+
+
+## Evaluation correction and training diagnostics
+
+The evaluation code keeps the following quantities separate to prevent a change of convention from being hidden:
+
+- `oos_mean_raw_loss`: E[L_raw], where L_raw = Z - (delta · S)_T + C_T(delta).
+- `oos_signed_terminal_hedging_loss`: E[L_raw - p0]. This is a diagnostic only and is saved separately as `signed_terminal_hedging_loss_*`.
+- `oos_mean_excess_loss_diagnostic`: E[(L_raw - p0)^+], the provisional Figure 5 Mean Loss* proxy and the value saved in `figure5_mean_loss_proxy_*` and `mean_loss_*` for the E3 result.
+- `oos_realized_cvar_shortfall`: CVaR_alpha(L_raw - p0).
+- `oos_mean_hedging_error`: E[p0 - L_raw], the signed mean of the histogram variable; it is the negative of the signed terminal hedging loss.
+
+The Figure 5 table retains **Price** and **Realized CVaR** and labels the first column **Mean Loss***, with an on-figure footnote explicitly stating the proxy formula and the lack of confirmation from the original paper. The original paper's Figure 5 Mean Loss formula is not independently verified, so our reconstructed proxy must not be represented as an exact numerical replication. The raw and signed means remain separately available in `evaluation.json` and `metrics.json`. In this seed-0 run the positive-part proxy happens to favor simpler by a tiny amount; the pricing and OOS CVaR comparisons favor recurrent.
+
+### Fixed validation paths
+
+The training function now supports an optional fixed validation sample. Set `train.validation_paths` to a positive count; `train.validation_seed` fixes the sample and `train.validation_batch_size` controls evaluation memory. At each existing `log_every` interval, it logs `validation_cvar` alongside the stochastic training CVaR. Validation generation uses a separate seed and restores CPU/CUDA RNG states, so enabling the diagnostic does not change the subsequent training-path random sequence.
+
+The E3 config enables 10,000 fixed validation paths for future training runs. The evaluation-only workflow also evaluates the existing saved seed-0 checkpoints once on a separate 10,000-path fixed validation sample and stores both loss arrays and summary CVaR values. **The existing seed-0 checkpoints were not retrained**; the historical training log cannot be retroactively populated with validation values. The one-off final-checkpoint diagnostic is not a validation learning curve and cannot by itself establish the absence of overfitting.
+
+### Current scope and limitations
+
+- This correction is evaluation-only for the existing seed-0 models; model weights, architecture, features, Heston generator, optimizer, and training hyperparameters are unchanged.
+- Seed 1-4 are intentionally deferred until the remaining A2 experiments have been reviewed.
+- Numerical agreement with the paper is assessed separately from implementation fidelity and economic interpretation. The observed price gap remains a replication limitation, not a reason to alter the evaluation definition.
+
+
+### Operational and paper-target status
+
+`metrics.json` now separates three groups:
+
+- `checks`, `operational_passed`, and backward-compatible `passed`: execution/data-validity checks only, including independent seeds and finite fixed-validation CVaR. A numerical disagreement with the paper cannot make this status fail.
+- `paper_target_checks` and `paper_target_passed`: the pre-specified quantitative price bands (recurrent 5.2-5.8, simpler 6.4-7.1). For this seed-0 run the expected result is `false`.
+- `economic_direction_checks`: relative recurrent-vs-simpler price, OOS CVaR, and positive-part proxy comparisons. These are diagnostic interpretations, never operational pass/fail gates.
+
+Existing artifacts can be updated without simulation or retraining using `python -m scripts.run_e3 --finalize-only --run-dir results-e3`, after refreshing this branch. This updates `metrics.json` only. Regenerate the figure with `--plot-only`; do not rerun the 1M-path calibration solely to change the label.
