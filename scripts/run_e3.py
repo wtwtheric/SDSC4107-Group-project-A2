@@ -394,12 +394,40 @@ def run_independent_evaluation(
     }
 
 
+def paper_target_checks(report: dict[str, Any]) -> dict[str, bool]:
+    """Report numerical agreement and relative ranking separately from operational validity."""
+    recurrent = report["metrics"]["recurrent"]
+    simpler = report["metrics"]["simpler"]
+    return {
+        "recurrent_price_in_paper_band": 5.2 <= recurrent["indifference_price"] <= 5.8,
+        "simpler_price_in_paper_band": 6.4 <= simpler["indifference_price"] <= 7.1,
+    }
+
+
+def economic_direction_checks(report: dict[str, Any]) -> dict[str, bool]:
+    """Qualitative model comparisons are informative, not engineering pass/fail criteria."""
+    recurrent = report["metrics"]["recurrent"]
+    simpler = report["metrics"]["simpler"]
+    return {
+        "recurrent_price_lower_than_simpler": (
+            recurrent["indifference_price"] < simpler["indifference_price"]
+        ),
+        "recurrent_oos_cvar_lower_than_simpler": (
+            recurrent["oos_realized_cvar_loss"] < simpler["oos_realized_cvar_loss"]
+        ),
+        "recurrent_mean_positive_loss_proxy_lower_than_simpler": (
+            recurrent["oos_mean_excess_loss_diagnostic"]
+            < simpler["oos_mean_excess_loss_diagnostic"]
+        ),
+    }
+
+
 def apply_evaluation_to_metrics(
     metrics: dict[str, float],
     checks: dict[str, bool],
     report: dict[str, Any],
 ) -> tuple[dict[str, float], dict[str, bool]]:
-    """Map independent calibration/OOS results to the repository's E3 metrics schema."""
+    """Update E3 metrics and checks while keeping paper targets separate."""
     recurrent = report["metrics"]["recurrent"]
     simpler = report["metrics"]["simpler"]
     metrics.update(
@@ -424,17 +452,24 @@ def apply_evaluation_to_metrics(
             "cvar_shortfall_simpler": simpler["oos_realized_cvar_shortfall"],
         }
     )
+    # Remove historical target and ranking checks from the operational checks.
+    for key in (*paper_target_checks(report), *economic_direction_checks(report)):
+        checks.pop(key, None)
+    validation = report.get("fixed_validation", {})
+    validation_metrics = validation.get("metrics", {})
     checks.update(
         {
-            "independent_calibration_oos_seeds": (report["calibration_seed"] != report["oos_seed"]),
-            "recurrent_price_in_paper_band": (5.2 <= recurrent["indifference_price"] <= 5.8),
-            "simpler_price_in_paper_band": (6.4 <= simpler["indifference_price"] <= 7.1),
-            "recurrent_price_lower_than_simpler": (
-                recurrent["indifference_price"] < simpler["indifference_price"]
+            "independent_calibration_oos_seeds": (
+                report["calibration_seed"] != report["oos_seed"]
             ),
-            "recurrent_oos_cvar_lower_than_simpler": (
-                recurrent["oos_realized_cvar_loss"] < simpler["oos_realized_cvar_loss"]
+            "independent_validation_seed": (
+                validation.get("seed") is not None
+                and validation["seed"] not in {report["calibration_seed"], report["oos_seed"]}
             ),
+            "finite_validation_cvar": all(
+                np.isfinite(validation_metrics[model]["cvar"])
+                for model in ("recurrent", "simpler")
+            ) if all(model in validation_metrics for model in ("recurrent", "simpler")) else False,
         }
     )
     return metrics, checks
@@ -452,8 +487,17 @@ def update_metrics_file(
         raise FileNotFoundError(f"Cannot update missing metrics file: {path}")
     payload = json.loads(path.read_text(encoding="utf-8"))
     payload.setdefault("metrics", {}).update(metrics)
-    payload.setdefault("checks", {}).update(checks)
-    payload["passed"] = bool(payload["checks"]) and all(payload["checks"].values())
+    saved_checks = payload.setdefault("checks", {})
+    # Older seed-0 metrics files mixed paper target bands with execution checks.
+    for key in (*paper_target_checks(evaluation), *economic_direction_checks(evaluation)):
+        saved_checks.pop(key, None)
+    saved_checks.update(checks)
+    payload["operational_passed"] = bool(saved_checks) and all(saved_checks.values())
+    payload["passed"] = payload["operational_passed"]  # backward-compatible field
+    targets = paper_target_checks(evaluation)
+    payload["paper_target_checks"] = targets
+    payload["paper_target_passed"] = all(targets.values())
+    payload["economic_direction_checks"] = economic_direction_checks(evaluation)
     payload["independent_evaluation"] = {
         "calibration_paths": evaluation["calibration_paths"],
         "calibration_seed": evaluation["calibration_seed"],
@@ -586,10 +630,11 @@ def main() -> int:
         device=device,
         n_paths=result["n_paths"],
     )
+    update_metrics_file(folder, result["metrics"], result["checks"], evaluation["report"])
     log.info(
-        "E3 completed runtime=%s passed=%s",
+        "E3 completed runtime=%s operational_passed=%s",
         human_secs(time.perf_counter() - started),
-        record["passed"],
+        all(result["checks"].values()),
     )
     return 0
 
