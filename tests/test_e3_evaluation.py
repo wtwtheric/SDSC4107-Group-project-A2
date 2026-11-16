@@ -51,6 +51,18 @@ def test_eval_only_metadata_uses_nested_fixed_validation(tmp_path) -> None:
         "oos_seed": 314159,
         "device": "cuda",
         "runtime_sec": 2.5,
+        "metrics": {
+            "recurrent": {
+                "indifference_price": 4.17,
+                "oos_realized_cvar_loss": 4.16,
+                "oos_mean_excess_loss_diagnostic": 0.00077,
+            },
+            "simpler": {
+                "indifference_price": 4.23,
+                "oos_realized_cvar_loss": 4.22,
+                "oos_mean_excess_loss_diagnostic": 0.00075,
+            },
+        },
         "fixed_validation": {
             "paths": 10_000,
             "seed": 8675309,
