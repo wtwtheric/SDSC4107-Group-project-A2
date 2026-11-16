@@ -451,9 +451,9 @@ def update_metrics_file(
         "oos_seed": evaluation["oos_seed"],
         "device": evaluation["device"],
         "runtime_sec": evaluation["runtime_sec"],
-        "validation_paths": evaluation["validation_paths"],
-        "validation_seed": evaluation["validation_seed"],
-        "validation_metrics": evaluation["validation_metrics"],
+        "validation_paths": evaluation["fixed_validation"]["paths"],
+        "validation_seed": evaluation["fixed_validation"]["seed"],
+        "validation_metrics": evaluation["fixed_validation"]["metrics"],
     }
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
