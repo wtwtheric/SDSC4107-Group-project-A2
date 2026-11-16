@@ -459,17 +459,16 @@ def apply_evaluation_to_metrics(
     validation_metrics = validation.get("metrics", {})
     checks.update(
         {
-            "independent_calibration_oos_seeds": (
-                report["calibration_seed"] != report["oos_seed"]
-            ),
+            "independent_calibration_oos_seeds": (report["calibration_seed"] != report["oos_seed"]),
             "independent_validation_seed": (
                 validation.get("seed") is not None
                 and validation["seed"] not in {report["calibration_seed"], report["oos_seed"]}
             ),
             "finite_validation_cvar": all(
-                np.isfinite(validation_metrics[model]["cvar"])
-                for model in ("recurrent", "simpler")
-            ) if all(model in validation_metrics for model in ("recurrent", "simpler")) else False,
+                np.isfinite(validation_metrics[model]["cvar"]) for model in ("recurrent", "simpler")
+            )
+            if all(model in validation_metrics for model in ("recurrent", "simpler"))
+            else False,
         }
     )
     return metrics, checks
