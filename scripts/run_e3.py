@@ -186,8 +186,10 @@ def update_saved_pnl(
     calibration_simpler: np.ndarray,
     hedging_error_recurrent: np.ndarray,
     hedging_error_simpler: np.ndarray,
+    validation_recurrent: np.ndarray,
+    validation_simpler: np.ndarray,
 ) -> None:
-    """Append calibration and centered OOS arrays without dropping existing PnL fields."""
+    """Append calibration, validation, and centered OOS arrays without dropping existing fields."""
     with np.load(pnl_path) as saved:
         arrays = {key: np.asarray(saved[key]) for key in saved.files}
     terminal_loss = arrays.pop("terminal_loss")
@@ -197,6 +199,8 @@ def update_saved_pnl(
             "calibration_loss_simpler": calibration_simpler,
             "hedging_error_recurrent": hedging_error_recurrent,
             "hedging_error_simpler": hedging_error_simpler,
+            "validation_loss_recurrent": validation_recurrent,
+            "validation_loss_simpler": validation_simpler,
         }
     )
     save_pnl(pnl_path, terminal_loss, **arrays)
@@ -328,6 +332,8 @@ def run_independent_evaluation(
         calibration_simpler,
         error_recurrent,
         error_simpler,
+        validation_recurrent,
+        validation_simpler,
     )
 
     report = {
