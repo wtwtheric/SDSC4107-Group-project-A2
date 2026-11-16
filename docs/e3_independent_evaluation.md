@@ -31,7 +31,7 @@ The run directory must contain `config.yaml`, `pnl.npz`, `policy_recurrent.pt`, 
 The run directory contains:
 
 - `metrics.json`: original training provenance plus independent calibration/OOS metrics and checks.
-- `pnl.npz`: original arrays plus calibration losses and centered OOS hedging errors.
+- `pnl.npz`: original arrays plus calibration losses, fixed-validation losses, and centered OOS hedging errors.
 - `evaluation.json`: sample counts, seeds, metric definitions, and independent-evaluation results.
 - `fig_05_e3.png`: overlaid terminal hedging-error histogram and comparison table, saved at 300 dpi without an in-plot title.
 - `evaluation.log`: created for evaluation-only mode; full runs log to `run.log`.
@@ -107,7 +107,7 @@ The Figure 5 table uses the original column labels: **Mean Loss**, **Price**, an
 
 The training function now supports an optional fixed validation sample. Set `train.validation_paths` to a positive count; `train.validation_seed` fixes the sample and `train.validation_batch_size` controls evaluation memory. At each existing `log_every` interval, it logs `validation_cvar` alongside the stochastic training CVaR. Validation generation uses a separate seed and restores CPU/CUDA RNG states, so enabling the diagnostic does not change the subsequent training-path random sequence.
 
-The E3 config enables 10,000 fixed validation paths for future training runs. **The existing seed-0 checkpoints were not retrained**; the historical training log cannot be retroactively populated with validation values. The current seed-0 checkpoint can instead be evaluated once on a fixed validation sample as a final-checkpoint diagnostic. This is not a validation learning curve and cannot by itself establish the absence of overfitting.
+The E3 config enables 10,000 fixed validation paths for future training runs. The evaluation-only workflow also evaluates the existing saved seed-0 checkpoints once on a separate 10,000-path fixed validation sample and stores both loss arrays and summary CVaR values. **The existing seed-0 checkpoints were not retrained**; the historical training log cannot be retroactively populated with validation values. The one-off final-checkpoint diagnostic is not a validation learning curve and cannot by itself establish the absence of overfitting.
 
 ### Current scope and limitations
 
