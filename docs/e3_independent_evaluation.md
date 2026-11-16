@@ -1,13 +1,22 @@
-# E3 independent calibration and Figure 5
+# E3 single-entry workflow
 
-This workflow evaluates the already-trained E3 recurrent and simpler checkpoints. It does not retrain either policy and does not overwrite the original `metrics.json`, `pnl.npz`, or checkpoints.
+`scripts/run_e3.py` is the only E3 entry point. It supports both a full run and an evaluation-only run using saved checkpoints.
 
-## Run
+## Full run
 
-From the repository root, with the original E3 seed-0 run available at `results/e3/0/`:
+From the repository root:
 
 ```bash
-python -m scripts.evaluate_e3 \
+python -m scripts.run_e3 --seed 0 --device cuda
+```
+
+This trains recurrent and simpler policies, saves checkpoints and paired OOS terminal losses, estimates each indifference price on a separate calibration sample, evaluates OOS CVaR, and generates Figure 5.
+
+## Re-evaluate existing checkpoints (no retraining)
+
+```bash
+python -m scripts.run_e3 \
+  --eval-only \
   --run-dir results/e3/0 \
   --calibration-paths 1000000 \
   --calibration-batch-size 25000 \
@@ -15,27 +24,29 @@ python -m scripts.evaluate_e3 \
   --device cuda
 ```
 
-The original OOS losses are reused from `results/e3/0/pnl.npz`. Those paths were generated using `train.eval_seed=314159`. Fresh calibration paths are generated using seed 271828. Recurrent and simpler policies are evaluated on identical paths within each sample.
+The run directory must contain `config.yaml`, `pnl.npz`, `policy_recurrent.pt`, `policy_simpler.pt`, and `metrics.json`. The original OOS loss arrays are reused; their seed is read from the saved config (`train.eval_seed`, 314159 in the current run). New calibration paths use a distinct seed (271828 by default). Both policies receive identical paths within each sample.
 
 ## Outputs
 
-Written to `results/e3/0/independent_evaluation/`:
+The run directory contains:
 
-- `evaluation.json`: calibration and OOS metrics, sample counts, seeds, and definitions.
-- `figure5_e3.png`: overlaid histogram of the terminal hedging error and a three-row-style comparison table.
-- `evaluation_arrays.npz`: calibration losses, OOS losses, and centered OOS hedging errors for both policies.
+- `metrics.json`: original training provenance plus independent calibration/OOS metrics and checks.
+- `pnl.npz`: original arrays plus calibration losses and centered OOS hedging errors.
+- `evaluation.json`: sample counts, seeds, metric definitions, and independent-evaluation results.
+- `fig_05_e3.png`: overlaid terminal hedging-error histogram and comparison table, saved at 300 dpi without an in-plot title.
+- `evaluation.log`: created for evaluation-only mode; full runs log to `run.log`.
 
 ## Metric definitions
 
-Let (L) denote the terminal loss returned by the Heston environment, including transaction costs, and let (alpha=0.99).
+Let L be the terminal loss from the Heston environment, including proportional transaction costs, and alpha=0.99.
 
-1. **Indifference price**: (p_0=\mathrm{CVaR}_\alpha(L_{cal})), estimated on the fresh calibration sample. This is equivalent to (q+\mathrm{CVaR}_\alpha(L_{cal}-q)) by translation equivariance.
-2. **Figure 5 terminal hedging error**: (p_0-L_{OOS}), matching the paper's (p_0-Z+(\delta\cdot S)_T-C_T(\delta)) sign convention.
-3. **OOS realized CVaR shortfall**: (\mathrm{CVaR}_\alpha(L_{OOS}-p_0)). Lower values indicate a smaller upper-tail loss relative to the calibrated price.
-4. **Mean OOS loss**: arithmetic mean of the uncentered (L_{OOS}). It is shown transparently and should not be confused with the paper's reported Mean Loss unless that table's exact normalization is separately reproduced.
+1. **Indifference price**: p0 = CVaR_alpha(L_cal), estimated on fresh calibration paths.
+2. **Figure 5 terminal hedging error**: p0 - L_OOS.
+3. **OOS realized CVaR shortfall**: CVaR_alpha(L_OOS - p0). Lower is better.
+4. **Mean OOS loss**: arithmetic mean of uncentered L_OOS.
 
-The calibration and OOS samples are independent by seed and are shared between the two policies. The script reports the original OOS seed from the saved config for provenance.
+The calibration and OOS samples are independent by seed and shared between recurrent and simpler policies. This provides an independent-price/OOS-risk estimate but does not guarantee exact numerical agreement with the paper.
 
-## Important interpretation
+## Current replication status
 
-This is a clean independent-price / OOS-risk evaluation using the current implementation and existing checkpoints. It does not by itself resolve the gap between this implementation and the paper's numerical Figure 5 values. In particular, the simulator, input features, normalization, and training batch size remain those of the saved E3 run.
+The existing seed-0 result has recurrent price 4.1707 and simpler price 4.2261, below the plan's target bands [5.2, 5.8] and [6.4, 7.1]. The recurrent policy has lower OOS mean loss and OOS CVaR in this run, but the price gap is small. The result is therefore a valid evaluation run, not yet a quantitative reproduction of the paper's Figure 5 target values.
