@@ -471,6 +471,11 @@ def main() -> int:
         action="store_true",
         help="Skip training and evaluate existing checkpoints and OOS pnl.npz.",
     )
+    parser.add_argument(
+        "--finalize-only",
+        action="store_true",
+        help="Update metrics.json from an already saved evaluation.json without recalibration or training.",
+    )
     parser.add_argument("--calibration-paths", type=int, default=None)
     parser.add_argument("--calibration-batch-size", type=int, default=None)
     parser.add_argument("--calibration-seed", type=int, default=None)
@@ -478,6 +483,24 @@ def main() -> int:
     args = parser.parse_args()
 
     folder = args.run_dir or (Path(args.out) / "e3" / str(args.seed))
+    if args.finalize_only:
+        if args.eval_only:
+            parser.error("--finalize-only and --eval-only are mutually exclusive")
+        report_path = folder / "evaluation.json"
+        metrics_path = folder / "metrics.json"
+        if not report_path.is_file() or not metrics_path.is_file():
+            raise FileNotFoundError(
+                "Finalize-only requires both evaluation.json and metrics.json in the run directory"
+            )
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        payload = json.loads(metrics_path.read_text(encoding="utf-8"))
+        metrics, checks = apply_evaluation_to_metrics(
+            payload.get("metrics", {}), payload.get("checks", {}), report
+        )
+        update_metrics_file(folder, metrics, checks, report)
+        print(f"E3 finalized from saved evaluation: {metrics_path}")
+        return 0
+
     if args.eval_only:
         config_path = folder / "config.yaml"
         if not config_path.is_file():
