@@ -1,32 +1,625 @@
-"""Run one E3 seed using the common A2 QE-M simulator and paired OOS paths."""
+"""Run E3 end-to-end: train (or load checkpoints), calibrate, OOS-evaluate, and plot Figure 5."""
 
 from __future__ import annotations
 
 import argparse
+import json
+import logging
 import time
 from pathlib import Path
+from typing import Any
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from src.common.config import dump_runtime_config, load_config
 from src.common.logging import human_secs, setup_logger
-from src.common.metrics import save_pnl, write_metrics
-from src.common.seed import resolve_device
-from src.replication.e3 import run
+from src.common.metrics import cvar, save_pnl, write_metrics
+from src.common.seed import resolve_device, seed_everything
+from src.replication.e1 import market_from_cfg, policy_from_cfg
+from src.replication.e3 import run as train_and_evaluate
+from src.replication.env_heston import HestonWorld
+
+
+def empirical_cvar(values: np.ndarray, alpha: float) -> float:
+    """Return empirical upper-tail CVaR for a one-dimensional loss sample."""
+    return float(cvar(torch.as_tensor(values, dtype=torch.float64), alpha))
+
+
+def summarize(calibration_loss: np.ndarray, oos_loss: np.ndarray, alpha: float) -> dict[str, float]:
+    """Calibrate price on one sample and assess realized risk on an independent sample."""
+    price = empirical_cvar(calibration_loss, alpha)
+    oos_cvar = empirical_cvar(oos_loss, alpha)
+    hedging_error = price - oos_loss
+    centered_loss = oos_loss - price
+    return {
+        "calibration_mean_raw_loss": float(calibration_loss.mean()),
+        "indifference_price": price,
+        "oos_mean_raw_loss": float(oos_loss.mean()),
+        "oos_signed_terminal_hedging_loss": float(centered_loss.mean()),
+        "oos_mean_hedging_error": float(hedging_error.mean()),
+        "oos_mean_excess_loss_diagnostic": float(np.maximum(centered_loss, 0.0).mean()),
+        "oos_mean_positive_hedging_error": float(np.maximum(hedging_error, 0.0).mean()),
+        "oos_realized_cvar_loss": oos_cvar,
+        "oos_realized_cvar_shortfall": empirical_cvar(oos_loss - price, alpha),
+        "oos_hedging_error_q01": float(np.quantile(hedging_error, 0.01)),
+        "oos_hedging_error_median": float(np.median(hedging_error)),
+        "oos_hedging_error_q99": float(np.quantile(hedging_error, 0.99)),
+    }
+
+
+def load_policy(
+    checkpoint: Path,
+    cfg: dict[str, Any],
+    recurrent: bool,
+    world: HestonWorld,
+    device: torch.device,
+) -> torch.nn.Module:
+    """Instantiate a frozen E3 policy and load its saved state dictionary."""
+    policy = policy_from_cfg(
+        cfg, world.market.n_features, world.market.d, device, recurrent=recurrent
+    )
+    state = torch.load(checkpoint, map_location=device, weights_only=True)
+    policy.load_state_dict(state, strict=True)
+    policy.eval()
+    return policy
+
+
+@torch.no_grad()
+def calibration_losses(
+    world: HestonWorld,
+    recurrent: torch.nn.Module,
+    simpler: torch.nn.Module,
+    n_paths: int,
+    batch_size: int,
+    seed: int,
+    log: logging.Logger,
+    sample_label: str = "calibration",
+) -> tuple[np.ndarray, np.ndarray]:
+    """Evaluate both frozen policies on common paths generated from the supplied seed."""
+    seed_everything(seed)
+    recurrent_parts: list[np.ndarray] = []
+    simpler_parts: list[np.ndarray] = []
+    done = 0
+    while done < n_paths:
+        size = min(batch_size, n_paths - done)
+        paths = world.simulate(size)
+        features = world.features(paths)
+        recurrent_positions = recurrent.forward_path(features)
+        simpler_positions = simpler.forward_path(features)
+        recurrent_parts.append(world.terminal_loss(recurrent_positions, paths).cpu().numpy())
+        simpler_parts.append(world.terminal_loss(simpler_positions, paths).cpu().numpy())
+        done += size
+        if done % max(batch_size * 4, batch_size) == 0 or done == n_paths:
+            log.info("%s paths %d/%d", sample_label, done, n_paths)
+    return np.concatenate(recurrent_parts), np.concatenate(simpler_parts)
+
+
+def make_figure(
+    recurrent_error: np.ndarray,
+    simpler_error: np.ndarray,
+    metrics: dict[str, dict[str, float]],
+    alpha: float,
+    output: Path,
+    bins: int,
+) -> None:
+    """Save the E3 Figure 5 histogram and comparison table at 300 dpi."""
+    pooled = np.concatenate([recurrent_error, simpler_error])
+    lo, hi = np.quantile(pooled, [0.001, 0.999])
+    if not np.isfinite([lo, hi]).all() or hi <= lo:
+        raise ValueError("Cannot construct histogram range from hedging errors")
+    edges = np.linspace(lo, hi, bins + 1)
+
+    fig = plt.figure(figsize=(11.5, 7.2), constrained_layout=True)
+    grid = fig.add_gridspec(2, 1, height_ratios=[4.5, 1.45])
+    ax = fig.add_subplot(grid[0])
+    ax.hist(
+        recurrent_error,
+        bins=edges,
+        alpha=0.55,
+        label="recurrent",
+        color="#4472C4",
+        edgecolor="none",
+    )
+    ax.hist(
+        simpler_error,
+        bins=edges,
+        alpha=0.55,
+        label="simpler",
+        color="#ed7c31",
+        edgecolor="none",
+    )
+    ax.axvline(0.0, color="black", linewidth=1.0, linestyle="--", alpha=0.7)
+    ax.set_xlabel(r"Terminal hedging error  $p_0 - L_{\mathrm{raw}}$")
+    ax.set_ylabel("Number of OOS paths")
+    ax.legend(frameon=True)
+    ax.grid(axis="y", alpha=0.2)
+
+    table_ax = fig.add_subplot(grid[1])
+    table_ax.axis("off")
+    columns = ["Model", "Mean Loss*", "Price", "Realized CVaR"]
+    rows = [
+        [
+            "Recurrent",
+            f"{metrics['recurrent']['oos_mean_excess_loss_diagnostic']:.6f}",
+            f"{metrics['recurrent']['indifference_price']:.4f}",
+            f"{metrics['recurrent']['oos_realized_cvar_shortfall']:.4f}",
+        ],
+        [
+            "Simpler",
+            f"{metrics['simpler']['oos_mean_excess_loss_diagnostic']:.6f}",
+            f"{metrics['simpler']['indifference_price']:.4f}",
+            f"{metrics['simpler']['oos_realized_cvar_shortfall']:.4f}",
+        ],
+    ]
+    table = table_ax.table(
+        cellText=rows,
+        colLabels=columns,
+        loc="center",
+        cellLoc="center",
+        colLoc="center",
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    table.scale(1.0, 1.55)
+    table_ax.text(
+        0.5,
+        0.04,
+        "* Mean Loss proxy: E[max(L_raw - p0, 0)]; not confirmed as the paper's Mean Loss.",
+        ha="center",
+        va="bottom",
+        fontsize=7,
+        transform=table_ax.transAxes,
+    )
+    fig.savefig(output, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def update_saved_pnl(
+    pnl_path: Path,
+    calibration_recurrent: np.ndarray,
+    calibration_simpler: np.ndarray,
+    hedging_error_recurrent: np.ndarray,
+    hedging_error_simpler: np.ndarray,
+    validation_recurrent: np.ndarray,
+    validation_simpler: np.ndarray,
+) -> None:
+    """Append calibration, validation, and centered OOS arrays without dropping existing fields."""
+    with np.load(pnl_path) as saved:
+        arrays = {key: np.asarray(saved[key]) for key in saved.files}
+    terminal_loss = arrays.pop("terminal_loss")
+    arrays.update(
+        {
+            "calibration_loss_recurrent": calibration_recurrent,
+            "calibration_loss_simpler": calibration_simpler,
+            "hedging_error_recurrent": hedging_error_recurrent,
+            "hedging_error_simpler": hedging_error_simpler,
+            "validation_loss_recurrent": validation_recurrent,
+            "validation_loss_simpler": validation_simpler,
+        }
+    )
+    save_pnl(pnl_path, terminal_loss, **arrays)
+
+
+def run_independent_evaluation(
+    run_dir: Path,
+    cfg: dict[str, Any],
+    device: torch.device,
+    log: logging.Logger,
+    calibration_paths_override: int | None = None,
+    calibration_batch_override: int | None = None,
+    calibration_seed_override: int | None = None,
+    bins: int = 100,
+) -> dict[str, Any]:
+    """Load existing E3 artifacts, independently calibrate prices, and evaluate OOS risk."""
+    config = cfg
+    train_cfg = config.get("train", {}) or {}
+    alpha = float(config.get("alpha", 0.99))
+    n_calibration = int(
+        calibration_paths_override
+        or train_cfg.get("calibration_paths", train_cfg.get("eval_paths", 1_000_000))
+    )
+    batch_size = int(
+        calibration_batch_override
+        or train_cfg.get("calibration_batch_size", train_cfg.get("eval_batch_size", 25_000))
+    )
+    calibration_seed = int(
+        calibration_seed_override
+        if calibration_seed_override is not None
+        else train_cfg.get("calibration_seed", 271828)
+    )
+    oos_seed = int(train_cfg.get("eval_seed", 314159))
+    if calibration_seed == oos_seed:
+        raise ValueError("Calibration and OOS seeds must differ to ensure independent samples")
+    if n_calibration < 1 or batch_size < 1:
+        raise ValueError("Calibration path count and batch size must be positive")
+
+    pnl_path = run_dir / "pnl.npz"
+    recurrent_path = run_dir / "policy_recurrent.pt"
+    simpler_path = run_dir / "policy_simpler.pt"
+    for path in (pnl_path, recurrent_path, simpler_path):
+        if not path.is_file():
+            raise FileNotFoundError(f"Required E3 artifact not found: {path}")
+
+    with np.load(pnl_path) as saved:
+        required = {"terminal_loss", "terminal_loss_simpler"}
+        missing = required.difference(saved.files)
+        if missing:
+            raise KeyError(f"{pnl_path} is missing arrays: {sorted(missing)}")
+        oos_recurrent = np.asarray(saved["terminal_loss"], dtype=np.float64)
+        oos_simpler = np.asarray(saved["terminal_loss_simpler"], dtype=np.float64)
+    if oos_recurrent.ndim != 1 or oos_recurrent.shape != oos_simpler.shape:
+        raise ValueError("Recurrent and simpler OOS losses must be paired 1-D arrays")
+    if not np.isfinite(oos_recurrent).all() or not np.isfinite(oos_simpler).all():
+        raise ValueError("OOS losses contain non-finite values")
+
+    market = market_from_cfg(config)
+    world = HestonWorld(market, device=device)
+    recurrent = load_policy(recurrent_path, config, True, world, device)
+    simpler = load_policy(simpler_path, config, False, world, device)
+
+    started = time.perf_counter()
+    calibration_recurrent, calibration_simpler = calibration_losses(
+        world,
+        recurrent,
+        simpler,
+        n_calibration,
+        batch_size,
+        calibration_seed,
+        log,
+        sample_label="calibration",
+    )
+    if not np.isfinite(calibration_recurrent).all() or not np.isfinite(calibration_simpler).all():
+        raise ValueError("Calibration losses contain non-finite values")
+
+    validation_paths = int(train_cfg.get("validation_paths", 10_000))
+    validation_batch = int(train_cfg.get("validation_batch_size", 4_096))
+    validation_seed = int(train_cfg.get("validation_seed", 8_675_309))
+    if validation_paths < 1 or validation_batch < 1:
+        raise ValueError("Validation path count and batch size must be positive")
+    if validation_seed in {calibration_seed, oos_seed}:
+        raise ValueError("Validation, calibration, and OOS seeds must all be distinct")
+    validation_recurrent, validation_simpler = calibration_losses(
+        world,
+        recurrent,
+        simpler,
+        validation_paths,
+        validation_batch,
+        validation_seed,
+        log,
+        sample_label="fixed validation",
+    )
+    if not np.isfinite(validation_recurrent).all() or not np.isfinite(validation_simpler).all():
+        raise ValueError("Validation losses contain non-finite values")
+    validation_metrics = {
+        "recurrent": {
+            "mean_raw_loss": float(validation_recurrent.mean()),
+            "cvar": empirical_cvar(validation_recurrent, alpha),
+        },
+        "simpler": {
+            "mean_raw_loss": float(validation_simpler.mean()),
+            "cvar": empirical_cvar(validation_simpler, alpha),
+        },
+    }
+
+    metrics = {
+        "recurrent": summarize(calibration_recurrent, oos_recurrent, alpha),
+        "simpler": summarize(calibration_simpler, oos_simpler, alpha),
+    }
+    error_recurrent = metrics["recurrent"]["indifference_price"] - oos_recurrent
+    error_simpler = metrics["simpler"]["indifference_price"] - oos_simpler
+
+    make_figure(
+        error_recurrent,
+        error_simpler,
+        metrics,
+        alpha,
+        run_dir / "fig_05_e3.png",
+        bins,
+    )
+    update_saved_pnl(
+        pnl_path,
+        calibration_recurrent,
+        calibration_simpler,
+        error_recurrent,
+        error_simpler,
+        validation_recurrent,
+        validation_simpler,
+    )
+
+    report = {
+        "schema_version": "1.0",
+        "experiment": "e3",
+        "source_run_dir": str(run_dir),
+        "calibration_paths": n_calibration,
+        "calibration_seed": calibration_seed,
+        "oos_paths": int(len(oos_recurrent)),
+        "oos_source": str(pnl_path),
+        "oos_seed": oos_seed,
+        "alpha": alpha,
+        "device": str(device),
+        "runtime_sec": round(time.perf_counter() - started, 3),
+        "metrics": metrics,
+        "fixed_validation": {
+            "paths": validation_paths,
+            "seed": validation_seed,
+            "metrics": validation_metrics,
+            "interpretation": "one-off final-checkpoint diagnostic, not a historical training curve",
+        },
+        "definitions": {
+            "indifference_price": (
+                "CVaR_alpha(terminal_loss) estimated on independent calibration paths"
+            ),
+            "figure5_histogram": "indifference_price - OOS terminal_loss",
+            "realized_cvar_shortfall": (
+                "CVaR_alpha(OOS terminal_loss - calibration indifference_price)"
+            ),
+            "oos_mean_raw_loss": "E[L_raw] on the OOS sample",
+            "oos_signed_terminal_hedging_loss": "E[L_raw - p0] on the OOS sample",
+            "figure5_mean_loss_proxy": (
+                "E[max(L_raw - p0, 0)] on the OOS sample; a reconstructed "
+                "positive-part proxy, NOT a verified definition from the paper"
+            ),
+        },
+    }
+    (run_dir / "evaluation.json").write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    log.info("E3 independent evaluation complete")
+    for name, values in metrics.items():
+        log.info(
+            "%s price=%.6f mean_raw_loss=%.6f mean_positive_loss_proxy=%.6f "
+            "mean_signed_terminal_loss=%.6f realized_cvar_shortfall=%.6f",
+            name,
+            values["indifference_price"],
+            values["oos_mean_raw_loss"],
+            values["oos_mean_excess_loss_diagnostic"],
+            values["oos_signed_terminal_hedging_loss"],
+            values["oos_realized_cvar_shortfall"],
+        )
+    log.info("Figure: %s", run_dir / "fig_05_e3.png")
+    log.info("Report: %s", run_dir / "evaluation.json")
+    return {
+        "report": report,
+        "calibration_seed": calibration_seed,
+        "oos_seed": oos_seed,
+        "oos_paths": int(len(oos_recurrent)),
+        "validation_paths": validation_paths,
+        "validation_seed": validation_seed,
+        "validation_metrics": validation_metrics,
+    }
+
+
+def paper_target_checks(report: dict[str, Any]) -> dict[str, bool]:
+    """Report numerical agreement and relative ranking separately from operational validity."""
+    recurrent = report["metrics"]["recurrent"]
+    simpler = report["metrics"]["simpler"]
+    return {
+        "recurrent_price_in_paper_band": 5.2 <= recurrent["indifference_price"] <= 5.8,
+        "simpler_price_in_paper_band": 6.4 <= simpler["indifference_price"] <= 7.1,
+    }
+
+
+def economic_direction_checks(report: dict[str, Any]) -> dict[str, bool]:
+    """Qualitative model comparisons are informative, not engineering pass/fail criteria."""
+    recurrent = report["metrics"]["recurrent"]
+    simpler = report["metrics"]["simpler"]
+    return {
+        "recurrent_price_lower_than_simpler": (
+            recurrent["indifference_price"] < simpler["indifference_price"]
+        ),
+        "recurrent_oos_cvar_lower_than_simpler": (
+            recurrent["oos_realized_cvar_loss"] < simpler["oos_realized_cvar_loss"]
+        ),
+        "recurrent_mean_positive_loss_proxy_lower_than_simpler": (
+            recurrent["oos_mean_excess_loss_diagnostic"]
+            < simpler["oos_mean_excess_loss_diagnostic"]
+        ),
+    }
+
+
+def apply_evaluation_to_metrics(
+    metrics: dict[str, float],
+    checks: dict[str, bool],
+    report: dict[str, Any],
+) -> tuple[dict[str, float], dict[str, bool]]:
+    """Update E3 metrics and checks while keeping paper targets separate."""
+    recurrent = report["metrics"]["recurrent"]
+    simpler = report["metrics"]["simpler"]
+    metrics.update(
+        {
+            "price_recurrent": recurrent["indifference_price"],
+            "price_simpler": simpler["indifference_price"],
+            "cvar_recurrent": recurrent["oos_realized_cvar_loss"],
+            "cvar_simpler": simpler["oos_realized_cvar_loss"],
+            "mean_loss_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
+            "mean_loss_simpler": simpler["oos_mean_excess_loss_diagnostic"],
+            "raw_mean_loss_recurrent": recurrent["oos_mean_raw_loss"],
+            "raw_mean_loss_simpler": simpler["oos_mean_raw_loss"],
+            "mean_excess_loss_diagnostic_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
+            "mean_excess_loss_diagnostic_simpler": simpler["oos_mean_excess_loss_diagnostic"],
+            "figure5_mean_loss_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
+            "figure5_mean_loss_simpler": simpler["oos_mean_excess_loss_diagnostic"],
+            "figure5_mean_loss_proxy_recurrent": recurrent["oos_mean_excess_loss_diagnostic"],
+            "figure5_mean_loss_proxy_simpler": simpler["oos_mean_excess_loss_diagnostic"],
+            "signed_terminal_hedging_loss_recurrent": recurrent["oos_signed_terminal_hedging_loss"],
+            "signed_terminal_hedging_loss_simpler": simpler["oos_signed_terminal_hedging_loss"],
+            "cvar_shortfall_recurrent": recurrent["oos_realized_cvar_shortfall"],
+            "cvar_shortfall_simpler": simpler["oos_realized_cvar_shortfall"],
+        }
+    )
+    # Remove historical target and ranking checks from the operational checks.
+    for key in (*paper_target_checks(report), *economic_direction_checks(report)):
+        checks.pop(key, None)
+    validation = report.get("fixed_validation", {})
+    validation_metrics = validation.get("metrics", {})
+    checks.update(
+        {
+            "independent_calibration_oos_seeds": (report["calibration_seed"] != report["oos_seed"]),
+            "independent_validation_seed": (
+                validation.get("seed") is not None
+                and validation["seed"] not in {report["calibration_seed"], report["oos_seed"]}
+            ),
+            "finite_validation_cvar": all(
+                np.isfinite(validation_metrics[model]["cvar"]) for model in ("recurrent", "simpler")
+            )
+            if all(model in validation_metrics for model in ("recurrent", "simpler"))
+            else False,
+        }
+    )
+    return metrics, checks
+
+
+def update_metrics_file(
+    run_dir: Path,
+    metrics: dict[str, float],
+    checks: dict[str, bool],
+    evaluation: dict[str, Any],
+) -> None:
+    """Update metrics after eval-only while preserving the original training provenance."""
+    path = run_dir / "metrics.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"Cannot update missing metrics file: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload.setdefault("metrics", {}).update(metrics)
+    saved_checks = payload.setdefault("checks", {})
+    # Older seed-0 metrics files mixed paper target bands with execution checks.
+    for key in (*paper_target_checks(evaluation), *economic_direction_checks(evaluation)):
+        saved_checks.pop(key, None)
+    saved_checks.update(checks)
+    payload["operational_passed"] = bool(saved_checks) and all(saved_checks.values())
+    payload["passed"] = payload["operational_passed"]  # backward-compatible field
+    targets = paper_target_checks(evaluation)
+    payload["paper_target_checks"] = targets
+    payload["paper_target_passed"] = all(targets.values())
+    payload["economic_direction_checks"] = economic_direction_checks(evaluation)
+    payload["independent_evaluation"] = {
+        "calibration_paths": evaluation["calibration_paths"],
+        "calibration_seed": evaluation["calibration_seed"],
+        "oos_paths": evaluation["oos_paths"],
+        "oos_seed": evaluation["oos_seed"],
+        "device": evaluation["device"],
+        "runtime_sec": evaluation["runtime_sec"],
+        "validation_paths": evaluation["fixed_validation"]["paths"],
+        "validation_seed": evaluation["fixed_validation"]["seed"],
+        "validation_metrics": evaluation["fixed_validation"]["metrics"],
+    }
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/exp/e3.yaml")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", default="results")
+    parser.add_argument("--run-dir", type=Path, default=None)
     parser.add_argument("--device", default=None)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--eval-only",
+        action="store_true",
+        help="Skip training and evaluate existing checkpoints and OOS pnl.npz.",
+    )
+    parser.add_argument(
+        "--finalize-only",
+        action="store_true",
+        help="Update metrics.json from an already saved evaluation.json without recalibration or training.",
+    )
+    parser.add_argument(
+        "--plot-only",
+        action="store_true",
+        help="Rebuild Figure 5 from saved evaluation.json and pnl.npz without running models.",
+    )
+    parser.add_argument("--calibration-paths", type=int, default=None)
+    parser.add_argument("--calibration-batch-size", type=int, default=None)
+    parser.add_argument("--calibration-seed", type=int, default=None)
+    parser.add_argument("--bins", type=int, default=100)
     args = parser.parse_args()
-    cfg = load_config(args.config)
+
+    folder = args.run_dir or (Path(args.out) / "e3" / str(args.seed))
+    if sum((args.finalize_only, args.eval_only, args.plot_only)) > 1:
+        parser.error("--finalize-only, --plot-only, and --eval-only are mutually exclusive")
+    if args.plot_only:
+        report_path = folder / "evaluation.json"
+        pnl_path = folder / "pnl.npz"
+        if not report_path.is_file() or not pnl_path.is_file():
+            raise FileNotFoundError(
+                "Plot-only requires evaluation.json and pnl.npz in the run directory"
+            )
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        with np.load(pnl_path) as saved:
+            losses_recurrent = np.asarray(saved["terminal_loss"], dtype=np.float64)
+            losses_simpler = np.asarray(saved["terminal_loss_simpler"], dtype=np.float64)
+        if losses_recurrent.ndim != 1 or losses_recurrent.shape != losses_simpler.shape:
+            raise ValueError("Plot-only requires paired one-dimensional OOS loss arrays")
+        if not np.isfinite(losses_recurrent).all() or not np.isfinite(losses_simpler).all():
+            raise ValueError("Plot-only OOS losses contain non-finite values")
+        summary = report["metrics"]
+        make_figure(
+            summary["recurrent"]["indifference_price"] - losses_recurrent,
+            summary["simpler"]["indifference_price"] - losses_simpler,
+            summary,
+            float(report["alpha"]),
+            folder / "fig_05_e3.png",
+            args.bins,
+        )
+        print(f"E3 Figure 5 regenerated: {folder / 'fig_05_e3.png'}")
+        return 0
+    if args.finalize_only:
+        report_path = folder / "evaluation.json"
+        metrics_path = folder / "metrics.json"
+        if not report_path.is_file() or not metrics_path.is_file():
+            raise FileNotFoundError(
+                "Finalize-only requires both evaluation.json and metrics.json in the run directory"
+            )
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        payload = json.loads(metrics_path.read_text(encoding="utf-8"))
+        metrics, checks = apply_evaluation_to_metrics(
+            payload.get("metrics", {}), payload.get("checks", {}), report
+        )
+        update_metrics_file(folder, metrics, checks, report)
+        print(f"E3 finalized from saved evaluation: {metrics_path}")
+        return 0
+
+    if args.eval_only:
+        config_path = folder / "config.yaml"
+        if not config_path.is_file():
+            raise FileNotFoundError(f"Saved E3 config not found: {config_path}")
+        cfg = load_config(config_path)
+    else:
+        cfg = load_config(args.config)
     if args.device:
         cfg["device"] = args.device
     device = resolve_device(cfg["device"])
-    folder = Path(args.out) / "e3" / str(args.seed)
+
+    if args.eval_only:
+        log = setup_logger("a2.e3.eval", folder / "evaluation.log")
+        started = time.perf_counter()
+        log.info("E3 eval-only run_dir=%s device=%s", folder, device)
+        evaluation = run_independent_evaluation(
+            folder,
+            cfg,
+            device,
+            log,
+            args.calibration_paths,
+            args.calibration_batch_size,
+            args.calibration_seed,
+            args.bins,
+        )
+        payload = json.loads((folder / "metrics.json").read_text(encoding="utf-8"))
+        metrics, checks = apply_evaluation_to_metrics(
+            payload.get("metrics", {}),
+            payload.get("checks", {}),
+            evaluation["report"],
+        )
+        update_metrics_file(folder, metrics, checks, evaluation["report"])
+        log.info("E3 eval-only completed runtime=%s", human_secs(time.perf_counter() - started))
+        return 0
+
     if args.resume and (folder / "metrics.json").exists():
         print(f"E3 seed {args.seed} already complete; skipping.")
         return 0
@@ -36,12 +629,27 @@ def main() -> int:
     log = setup_logger(f"a2.e3.{args.seed}", folder / "run.log")
     started = time.perf_counter()
     log.info("E3 seed=%d device=%s config=%s", args.seed, device, args.config)
-    result = run(cfg, args.seed, device, log)
+
+    result = train_and_evaluate(cfg, args.seed, device, log)
     dump_runtime_config(cfg, folder / "config.yaml")
     save_pnl(folder / "pnl.npz", result["terminal_loss"], **result.get("extra_pnl", {}))
     for name, state in result.get("artifacts", {}).items():
         torch.save(state, folder / name)
-    record = write_metrics(
+
+    evaluation = run_independent_evaluation(
+        folder,
+        cfg,
+        device,
+        log,
+        args.calibration_paths,
+        args.calibration_batch_size,
+        args.calibration_seed,
+        args.bins,
+    )
+    result["metrics"], result["checks"] = apply_evaluation_to_metrics(
+        result["metrics"], result["checks"], evaluation["report"]
+    )
+    write_metrics(
         folder / "metrics.json",
         exp="e3",
         seed=args.seed,
@@ -52,10 +660,11 @@ def main() -> int:
         device=device,
         n_paths=result["n_paths"],
     )
+    update_metrics_file(folder, result["metrics"], result["checks"], evaluation["report"])
     log.info(
-        "E3 completed runtime=%s passed=%s",
+        "E3 completed runtime=%s operational_passed=%s",
         human_secs(time.perf_counter() - started),
-        record["passed"],
+        all(result["checks"].values()),
     )
     return 0
 

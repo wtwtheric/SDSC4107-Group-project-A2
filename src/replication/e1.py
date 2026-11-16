@@ -18,6 +18,7 @@ from typing import Any
 
 import numpy as np
 import torch
+from torch import Tensor
 
 from src.common.metrics import cvar
 from src.replication.benchmark import HestonBenchmark
@@ -106,7 +107,62 @@ def train_policy(
     alpha = float(cfg["alpha"])
     log_every = int(train_cfg.get("log_every", 250))
     opt = torch.optim.Adam(policy.parameters(), lr=lr)
-    log.info("  lr_schedule=%s lr=%g->%g batch=%d n_iter=%d", schedule, lr, lr_min, batch, n_iter)
+
+    # Optional fixed validation sample. Generate it from a separate seed and
+    # restore all RNG states so enabling diagnostics does not alter training paths.
+    validation_paths = None
+    validation_features = None
+    validation_seed = int(train_cfg.get("validation_seed", 8675309))
+    validation_count = int(train_cfg.get("validation_paths", 0))
+    validation_batch = int(train_cfg.get("validation_batch_size", 4096))
+    if validation_count > 0:
+        if validation_batch < 1:
+            raise ValueError("validation_batch_size must be positive")
+        cpu_rng = torch.get_rng_state()
+        cuda_rng = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
+        try:
+            torch.manual_seed(validation_seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(validation_seed)
+            validation_paths = world.simulate(validation_count)
+            validation_features = world.features(validation_paths)
+        finally:
+            torch.set_rng_state(cpu_rng)
+            if cuda_rng is not None:
+                torch.cuda.set_rng_state_all(cuda_rng)
+
+    def evaluate_fixed_validation() -> float:
+        assert validation_paths is not None and validation_features is not None
+        policy.eval()
+        parts: list[Tensor] = []
+        with torch.no_grad():
+            for start in range(0, validation_count, validation_batch):
+                stop = min(start + validation_batch, validation_count)
+                # Slice the NamedTuple fields consistently to avoid copying the full
+                # validation sample into a second set of tensors.
+                paths_batch = HestonPaths(
+                    spot=validation_paths.spot[start:stop],
+                    variance=validation_paths.variance[start:stop],
+                    varswap=validation_paths.varswap[start:stop],
+                    time=validation_paths.time,
+                )
+                features_batch = validation_features[start:stop]
+                positions = policy.forward_path(features_batch)
+                parts.append(world.terminal_loss(positions, paths_batch))
+        value = float(cvar(torch.cat(parts), alpha))
+        policy.train()
+        return value
+
+    log.info(
+        "  lr_schedule=%s lr=%g->%g batch=%d n_iter=%d validation_paths=%d validation_seed=%d",
+        schedule,
+        lr,
+        lr_min,
+        batch,
+        n_iter,
+        validation_count,
+        validation_seed,
+    )
 
     running = 0.0
     for it in range(1, n_iter + 1):
@@ -123,15 +179,28 @@ def train_policy(
         opt.step()
         running += float(loss.detach())
         if it % log_every == 0:
-            log.info(
-                "  iter %d/%d lr=%.3g train_cvar=%.4f (last %d avg %.4f)",
-                it,
-                n_iter,
-                lr_t,
-                float(loss.detach()),
-                log_every,
-                running / log_every,
-            )
+            if validation_paths is not None:
+                validation_cvar = evaluate_fixed_validation()
+                log.info(
+                    "  iter %d/%d lr=%.3g train_cvar=%.4f (last %d avg %.4f) validation_cvar=%.4f",
+                    it,
+                    n_iter,
+                    lr_t,
+                    float(loss.detach()),
+                    log_every,
+                    running / log_every,
+                    validation_cvar,
+                )
+            else:
+                log.info(
+                    "  iter %d/%d lr=%.3g train_cvar=%.4f (last %d avg %.4f)",
+                    it,
+                    n_iter,
+                    lr_t,
+                    float(loss.detach()),
+                    log_every,
+                    running / log_every,
+                )
             running = 0.0
     return policy
 

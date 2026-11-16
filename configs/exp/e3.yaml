@@ -1,7 +1,7 @@
 # E3: transaction costs, recurrent versus simpler policy.
 exp: e3
 kind: e3
-seeds: [0, 1, 2, 3, 4]
+seeds: [0]  # Seeds 1-4 deferred until the remaining A2 experiments are stable.
 device: auto
 n_steps: 30
 batch: 1024
@@ -35,3 +35,7 @@ train:
   eval_seed: 314159
   visual_paths: 200000
   visual_step: 15
+  # Optional diagnostics for future training runs; existing seed-0 checkpoints are unchanged.
+  validation_paths: 10000
+  validation_batch_size: 4096
+  validation_seed: 8675309
