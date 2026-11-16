@@ -37,11 +37,15 @@ def summarize(
     price = empirical_cvar(calibration_loss, alpha)
     oos_cvar = empirical_cvar(oos_loss, alpha)
     hedging_error = price - oos_loss
+    centered_loss = oos_loss - price
     return {
-        "calibration_mean_loss": float(calibration_loss.mean()),
+        "calibration_mean_raw_loss": float(calibration_loss.mean()),
         "indifference_price": price,
-        "oos_mean_loss": float(oos_loss.mean()),
+        "oos_mean_raw_loss": float(oos_loss.mean()),
+        "oos_signed_terminal_hedging_loss": float(centered_loss.mean()),
         "oos_mean_hedging_error": float(hedging_error.mean()),
+        "oos_mean_excess_loss_candidate": float(np.maximum(centered_loss, 0.0).mean()),
+        "oos_mean_positive_hedging_error": float(np.maximum(hedging_error, 0.0).mean()),
         "oos_realized_cvar_loss": oos_cvar,
         "oos_realized_cvar_shortfall": empirical_cvar(oos_loss - price, alpha),
         "oos_hedging_error_q01": float(np.quantile(hedging_error, 0.01)),
@@ -142,21 +146,18 @@ def make_figure(
 
     table_ax = fig.add_subplot(grid[1])
     table_ax.axis("off")
-    columns = ["Metric", "Recurrent", "Simpler"]
+    columns = ["Model", "Mean Loss*", "Price", "Realized CVaR"]
     rows = [
         [
-            "Mean loss",
-            f'{metrics["recurrent"]["oos_mean_loss"]:.4f}',
-            f'{metrics["simpler"]["oos_mean_loss"]:.4f}',
-        ],
-        [
-            "Indifference price",
+            "Recurrent",
+            f'{metrics["recurrent"]["oos_mean_excess_loss_candidate"]:.4f}',
             f'{metrics["recurrent"]["indifference_price"]:.4f}',
-            f'{metrics["simpler"]["indifference_price"]:.4f}',
+            f'{metrics["recurrent"]["oos_realized_cvar_shortfall"]:.4f}',
         ],
         [
-            f"Realized CVaR{alpha:.2f}",
-            f'{metrics["recurrent"]["oos_realized_cvar_shortfall"]:.4f}',
+            "Simpler",
+            f'{metrics["simpler"]["oos_mean_excess_loss_candidate"]:.4f}',
+            f'{metrics["simpler"]["indifference_price"]:.4f}',
             f'{metrics["simpler"]["oos_realized_cvar_shortfall"]:.4f}',
         ],
     ]
@@ -168,8 +169,13 @@ def make_figure(
         colLoc="center",
     )
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1.0, 1.65)
+    table.set_fontsize(9)
+    table.scale(1.0, 1.55)
+    table_ax.text(
+        0.5, 0.04,
+        "*Provisional diagnostic: E[(L_T - p_0)^+]; the paper does not explicitly define this table entry.",
+        ha="center", va="bottom", fontsize=7, transform=table_ax.transAxes,
+    )
     fig.savefig(output, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
@@ -321,10 +327,11 @@ def run_independent_evaluation(
     log.info("E3 independent evaluation complete")
     for name, values in metrics.items():
         log.info(
-            "%s price=%.6f mean_oos_loss=%.6f realized_cvar_shortfall=%.6f",
+            "%s price=%.6f mean_raw_loss=%.6f mean_excess_candidate=%.6f realized_cvar_shortfall=%.6f",
             name,
             values["indifference_price"],
-            values["oos_mean_loss"],
+            values["oos_mean_raw_loss"],
+            values["oos_mean_excess_loss_candidate"],
             values["oos_realized_cvar_shortfall"],
         )
     log.info("Figure: %s", run_dir / "fig_05_e3.png")
@@ -351,8 +358,12 @@ def apply_evaluation_to_metrics(
             "price_simpler": simpler["indifference_price"],
             "cvar_recurrent": recurrent["oos_realized_cvar_loss"],
             "cvar_simpler": simpler["oos_realized_cvar_loss"],
-            "mean_loss_recurrent": recurrent["oos_mean_loss"],
-            "mean_loss_simpler": simpler["oos_mean_loss"],
+            "mean_loss_recurrent": recurrent["oos_mean_raw_loss"],
+            "mean_loss_simpler": simpler["oos_mean_raw_loss"],
+            "figure5_mean_loss_candidate_recurrent": recurrent["oos_mean_excess_loss_candidate"],
+            "figure5_mean_loss_candidate_simpler": simpler["oos_mean_excess_loss_candidate"],
+            "signed_terminal_hedging_loss_recurrent": recurrent["oos_signed_terminal_hedging_loss"],
+            "signed_terminal_hedging_loss_simpler": simpler["oos_signed_terminal_hedging_loss"],
             "cvar_shortfall_recurrent": recurrent["oos_realized_cvar_shortfall"],
             "cvar_shortfall_simpler": simpler["oos_realized_cvar_shortfall"],
         }
