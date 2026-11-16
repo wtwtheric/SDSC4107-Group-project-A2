@@ -172,7 +172,7 @@ def make_figure(
     table.scale(1.0, 1.55)
     table_ax.text(
         0.5, 0.04,
-        "Mean Loss = E[L_T - p_0]; see documentation for the operational interpretation.",
+        "Mean Loss = E[L_T]; see documentation for the operational interpretation.",
         ha="center", va="bottom", fontsize=7, transform=table_ax.transAxes,
     )
     fig.savefig(output, dpi=300, bbox_inches="tight")
