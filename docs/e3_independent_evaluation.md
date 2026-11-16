@@ -42,8 +42,11 @@ Let L be the terminal loss from the Heston environment, including proportional t
 
 1. **Indifference price**: p0 = CVaR_alpha(L_cal), estimated on fresh calibration paths.
 2. **Figure 5 terminal hedging error**: p0 - L_OOS.
-3. **OOS realized CVaR shortfall**: CVaR_alpha(L_OOS - p0). Lower is better.
-4. **Mean OOS loss**: arithmetic mean of uncentered L_OOS.
+3. **OOS realized CVaR shortfall**: CVaR_alpha(L_raw,OOS - p0). Lower is better.
+4. **Raw mean loss**: E[L_raw] on the uncentered OOS sample. This is retained as a diagnostic and is not the Figure 5 table's Mean Loss.
+5. **Signed terminal hedging loss (Figure 5 operational definition)**: define the paper-style terminal hedging loss as L_T = Z - p0 - (delta · S)_T + C_T(delta) = L_raw - p0. The reported Mean Loss is E[L_T] on the OOS sample. This follows the terminal-loss convention discussed for Figure 5; because the paper's Figure 5 caption does not separately spell out the table calculation, this operational interpretation is stated explicitly rather than presented as an independently verified formula.
+6. **Positive-part excess loss diagnostic**: E[(L_raw - p0)^+] is also stored as an auxiliary diagnostic, not substituted for the paper's Mean Loss.
+7. **Figure 5 histogram**: p0 - L_raw,OOS, matching the sign/order in the paper's caption.
 
 The calibration and OOS samples are independent by seed and shared between recurrent and simpler policies. This provides an independent-price/OOS-risk estimate but does not guarantee exact numerical agreement with the paper.
 
@@ -86,3 +89,28 @@ Explain what the comparison says about hedging performance under transaction cos
 - If the recurrent and simpler results are close, report that the recurrent advantage is small in this run. Do not force a strong architectural conclusion from one seed.
 
 These three levels support a transparent replication report: implementation fidelity explains what was reproduced, numerical replication quantifies agreement with Figure 5, and economic interpretation explains the observed differences and their limits.
+
+
+## Evaluation correction and training diagnostics
+
+The evaluation code keeps the following quantities separate to prevent a change of convention from being hidden:
+
+- `oos_mean_raw_loss`: E[L_raw], where L_raw = Z - (delta · S)_T + C_T(delta).
+- `oos_signed_terminal_hedging_loss`: E[L_raw - p0]. This is the value displayed as Figure 5 "Mean Loss" and stored in the legacy `mean_loss_recurrent` / `mean_loss_simpler` metric fields.
+- `oos_mean_excess_loss_diagnostic`: E[(L_raw - p0)^+], an auxiliary diagnostic only.
+- `oos_realized_cvar_shortfall`: CVaR_alpha(L_raw - p0).
+- `oos_mean_hedging_error`: E[p0 - L_raw], the signed mean of the histogram variable; it is the negative of the signed terminal hedging loss.
+
+The Figure 5 table uses the original column labels: **Mean Loss**, **Price**, and **Realized CVaR**. The first is evaluated as the mean signed terminal hedging loss above. The paper's caption supplies the terminal hedging-error expression but does not independently define the averaging convention in the table; the project therefore records this interpretation transparently. Raw mean loss remains available in `evaluation.json` so readers can audit the centering.
+
+### Fixed validation paths
+
+The training function now supports an optional fixed validation sample. Set `train.validation_paths` to a positive count; `train.validation_seed` fixes the sample and `train.validation_batch_size` controls evaluation memory. At each existing `log_every` interval, it logs `validation_cvar` alongside the stochastic training CVaR. Validation generation uses a separate seed and restores CPU/CUDA RNG states, so enabling the diagnostic does not change the subsequent training-path random sequence.
+
+The E3 config enables 10,000 fixed validation paths for future training runs. **The existing seed-0 checkpoints were not retrained**; the historical training log cannot be retroactively populated with validation values. The current seed-0 checkpoint can instead be evaluated once on a fixed validation sample as a final-checkpoint diagnostic. This is not a validation learning curve and cannot by itself establish the absence of overfitting.
+
+### Current scope and limitations
+
+- This correction is evaluation-only for the existing seed-0 models; model weights, architecture, features, Heston generator, optimizer, and training hyperparameters are unchanged.
+- Seed 1-4 are intentionally deferred until the remaining A2 experiments have been reviewed.
+- Numerical agreement with the paper is assessed separately from implementation fidelity and economic interpretation. The observed price gap remains a replication limitation, not a reason to alter the evaluation definition.
