@@ -65,6 +65,35 @@ Outputs:
 
 These scripts do not simulate paths, train policies, change source metrics or overwrite original backups. Both checkpoints must be genuine weights rather than unmaterialized Git LFS pointers. If running inside AutoDL, `git lfs pull` is required when the checkpoints were checked out as pointer files.
 
+## Measured seed-0 checkpoint diagnosis (2026-11-17)
+
+The new diagnostic script has now been executed in GitHub Actions using the actual corrected simpler seed-0 checkpoint files (not mocked networks or a regenerated training run). The 81 × 61 uniform state grid produces:
+
+| Leg and metric | Alpha 0.95 | Alpha 0.99 |
+|---|---:|---:|
+| Stock hedge RMSE against model | 0.0307 | 0.0608 |
+| Stock hedge grid correlation | 0.7808 | 0.0167 |
+| NN stock hedge maximum | 0.3242 | 0.1166 |
+| NN stock hedge spot at peak | 99.4 | 96.8 |
+| NN stock hedge at model peak (S=99.8, V=0.02) | 0.2987 | 0.0511 |
+| Stock hedge deviation at model peak | -0.0728 | -0.3205 |
+| Variance swap hedge RMSE against model | 29.48 | 58.26 |
+| Variance swap hedge correlation | 0.8991 | 0.4260 |
+| NN variance swap maximum | 335.05 | 93.00 |
+| NN variance swap at model peak (S=99.3, V=0.02) | 267.17 | 1.88 |
+
+The shared model stock hedge maximum is 0.3715 at S=99.8, V=0.02. The model variance-swap maximum is 332.29 at S=99.3, V=0.02.
+
+**Inference.** The alpha=0.95 simpler policy largely reproduces the model hedge's stock peak and variance-swap structure, albeit with measurable deviations. In contrast, the alpha=0.99 policy shows a large downward scale reduction **and** a leftward shift of the stock peak. The stock grid correlation drops to approximately zero; the variance-swap leg also loses much of the model peak structure. This is a genuine checkpoint-derived shape deviation, not an artifact introduced by the old grey-centered colormap. The leftward peak shift is *qualitatively compatible* with more conservative effective-strike/barrier behavior, but we have not identified a precise effective barrier or established the paper's quantitative hedge-surface reproduction.
+
+These diagnostics do not contradict the 11.41% lower realized CVaR99 under common OOS paths: minimizing tail losses is a different objective from matching the risk-neutral model hedge pointwise. The grid is not weighted by the realized state distribution. We must check the actual k=15 state support (and compare training-path conditioning / BatchNorm statistics) before deciding whether retraining is warranted.
+
+The four checkpoint-derived rows are archived in `reports/e2cs/e2cs_shape_diagnostics_seed0.csv`. The full JSON, grid NPZ, and updated figures are available in the successful GitHub Actions artifact:
+
+https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44038798249/artifacts/14307724287
+
+**Verification:** GitHub Actions CI completed successfully with 65 passing tests. The actual checkpoint-only shape diagnosis completed successfully and produced the plots and data artifact; no model training was performed.
+
 ## Status and next evaluation
 
 The qualitative pattern previously observed in the original figures is that alpha=0.99 has a much flatter stock surface than the model hedge. That **visual interpretation** is not itself a measured numerical diagnosis. The numerical diagnostics should be run and inspected before attributing the flattening to input normalization, effective tail sample size, BatchNorm statistics, or policy optimization. Those are competing hypotheses, not demonstrated causes.
