@@ -55,7 +55,7 @@ def _metrics(
     policy: np.ndarray,
     spots: np.ndarray,
     variances: np.ndarray,
-) -> dict[str, float | list[float]]:
+) -> dict[str, float | None]:
     if model.shape != policy.shape or model.shape != (len(spots), len(variances)):
         raise ValueError("Grid and position shapes differ")
     if not (np.isfinite(model).all() and np.isfinite(policy).all()):
@@ -66,7 +66,7 @@ def _metrics(
     covariance_denom = float(np.sqrt(np.sum(model_centered**2) * np.sum(policy_centered**2)))
     correlation = (
         float(np.sum(model_centered * policy_centered) / covariance_denom)
-        if covariance_denom > 1e-14 else float("nan")
+        if covariance_denom > 1e-14 else None
     )
     mi = np.unravel_index(int(np.argmax(model)), model.shape)
     ni = np.unravel_index(int(np.argmax(policy)), policy.shape)
