@@ -28,7 +28,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--e2-dir", type=Path, default=Path("results/e2/0"))
     parser.add_argument("--e2cs-dir", type=Path, default=Path("results/e2cs"))
     parser.add_argument(
-        "--e2cs-checkpoint-root", type=Path,
+        "--e2cs-checkpoint-root",
+        type=Path,
         default=Path("backups/e2cs_simple_seed0/e2cs"),
     )
     parser.add_argument("--e2cs-report-dir", type=Path, default=Path("reports/e2cs"))
