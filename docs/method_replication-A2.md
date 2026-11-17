@@ -235,3 +235,14 @@ If Fractional CVaR is retained, all formal (\alpha=0.99) E2/E3 runs and (\alpha=
 5. Run E3 with (\varepsilon=0.01,\alpha=0.99).
 6. Run E4-BS then E4-Heston on the paper epsilon grid.
 7. Run the low-friction E4 extension only after the main grid is stable.
+
+
+## 11. E4 seed-0 asymptotic analysis and A2 figure pipeline (2026-11-17)
+
+The original Section 10 sequence above is retained as the historical working plan. E4 seed 0 has since completed for both Black–Scholes (d=1) and Heston (d=2). Our results and numerical deviations are analyzed in docs/e4_seed0_analysis.md, with full provenance in backups/e4bs/seed_0_epsilon_summary.json and backups/e4h/seed_0_epsilon_summary.json.
+
+Observed full-grid log-log slopes: BS 0.711082 (R² 0.999080); Heston 0.653363 (R² 0.998083). Both broadly agree with the theoretical 2/3 scaling, although both marginally miss the project's numerical tolerance bands. Sensitivity over epsilon subsets and the limitations of the risk-neutral p0 baseline are documented in the E4 analysis file.
+
+The A2 plots are now independent of model training. Use scripts/make_figures_a2.py as a shared entry point; it dispatches to the specialist E2, E2cs, E3 and E4 plotting modules. E3 Figure 5 plotting has been extracted from scripts/run_e3.py to scripts/make_e3_figures.py; numerical evaluation and checkpoints remain unchanged. E4 plots and sensitivity CSVs come directly from the saved epsilon summary JSON files, without re-running any simulations.
+
+E4 multi-seed robustness (seeds 1–4) is the next separate training step. E2cs hedge-shape diagnostics and colormap adjustments will be developed separately after the E4 robustness branch is started; do not overwrite the original corrected simpler seed-0 results.
