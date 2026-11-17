@@ -22,3 +22,16 @@ jobs:
           pip install "numpy==1.26.4" "scipy==1.13.1" "pfhedge==0.23.0" matplotlib pytest ruff pyyaml
       - name: CI
         run: python scripts/ci.py
+      - name: Render E4 seed-0 figures and sensitivity tables
+        if: success() && github.ref == 'refs/heads/exp/a2-seed0-batch'
+        run: python -m scripts.make_figures_a2 --only e4 --seeds 0
+      - name: Upload E4 seed-0 figure artifacts
+        if: success() && github.ref == 'refs/heads/exp/a2-seed0-batch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e4-seed0-figures-and-sensitivity
+          path: |
+            figures/fig10_e4_bs.png
+            figures/fig11_e4_heston.png
+            reports/e4/
+          if-no-files-found: error
