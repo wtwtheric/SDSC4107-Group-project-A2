@@ -11,8 +11,8 @@ from scripts.make_e4_figures import THEORETICAL_SLOPE, load_grid, make_figures, 
 
 
 def test_regression_recovers_exact_power_law() -> None:
-    eps = np.array([2.0 ** -k for k in (10, 9, 8, 7, 6)])
-    increments = 17 * eps ** THEORETICAL_SLOPE
+    eps = np.array([2.0**-k for k in (10, 9, 8, 7, 6)])
+    increments = 17 * eps**THEORETICAL_SLOPE
     fit = regression(eps, increments)
     assert fit["slope"] == pytest.approx(THEORETICAL_SLOPE, abs=1e-12)
     assert fit["r2"] == pytest.approx(1.0, abs=1e-12)
@@ -23,17 +23,21 @@ def _save_grid(path, *, exp: str, seed: int, slope: float) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     records = []
     for k in (6, 7, 8, 9, 10):
-        eps = 2.0 ** -k
+        eps = 2.0**-k
         inc = 10.0 * eps**slope
-        records.append({
-            "exp": exp, "seed": seed, "passed": True,
-            "metrics": {
-                "eps": eps,
-                "price_eps": 2.0 + inc,
-                "price0": 2.0,
-                "price_increment": inc,
-            },
-        })
+        records.append(
+            {
+                "exp": exp,
+                "seed": seed,
+                "passed": True,
+                "metrics": {
+                    "eps": eps,
+                    "price_eps": 2.0 + inc,
+                    "price0": 2.0,
+                    "price_increment": inc,
+                },
+            }
+        )
     path.write_text(json.dumps(records), encoding="utf-8")
 
 
@@ -69,9 +73,7 @@ def test_e4_figures_and_tables_use_separate_per_seed_slopes(tmp_path) -> None:
     ) as handle:
         rows = list(csv.DictReader(handle))
     assert len(rows) == 20  # 2 models x 2 seeds x 5 epsilon subsets
-    with (tmp_path / "reports" / "e4_seed_slopes.csv").open(
-        newline="", encoding="utf-8"
-    ) as handle:
+    with (tmp_path / "reports" / "e4_seed_slopes.csv").open(newline="", encoding="utf-8") as handle:
         summary = list(csv.DictReader(handle))
     assert len(summary) == 2
     assert all(float(row["slope_mean"]) == pytest.approx(0.67) for row in summary)
