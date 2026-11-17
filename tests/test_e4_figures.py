@@ -7,7 +7,6 @@ import json
 
 import numpy as np
 import pytest
-
 from scripts.make_e4_figures import THEORETICAL_SLOPE, load_grid, make_figures, regression
 
 
