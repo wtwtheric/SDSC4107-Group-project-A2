@@ -19,7 +19,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from scripts.make_e2cs_figures import plot_surface_pairs
 from src.common.config import load_config
 from src.common.seed import resolve_device
