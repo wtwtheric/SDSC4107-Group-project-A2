@@ -65,7 +65,8 @@ def _metrics(
     covariance_denom = float(np.sqrt(np.sum(model_centered**2) * np.sum(policy_centered**2)))
     correlation = (
         float(np.sum(model_centered * policy_centered) / covariance_denom)
-        if covariance_denom > 1e-14 else None
+        if covariance_denom > 1e-14
+        else None
     )
     mi = np.unravel_index(int(np.argmax(model)), model.shape)
     ni = np.unravel_index(int(np.argmax(policy)), policy.shape)
@@ -101,8 +102,14 @@ def _metrics(
 
 
 def analyze(
-    *, checkpoint_root: Path, config_path: Path, output_dir: Path,
-    figures_dir: Path, seed: int, step: int, device: torch.device,
+    *,
+    checkpoint_root: Path,
+    config_path: Path,
+    output_dir: Path,
+    figures_dir: Path,
+    seed: int,
+    step: int,
+    device: torch.device,
     make_plots: bool = True,
 ) -> dict[str, Any]:
     cfg = load_config(str(config_path))
@@ -116,7 +123,12 @@ def analyze(
     strike1 = float(cfg["payoff"]["strike1"])
     strike2 = float(cfg["payoff"]["strike2"])
     model_stock, model_varswap = _model_delta_grids(
-        market, strike1, strike2, step, spots, variances,
+        market,
+        strike1,
+        strike2,
+        step,
+        spots,
+        variances,
     )
     outputs: dict[str, dict[str, np.ndarray]] = {}
     metrics_by_alpha: dict[str, Any] = {}
@@ -131,8 +143,12 @@ def analyze(
         ):
             raise ValueError(f"{path}: checkpoint is not the corrected simpler E2cs setup")
         policy = policy_from_cfg(
-            saved, market.n_features, market.d, device,
-            recurrent=False, n_features_override=2,
+            saved,
+            market.n_features,
+            market.d,
+            device,
+            recurrent=False,
+            n_features_override=2,
         )
         policy.load_state_dict(
             torch.load(path / "policy.pt", map_location=device, weights_only=True),
@@ -169,26 +185,41 @@ def analyze(
         "alpha": metrics_by_alpha,
     }
     (output_dir / "e2cs_shape_diagnostics.json").write_text(
-        json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8",
+        json.dumps(report, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
     )
     with (output_dir / "e2cs_shape_diagnostics.csv").open(
         "w", newline="", encoding="utf-8"
     ) as handle:
         names = [
-            "alpha", "leg", "rmse", "mae", "correlation", "model_peak_spot",
-            "model_peak_height", "policy_peak_spot", "policy_peak_height",
-            "policy_at_model_peak", "difference_at_model_peak",
-            "model_range", "policy_range", "fraction_policy_below_model",
-            "low_variance_model_spot_range", "low_variance_policy_spot_range",
+            "alpha",
+            "leg",
+            "rmse",
+            "mae",
+            "correlation",
+            "model_peak_spot",
+            "model_peak_height",
+            "policy_peak_spot",
+            "policy_peak_height",
+            "policy_at_model_peak",
+            "difference_at_model_peak",
+            "model_range",
+            "policy_range",
+            "fraction_policy_below_model",
+            "low_variance_model_spot_range",
+            "low_variance_policy_spot_range",
         ]
         writer = csv.DictWriter(handle, fieldnames=names)
         writer.writeheader()
         for alpha, d in metrics_by_alpha.items():
             for leg in ("stock", "variance_swap"):
-                writer.writerow({
-                    "alpha": alpha, "leg": leg,
-                    **{key: d[leg][key] for key in names if key not in {"alpha", "leg"}},
-                })
+                writer.writerow(
+                    {
+                        "alpha": alpha,
+                        "leg": leg,
+                        **{key: d[leg][key] for key in names if key not in {"alpha", "leg"}},
+                    }
+                )
     np.savez_compressed(
         output_dir / "e2cs_diagnostic_grids.npz",
         spot_grid=spots,
@@ -208,7 +239,8 @@ def analyze(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--checkpoint-root", type=Path,
+        "--checkpoint-root",
+        type=Path,
         default=Path("backups/e2cs_simple_seed0/e2cs"),
     )
     parser.add_argument("--config", type=Path, default=Path("configs/exp/e2cs.yaml"))
