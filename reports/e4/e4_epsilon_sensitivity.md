@@ -1,7 +1,7 @@
 # E4 epsilon-subset slope sensitivity
 
-Computed from archived epsilon summaries; no model training was performed.
-Three-point fits are descriptive, not reliable stand-alone asymptotic estimators.
+Computed from saved epsilon summaries, never from retraining or simulated new samples.
+Slopes are per seed; n=3 subsets are descriptive, not robust asymptotic estimators.
 
 | Market | Seed | Subset | Slope | R² |
 |---|---:|---|---:|---:|
@@ -16,4 +16,5 @@ Three-point fits are descriptive, not reliable stand-alone asymptotic estimators
 | e4h | 0 | smallest_4 | 0.6308 | 0.9984 |
 | e4h | 0 | largest_4 | 0.6791 | 0.9993 |
 
-Theoretical exponent: 2/3 ≈ 0.6667. The theoretical-slope reference line has an independently fitted intercept.
+Theoretical exponent: 2/3 ≈ 0.6667. The fixed-slope reference
+intercept is fitted separately; it is not an independently estimated exponent.
