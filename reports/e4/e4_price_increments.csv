@@ -1,0 +1,11 @@
+experiment,seed,epsilon,price_eps,price_increment,source_summary
+e4bs,0,0.0009765625,2.536020590312736,0.2488699622677668,backups/e4bs/seed_0_epsilon_summary.json
+e4bs,0,0.001953125,2.6774249023580534,0.39027427431308404,backups/e4bs/seed_0_epsilon_summary.json
+e4bs,0,0.00390625,2.920846669005657,0.6336960409606878,backups/e4bs/seed_0_epsilon_summary.json
+e4bs,0,0.0078125,3.3394062946807654,1.052255666635796,backups/e4bs/seed_0_epsilon_summary.json
+e4bs,0,0.015625,4.069046353421589,1.7818957253766197,backups/e4bs/seed_0_epsilon_summary.json
+e4h,0,0.0009765625,1.9228542232282155,0.231020298117544,backups/e4h/seed_0_epsilon_summary.json
+e4h,0,0.001953125,2.034952241765298,0.34311831665462655,backups/e4h/seed_0_epsilon_summary.json
+e4h,0,0.00390625,2.225660351838007,0.5338264267273356,backups/e4h/seed_0_epsilon_summary.json
+e4h,0,0.0078125,2.548164088120396,0.8563301630097246,backups/e4h/seed_0_epsilon_summary.json
+e4h,0,0.015625,3.0993718012849545,1.407537876174283,backups/e4h/seed_0_epsilon_summary.json
