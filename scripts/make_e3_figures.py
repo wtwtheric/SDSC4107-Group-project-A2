@@ -100,9 +100,7 @@ def make_figure(
     plt.close(fig)
 
 
-def plot_saved(
-    *, run_dir: Path, output: Path | None = None, bins: int = 100
-) -> Path:
+def plot_saved(*, run_dir: Path, output: Path | None = None, bins: int = 100) -> Path:
     """Read only evaluation.json + original paired losses in pnl.npz."""
     report_path = run_dir / "evaluation.json"
     pnl_path = run_dir / "pnl.npz"
@@ -124,7 +122,10 @@ def plot_saved(
     make_figure(
         metrics["recurrent"]["indifference_price"] - recurrent,
         metrics["simpler"]["indifference_price"] - simpler,
-        metrics, float(report["alpha"]), out, bins,
+        metrics,
+        float(report["alpha"]),
+        out,
+        bins,
     )
     return out
 
