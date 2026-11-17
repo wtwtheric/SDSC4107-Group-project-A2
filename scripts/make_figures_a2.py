@@ -50,10 +50,15 @@ def main() -> int:
                     )
             subprocess.run(
                 [
-                    sys.executable, "-m", "scripts.make_e2cs_figures",
-                    "--results", str(args.e2cs_dir),
-                    "--figures", str(args.figures_dir),
-                    "--seed", str(args.seed),
+                    sys.executable,
+                    "-m",
+                    "scripts.make_e2cs_figures",
+                    "--results",
+                    str(args.e2cs_dir),
+                    "--figures",
+                    str(args.figures_dir),
+                    "--seed",
+                    str(args.seed),
                 ],
                 check=True,
             )
