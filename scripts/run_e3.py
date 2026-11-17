@@ -9,12 +9,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from scripts.make_e3_figures import make_figure, plot_saved
 from src.common.config import dump_runtime_config, load_config
 from src.common.logging import human_secs, setup_logger
 from src.common.metrics import cvar, save_pnl, write_metrics
@@ -96,86 +93,6 @@ def calibration_losses(
         if done % max(batch_size * 4, batch_size) == 0 or done == n_paths:
             log.info("%s paths %d/%d", sample_label, done, n_paths)
     return np.concatenate(recurrent_parts), np.concatenate(simpler_parts)
-
-
-def make_figure(
-    recurrent_error: np.ndarray,
-    simpler_error: np.ndarray,
-    metrics: dict[str, dict[str, float]],
-    alpha: float,
-    output: Path,
-    bins: int,
-) -> None:
-    """Save the E3 Figure 5 histogram and comparison table at 300 dpi."""
-    pooled = np.concatenate([recurrent_error, simpler_error])
-    lo, hi = np.quantile(pooled, [0.001, 0.999])
-    if not np.isfinite([lo, hi]).all() or hi <= lo:
-        raise ValueError("Cannot construct histogram range from hedging errors")
-    edges = np.linspace(lo, hi, bins + 1)
-
-    fig = plt.figure(figsize=(11.5, 7.2), constrained_layout=True)
-    grid = fig.add_gridspec(2, 1, height_ratios=[4.5, 1.45])
-    ax = fig.add_subplot(grid[0])
-    ax.hist(
-        recurrent_error,
-        bins=edges,
-        alpha=0.55,
-        label="recurrent",
-        color="#4472C4",
-        edgecolor="none",
-    )
-    ax.hist(
-        simpler_error,
-        bins=edges,
-        alpha=0.55,
-        label="simpler",
-        color="#ed7c31",
-        edgecolor="none",
-    )
-    ax.axvline(0.0, color="black", linewidth=1.0, linestyle="--", alpha=0.7)
-    ax.set_xlabel(r"Terminal hedging error  $p_0 - L_{\mathrm{raw}}$")
-    ax.set_ylabel("Number of OOS paths")
-    ax.legend(frameon=True)
-    ax.grid(axis="y", alpha=0.2)
-
-    table_ax = fig.add_subplot(grid[1])
-    table_ax.axis("off")
-    columns = ["Model", "Mean Loss*", "Price", "Realized CVaR"]
-    rows = [
-        [
-            "Recurrent",
-            f"{metrics['recurrent']['oos_mean_excess_loss_diagnostic']:.6f}",
-            f"{metrics['recurrent']['indifference_price']:.4f}",
-            f"{metrics['recurrent']['oos_realized_cvar_shortfall']:.4f}",
-        ],
-        [
-            "Simpler",
-            f"{metrics['simpler']['oos_mean_excess_loss_diagnostic']:.6f}",
-            f"{metrics['simpler']['indifference_price']:.4f}",
-            f"{metrics['simpler']['oos_realized_cvar_shortfall']:.4f}",
-        ],
-    ]
-    table = table_ax.table(
-        cellText=rows,
-        colLabels=columns,
-        loc="center",
-        cellLoc="center",
-        colLoc="center",
-    )
-    table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    table.scale(1.0, 1.55)
-    table_ax.text(
-        0.5,
-        0.04,
-        "* Mean Loss proxy: E[max(L_raw - p0, 0)]; not confirmed as the paper's Mean Loss.",
-        ha="center",
-        va="bottom",
-        fontsize=7,
-        transform=table_ax.transAxes,
-    )
-    fig.savefig(output, dpi=300, bbox_inches="tight")
-    plt.close(fig)
 
 
 def update_saved_pnl(
@@ -544,30 +461,7 @@ def main() -> int:
     if sum((args.finalize_only, args.eval_only, args.plot_only)) > 1:
         parser.error("--finalize-only, --plot-only, and --eval-only are mutually exclusive")
     if args.plot_only:
-        report_path = folder / "evaluation.json"
-        pnl_path = folder / "pnl.npz"
-        if not report_path.is_file() or not pnl_path.is_file():
-            raise FileNotFoundError(
-                "Plot-only requires evaluation.json and pnl.npz in the run directory"
-            )
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-        with np.load(pnl_path) as saved:
-            losses_recurrent = np.asarray(saved["terminal_loss"], dtype=np.float64)
-            losses_simpler = np.asarray(saved["terminal_loss_simpler"], dtype=np.float64)
-        if losses_recurrent.ndim != 1 or losses_recurrent.shape != losses_simpler.shape:
-            raise ValueError("Plot-only requires paired one-dimensional OOS loss arrays")
-        if not np.isfinite(losses_recurrent).all() or not np.isfinite(losses_simpler).all():
-            raise ValueError("Plot-only OOS losses contain non-finite values")
-        summary = report["metrics"]
-        make_figure(
-            summary["recurrent"]["indifference_price"] - losses_recurrent,
-            summary["simpler"]["indifference_price"] - losses_simpler,
-            summary,
-            float(report["alpha"]),
-            folder / "fig_05_e3.png",
-            args.bins,
-        )
-        print(f"E3 Figure 5 regenerated: {folder / 'fig_05_e3.png'}")
+        print(f"E3 Figure 5 regenerated: {plot_saved(run_dir=folder, bins=args.bins)}")
         return 0
     if args.finalize_only:
         report_path = folder / "evaluation.json"
