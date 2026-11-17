@@ -107,9 +107,7 @@ def _plot_heatmaps(
         ax.set_title(label, fontsize=10)
         ax.set_xlabel("Spot price S")
         ax.set_ylabel("Variance V")
-        fig.colorbar(
-            mesh, ax=ax, label="Stock hedge position" if idx != 3 else "NN − model"
-        )
+        fig.colorbar(mesh, ax=ax, label="Stock hedge position" if idx != 3 else "NN − model")
     fig.suptitle(f"Call-spread stock hedge at k=15 — CVaR {alpha}%", fontsize=14)
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=300, bbox_inches="tight")
@@ -129,21 +127,29 @@ def plot_surface_pairs(
     comparable_norm = _comparable_norm(
         [z for _s, _v, entries in surfaces.values() for _, z in entries[:2]]
     )
-    difference_norm = _symmetric_norm(
-        [entries[2][1] for _s, _v, entries in surfaces.values()]
-    )
+    difference_norm = _symmetric_norm([entries[2][1] for _s, _v, entries in surfaces.values()])
     result = []
     for alpha, number in (("0.95", "08"), ("0.99", "09")):
         s, v, entries = surfaces[alpha]
         path_3d = figure_root / f"fig{number}_e2cs_stock_position.png"
         path_heatmap = figure_root / f"fig{number}_e2cs_stock_position_heatmap.png"
         _plot_3d(
-            path_3d, str(int(float(alpha) * 100)), s, v, entries,
-            comparable_norm, difference_norm,
+            path_3d,
+            str(int(float(alpha) * 100)),
+            s,
+            v,
+            entries,
+            comparable_norm,
+            difference_norm,
         )
         _plot_heatmaps(
-            path_heatmap, str(int(float(alpha) * 100)), s, v, entries,
-            comparable_norm, difference_norm,
+            path_heatmap,
+            str(int(float(alpha) * 100)),
+            s,
+            v,
+            entries,
+            comparable_norm,
+            difference_norm,
         )
         result.extend([path_3d, path_heatmap])
     return result
