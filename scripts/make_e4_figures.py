@@ -113,27 +113,50 @@ def _plot(
     fig, ax = plt.subplots(figsize=(8.6, 5.7))
     if len(seeds) > 1:
         sd_y = np.std(y, axis=0, ddof=1)
-        ax.errorbar(x, mean_y, yerr=sd_y, fmt="o", color="#4472c4",
-                    capsize=3, label=f"Mean log increment ± seed SD (n={len(seeds)})")
+        ax.errorbar(
+            x,
+            mean_y,
+            yerr=sd_y,
+            fmt="o",
+            color="#4472c4",
+            capsize=3,
+            label=f"Mean log increment ± seed SD (n={len(seeds)})",
+        )
     else:
         ax.scatter(x, mean_y, color="#4472c4", s=58, label="Seed 0 observations", zorder=3)
     ax.plot(
-        grid_x, fitted["intercept"] + fitted["slope"] * grid_x,
-        color="#ed7c31", linewidth=2.0,
+        grid_x,
+        fitted["intercept"] + fitted["slope"] * grid_x,
+        color="#ed7c31",
+        linewidth=2.0,
         label=f"Free OLS slope = {fitted['slope']:.4f} (R² = {fitted['r2']:.4f})",
     )
     ax.plot(
-        grid_x, fitted["fixed_intercept"] + THEORETICAL_SLOPE * grid_x,
-        color="#555555", linestyle="--", linewidth=1.8,
+        grid_x,
+        fitted["fixed_intercept"] + THEORETICAL_SLOPE * grid_x,
+        color="#555555",
+        linestyle="--",
+        linewidth=1.8,
         label="Theoretical 2/3 reference (fitted intercept)",
     )
-    ax.set_title(f"Figure {number} replication — E4 {title}" + (" (multi-seed)" if len(seeds) > 1 else " (seed 0)"))
+    ax.set_title(
+        f"Figure {number} replication — E4 {title}"
+        + (" (multi-seed)" if len(seeds) > 1 else " (seed 0)")
+    )
     ax.set_xlabel(r"$\log(\varepsilon)$")
     ax.set_ylabel(r"$\log(p_{\varepsilon}-p_0)$")
     ax.legend(loc="upper left", fontsize=9, frameon=False)
     ax.grid(alpha=0.2)
-    ax.text(0.99, 0.02, f"Paper slope ≈ {PAPER_SLOPES[exp]:.2f}  |  Theoretical 2/3",
-            transform=ax.transAxes, ha="right", va="bottom", fontsize=8, color="#555555")
+    ax.text(
+        0.99,
+        0.02,
+        f"Paper slope ≈ {PAPER_SLOPES[exp]:.2f}  |  Theoretical 2/3",
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=8,
+        color="#555555",
+    )
     fig.tight_layout()
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output, dpi=300, bbox_inches="tight")
@@ -166,25 +189,35 @@ def make_figures(
                 raise ValueError(f"{source}: epsilon grid differs between seeds")
             all_increments.append(increment)
             for e, inc, p in zip(eps, increment, price, strict=True):
-                point_rows.append({
-                    "experiment": exp, "seed": seed, "epsilon": float(e),
-                    "price_eps": float(p), "price_increment": float(inc),
-                    "source_summary": str(source),
-                })
+                point_rows.append(
+                    {
+                        "experiment": exp,
+                        "seed": seed,
+                        "epsilon": float(e),
+                        "price_eps": float(p),
+                        "price_increment": float(inc),
+                        "source_summary": str(source),
+                    }
+                )
             for subset, selection in SUBSETS.items():
                 fit = regression(eps[selection], increment[selection])
-                sensitivity.append({
-                    "experiment": exp, "seed": seed, "subset": subset,
-                    "n_points": len(eps[selection]),
-                    "min_epsilon": float(eps[selection].min()),
-                    "max_epsilon": float(eps[selection].max()),
-                    "slope": fit["slope"], "r2": fit["r2"],
-                    "intercept": fit["intercept"],
-                    "theoretical_slope": THEORETICAL_SLOPE,
-                    "reference_fixed_r2": fit["fixed_r2"],
-                    "paper_reported_slope": PAPER_SLOPES[exp],
-                    "source_summary": str(source),
-                })
+                sensitivity.append(
+                    {
+                        "experiment": exp,
+                        "seed": seed,
+                        "subset": subset,
+                        "n_points": len(eps[selection]),
+                        "min_epsilon": float(eps[selection].min()),
+                        "max_epsilon": float(eps[selection].max()),
+                        "slope": fit["slope"],
+                        "r2": fit["r2"],
+                        "intercept": fit["intercept"],
+                        "theoretical_slope": THEORETICAL_SLOPE,
+                        "reference_fixed_r2": fit["fixed_r2"],
+                        "paper_reported_slope": PAPER_SLOPES[exp],
+                        "source_summary": str(source),
+                    }
+                )
                 if subset == "all_5":
                     slopes.append(fit["slope"])
         assert eps_ref is not None
@@ -192,14 +225,17 @@ def make_figures(
         output = figures_dir / f"fig{figure_no}_e4_{'bs' if exp == 'e4bs' else 'heston'}.png"
         _plot(exp, eps_ref, arr, [], output, seeds)
         output_paths.append(output)
-        robustness.append({
-            "experiment": exp, "n_seeds": len(seeds),
-            "seeds": ";".join(str(s) for s in seeds),
-            "slope_mean": float(np.mean(slopes)),
-            "slope_sd": float(np.std(slopes, ddof=1)) if len(slopes) > 1 else float("nan"),
-            "theoretical_slope": THEORETICAL_SLOPE,
-            "paper_reported_slope": PAPER_SLOPES[exp],
-        })
+        robustness.append(
+            {
+                "experiment": exp,
+                "n_seeds": len(seeds),
+                "seeds": ";".join(str(s) for s in seeds),
+                "slope_mean": float(np.mean(slopes)),
+                "slope_sd": float(np.std(slopes, ddof=1)) if len(slopes) > 1 else float("nan"),
+                "theoretical_slope": THEORETICAL_SLOPE,
+                "paper_reported_slope": PAPER_SLOPES[exp],
+            }
+        )
 
     sensitivity_csv = report_dir / "e4_epsilon_sensitivity.csv"
     prices_csv = report_dir / "e4_price_increments.csv"
@@ -223,8 +259,12 @@ def make_figures(
             f"| {row['experiment']} | {row['seed']} | {row['subset']} "
             f"| {row['slope']:.4f} | {row['r2']:.4f} |"
         )
-    lines += ["", "Theoretical exponent: 2/3 ≈ 0.6667. The fixed-slope reference",
-              "intercept is fitted separately; it is not an independently estimated exponent.", ""]
+    lines += [
+        "",
+        "Theoretical exponent: 2/3 ≈ 0.6667. The fixed-slope reference",
+        "intercept is fitted separately; it is not an independently estimated exponent.",
+        "",
+    ]
     md_path = report_dir / "e4_epsilon_sensitivity.md"
     md_path.write_text("\n".join(lines), encoding="utf-8")
     output_paths.append(md_path)
@@ -239,8 +279,10 @@ def main() -> int:
     parser.add_argument("--seeds", type=int, nargs="+", default=[0])
     args = parser.parse_args()
     for path in make_figures(
-        data_root=args.data_root, figures_dir=args.figures_dir,
-        report_dir=args.report_dir, seeds=args.seeds,
+        data_root=args.data_root,
+        figures_dir=args.figures_dir,
+        report_dir=args.report_dir,
+        seeds=args.seeds,
     ):
         print(f"saved {path}")
     return 0
