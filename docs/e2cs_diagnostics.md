@@ -94,6 +94,59 @@ https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44038798249/
 
 **Verification:** GitHub Actions CI completed successfully with 65 passing tests. The actual checkpoint-only shape diagnosis completed successfully and produced the plots and data artifact; no model training was performed.
 
+## Path-support, BatchNorm and training-convergence investigation (2026-11-18)
+
+A checkpoint-only and independent-path diagnostic has been implemented as `scripts/diagnose_e2cs_support_bn.py`, using the original simple-policy seed-0 weights; the same Heston model parameters and k=15. The initial successful run uses **40,000 newly generated CPU Heston paths, simulation seed 928371**, not the original GPU visual paths in the omitted `pnl.npz`. Results from this run are in GitHub Actions [run 44259116837](https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44259116837); the later regional-error extension is separately verified by CI before acceptance.
+
+### Market support
+
+On the independent 40k sample the model/NN surface grid covers spot `[95, 103]` and variance `[0.02, 0.14]`. Marginal coverage is **76.46% in spot** and **22.62% in variance**, but **only 16.15% jointly**. The variance median is **exactly zero**; the simulator produces a large boundary-zero component under this high-vol-of-vol Heston specification. The model-stock maximum neighborhood `S∈[99.3,100.3], V∈[0.02,0.04]` is occupied by **0.74%** of all paths; the 99%-policy shifted peak neighborhood `S∈[96.3,97.3], V∈[0.02,0.04]` is occupied by **0.42%**. Hence the uniform grid heavily emphasizes a portion of the state space visited relatively rarely. It must not be used as a population-weighted estimate of the policy's hedge error.
+
+### Conditional path-weighted hedge comparisons
+
+Within the 16.15% of simulated states inside the plotting grid, the model delta is bilinearly interpolated from the existing Heston finite-difference grid; the NN policy is evaluated directly:
+
+| Within-grid metric | α=0.95 | α=0.99 |
+|---|---:|---:|
+| Stock RMSE | 0.03721 | 0.07818 |
+| Variance-swap RMSE | 33.90 | 74.51 |
+| Stock mean signed NN-model difference | -0.00518 | -0.04968 |
+| Variance-swap mean signed difference | +5.47 | -24.21 |
+| Fraction of within-grid states with NN stock below model | 69.17% | 88.03% |
+
+The 99%-CVaR policy's poorer hedge-surface fidelity persists under the *within-grid path distribution*. **However, this comparison ignores 83.85% of paths outside that grid**, which requires a different model-delta calculation or a wider carefully validated state grid before claiming global OOS shape errors.
+
+### BatchNorm checkpoint evidence
+
+For the k=15 step, both policies' BN1 and BN2 track **30,000 batches**, consistent with 30,000 optimizer iterations. Comparing actual independent-state pre-BN activations against frozen running moments:
+
+| Statistic (median across neurons) | α=0.95 | α=0.99 |
+|---|---:|---:|
+| BN1 standardized absolute mean shift | 0.0919 | 0.1377 |
+| BN2 standardized absolute mean shift | 0.0339 | 0.5391 |
+| BN1 live/running variance ratio | 1.0275 | 1.0300 |
+| BN2 live/running variance ratio | 1.0202 | 0.9342 |
+
+The 99% BN2 mean shift is notably larger. Replacing the frozen running moments by moments from the independent sampled batch in a *non-mutating counterfactual* changes α=0.95 stock positions by mean absolute **0.01885** and α=0.99 by **0.02984**; variance-swap mean absolute changes are **14.62** and **37.95**. This flags greater BN sensitivity under α=0.99, but does **not** establish BN as the cause of weaker hedge-shape replication or imply that using batch statistics in production would improve CVaR. The latter would require a controlled out-of-sample evaluation.
+
+### Training history (not convergence proof)
+
+Window-mean stochastic training CVaR declines over 30k iterations for both policies, α=0.95 **1.0559 → 0.8599** and α=0.99 **1.3882 → 0.9099**. Comparing the last three reported windows (22.5k–30k) to the previous three (15k–22.5k), mean training CVaR improves **0.83%** (95%) and **1.42%** (99%). This supports *near-plateau behavior*, but particularly the 99%-policy may still be improving. Neither has fixed-validation measurements during the archived training, so genuine optimization convergence and overfitting cannot be established from these logs.
+
+**Current assessment:** The 99%-policy is substantially flatter and shifted on both hedge legs, the discrepancy remains on plotted states visited by the simulator, BN2 has an elevated running-vs-current mean shift, and training appears to be approaching a plateau. None alone proves a faulty implementation. Before retraining, inspect the new spatially stratified error table, original saved visual paths if available, and optionally a controlled BN recalibration vs original frozen BN using independent evaluation samples.
+
+To reproduce the new independent 40k diagnostic:
+
+```bash
+python -m scripts.diagnose_e2cs_support_bn --n-paths 40000 --simulation-seed 928371
+```
+
+To compute state support from the **original** 200k visualization states when `pnl.npz` exists:
+
+```bash
+python -m scripts.diagnose_e2cs_support_bn --pnl results/e2cs/0.95/0/pnl.npz
+```
+
 ## Status and next evaluation
 
 The qualitative pattern previously observed in the original figures is that alpha=0.99 has a much flatter stock surface than the model hedge. That **visual interpretation** is not itself a measured numerical diagnosis. The numerical diagnostics should be run and inspected before attributing the flattening to input normalization, effective tail sample size, BatchNorm statistics, or policy optimization. Those are competing hypotheses, not demonstrated causes.
