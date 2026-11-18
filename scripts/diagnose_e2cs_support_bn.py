@@ -22,7 +22,6 @@ import numpy as np
 import torch
 import torch.nn.functional as functional
 from scipy.interpolate import RegularGridInterpolator
-
 from src.common.config import load_config
 from src.common.seed import seed_everything
 from src.replication.e1 import market_from_cfg, policy_from_cfg
