@@ -18,7 +18,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from src.common.config import load_config
 from src.common.metrics import cvar
 from src.common.seed import seed_everything
