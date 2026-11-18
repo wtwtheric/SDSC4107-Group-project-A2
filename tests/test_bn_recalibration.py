@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 import torch
 
 from src.replication.bn_recalibration import recalibrate_batchnorm_from_features
