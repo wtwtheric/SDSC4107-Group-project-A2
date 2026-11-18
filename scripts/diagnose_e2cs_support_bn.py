@@ -279,6 +279,32 @@ def _weighted_comparison(
         valid
     )
     model = np.column_stack((stock_model, var_model))
+    spot_in = spots[mask]
+    var_in = vars_[mask]
+    zones: dict[str, np.ndarray] = {
+        "model_peak_neighborhood": (
+            (spot_in >= 99.3) & (spot_in <= 100.3)
+            & (var_in >= 0.02) & (var_in <= 0.04)
+        ),
+        "shifted_peak_neighborhood": (
+            (spot_in >= 96.3) & (spot_in <= 97.3)
+            & (var_in >= 0.02) & (var_in <= 0.04)
+        ),
+    }
+    for spot_name, s_lo, s_hi in (
+        ("S95_99", 95.0, 99.0),
+        ("S99_101", 99.0, 101.0),
+        ("S101_103", 101.0, 103.0),
+    ):
+        for v_name, v_lo, v_hi in (
+            ("V002_004", 0.02, 0.04),
+            ("V004_008", 0.04, 0.08),
+            ("V008_014", 0.08, 0.14),
+        ):
+            zones[f"{spot_name}_{v_name}"] = (
+                (spot_in >= s_lo) & (spot_in < s_hi)
+                & (var_in >= v_lo) & (var_in < v_hi)
+            )
     out = {}
     for alpha, policy in policies.items():
         with torch.no_grad():
@@ -298,7 +324,28 @@ def _weighted_comparison(
                     "is bilinearly interpolated, not re-priced at each state."
                 ),
             }
+        regional = {}
+        squared = diff**2
+        for zone_name, zone_mask in zones.items():
+            n_zone = int(np.sum(zone_mask))
+            regional[zone_name] = {
+                "n_paths": n_zone,
+                "fraction_of_all_paths": n_zone / len(spots),
+                "fraction_of_in_grid_paths": n_zone / len(valid),
+            }
+            for i, leg in enumerate(("stock", "variance_swap")):
+                total_ss = float(np.sum(squared[:, i]))
+                zone_ss = float(np.sum(squared[zone_mask, i]))
+                regional[zone_name][leg] = {
+                    "rmse": float(np.sqrt(np.mean(squared[zone_mask, i])))
+                    if n_zone else None,
+                    "mean_signed_difference": float(np.mean(diff[zone_mask, i]))
+                    if n_zone else None,
+                    "share_of_in_grid_squared_error": zone_ss / total_ss
+                    if total_ss > 0 else None,
+                }
         out[alpha] = {
+            "regional_errors_within_grid": regional,
             "path_weighted_within_grid": per_leg,
             "stock_actual_positions_quantiles": _q(values[:, 0]),
             "varswap_actual_positions_quantiles": _q(values[:, 1]),
