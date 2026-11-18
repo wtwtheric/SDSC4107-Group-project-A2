@@ -49,9 +49,7 @@ def _load_policy(folder: Path, device: torch.device) -> tuple[dict[str, Any], to
     return cfg, policy
 
 
-def _market_world(
-    cfg: dict[str, Any], device: torch.device | str = "cpu"
-) -> CallSpreadWorld:
+def _market_world(cfg: dict[str, Any], device: torch.device | str = "cpu") -> CallSpreadWorld:
     market = market_from_cfg(cfg)
     return CallSpreadWorld(
         market,
