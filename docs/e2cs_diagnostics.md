@@ -147,6 +147,18 @@ To compute state support from the **original** 200k visualization states when `p
 python -m scripts.diagnose_e2cs_support_bn --pnl results/e2cs/0.95/0/pnl.npz
 ```
 
+### Regional decomposition of the k=15 errors (validated extension)
+
+The extended checkpoint-and-fresh-path diagnostic in [Actions run 44259754846](https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44259754846) passed tests and generated the regional-error artifact. The **40,000** sampled states include an exact-zero variance atom of **55.885%**. **67.683%** have `V<0.02`, below the Figure 8–9 variance grid, while **9.695%** have `V>0.14`. This explains why the displayed grid jointly covers only **16.148%** of states. A main research limitation is therefore that plots over `V ∈ [0.02, 0.14]` largely omit the most frequently visited zero/near-zero variance regime under the current high-vol-of-vol QE-M simulator.
+
+The region `S∈[99,101], V∈[0.02,0.04]` contains **611 paths** (1.528% of all 40k, 9.46% of in-grid states). Its stock RMSE is **0.0647** for alpha=0.95 and **0.1802** for alpha=0.99. It accounts for approximately **28.6%** and **50.3%**, respectively, of the *total squared stock delta error among the in-grid states*. Therefore the α=0.99 mismatch is disproportionately concentrated around the model call-spread peak (S near 100, low but nonzero V), even under probability weighting within the grid. This zone does not alone explain most **unconditional** pathwise hedge error because 83.85% of sampled states are not included.
+
+For the narrower model stock peak neighborhood (`S∈[99.3,100.3], V∈[0.02,0.04]`), only **296 paths** (0.74% of all) are sampled. α=0.99 stock RMSE there is **0.2078** versus **0.0691** under α=0.95; it contributes approximately **32.4%** of in-grid squared stock error for α=0.99. The shifted NN peak zone (`S∈[96.3,97.3], V∈[0.02,0.04]`) contains **169 paths** (0.42% of all); α=0.99 stock RMSE is **0.0642**, contributing only **1.8%** of in-grid squared stock error.
+
+This is a stronger location-specific conclusion than the original uniform-grid RMSE: the observed discrepancy is not uniformly spread across the plotted states, and it is particularly large near the **model** peak. It does not prove that the α=0.99 policy is poorly optimized for CVaR in the full distribution.
+
+The full regional `n_paths`, conditional RMSE, signed bias and share of in-grid squared error for the two hedge legs are contained in `reports/e2cs/e2cs_support_bn_training.json` in the [Actions artifact](https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44259754846).
+
 ## Status and next evaluation
 
 The qualitative pattern previously observed in the original figures is that alpha=0.99 has a much flatter stock surface than the model hedge. That **visual interpretation** is not itself a measured numerical diagnosis. The numerical diagnostics should be run and inspected before attributing the flattening to input normalization, effective tail sample size, BatchNorm statistics, or policy optimization. Those are competing hypotheses, not demonstrated causes.
