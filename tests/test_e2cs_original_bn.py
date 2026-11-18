@@ -39,10 +39,13 @@ def test_grid_error_conditions_on_inside_states() -> None:
     v = np.array([0.02, 0.04, 0.04, 0.1])
     stock_grid = np.ones((3, 2)) * 0.4
     out = _grid_error(
-        s, v, np.array([0.5, 0.3, 0.6, 0.0]),
-        np.array([95.0, 97.5, 100.0]), np.array([0.02, 0.04]),
+        s,
+        v,
+        np.array([0.5, 0.3, 0.6, 0.0]),
+        np.array([95.0, 97.5, 100.0]),
+        np.array([0.02, 0.04]),
         stock_grid,
     )
     assert out["n_inside"] == 3
     assert out["fraction_inside"] == 0.75
-    assert abs(out["rmse"] - np.sqrt((0.1**2 + (-0.1)**2 + 0.2**2) / 3)) < 1e-12
+    assert abs(out["rmse"] - np.sqrt((0.1**2 + (-0.1) ** 2 + 0.2**2) / 3)) < 1e-12
