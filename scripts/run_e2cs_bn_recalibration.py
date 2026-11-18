@@ -51,13 +51,15 @@ def _load_policy(folder: Path, device: torch.device) -> tuple[dict[str, Any], to
     return cfg, policy
 
 
-def _market_world(cfg: dict[str, Any]) -> CallSpreadWorld:
+def _market_world(
+    cfg: dict[str, Any], device: torch.device | str = "cpu"
+) -> CallSpreadWorld:
     market = market_from_cfg(cfg)
     return CallSpreadWorld(
         market,
         float(cfg["payoff"]["strike1"]),
         float(cfg["payoff"]["strike2"]),
-        device="cpu",
+        device=device,
     )
 
 
@@ -230,7 +232,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     for alpha in ("0.95", "0.99"):
         folder = root / alpha / str(args.seed)
         cfg, original = _load_policy(folder, device)
-        world = _market_world(cfg)
+        world = _market_world(cfg, device)
         calibration_features = _simulate_calibration_features(
             world,
             args.calibration_paths,
@@ -276,7 +278,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             torch.load(calibrated_folder / "policy.pt", map_location=device, weights_only=True),
             strict=True,
         )
-        world = _market_world(cfg)
+        world = _market_world(cfg, device)
         results["policies"][alpha]["oos"] = _evaluate_pair(
             world,
             original,
