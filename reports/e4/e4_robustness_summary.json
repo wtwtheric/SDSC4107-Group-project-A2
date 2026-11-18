@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "status": "frozen",
+  "analysis_date": "2026-11-19",
+  "method": "OLS of log(price_increment) on log(epsilon), one slope per seed; cross-seed robustness summarized over seed slopes, not pooled epsilon observations",
+  "theoretical_slope": 0.6666666666666666,
+  "common_oos_eval_seed": 271828,
+  "bs": {
+    "slopes": {
+      "0": 0.7110822799287604,
+      "1": 0.7125430613728754,
+      "2": 0.7157750800529861,
+      "3": 0.7126504032171829,
+      "4": 0.7123237902532646
+    },
+    "r2": {
+      "0": 0.9990795632808902,
+      "1": 0.9991532732117749,
+      "2": 0.9991654459133629,
+      "3": 0.9990481541565216,
+      "4": 0.9992552372656571
+    },
+    "mean": 0.7128749229650138,
+    "sample_sd": 0.0017384453320284721,
+    "median": 0.7125430613728754
+  },
+  "heston": {
+    "slopes": {
+      "0": 0.6533625446717042,
+      "1": 0.6561894715251851,
+      "2": 0.6544589424981628,
+      "3": 0.6159691431755056,
+      "4": 0.6545519286464847
+    },
+    "r2": {
+      "0": 0.9980831769608784,
+      "1": 0.9980551954782882,
+      "2": 0.997958669623271,
+      "3": 0.9975252516093,
+      "4": 0.9986968885085981
+    },
+    "mean": 0.6469064061034084,
+    "sample_sd": 0.017323871444187882,
+    "median": 0.6544589424981628,
+    "seeds_0_1_2_4_mean": 0.6546407218353842,
+    "seeds_0_1_2_4_sample_sd": 0.0011652310816954135,
+    "seed3_small_epsilon_pattern": [
+      {
+        "epsilon": 0.0009765625,
+        "seed3_increment": 0.25406951379007303,
+        "other_seed_mean": 0.22985702636327643,
+        "seed3_pct_above_other_mean": 10.533716462741527
+      },
+      {
+        "epsilon": 0.001953125,
+        "seed3_increment": 0.37416580202253513,
+        "other_seed_mean": 0.3422768989772518,
+        "seed3_pct_above_other_mean": 9.316697428476694
+      },
+      {
+        "epsilon": 0.00390625,
+        "seed3_increment": 0.5562224759557974,
+        "other_seed_mean": 0.5335896968977867,
+        "seed3_pct_above_other_mean": 4.241607210482967
+      },
+      {
+        "epsilon": 0.0078125,
+        "seed3_increment": 0.866964689899623,
+        "other_seed_mean": 0.8551759324229233,
+        "seed3_pct_above_other_mean": 1.378518387824501
+      },
+      {
+        "epsilon": 0.015625,
+        "seed3_increment": 1.4112691231620254,
+        "other_seed_mean": 1.40587411361087,
+        "seed3_pct_above_other_mean": 0.3837476982415433
+      }
+    ]
+  },
+  "interpretation": {
+    "bs": "Very strong seed robustness: all five slopes are tightly clustered near 0.713 with R^2 about 0.999.",
+    "heston": "All five seeds preserve a monotone near-linear log-log relation. Seeds 0,1,2,4 cluster near 0.655; seed 3 is lower because its smallest-epsilon increments are systematically higher. Keep seed 3 as genuine training-seed sensitivity, not a failed run.",
+    "freeze_decision": "Freeze E4. Do not retrain or exclude seed 3. Report mean±sample SD across five independently fitted seed slopes and disclose Heston small-epsilon/optimization sensitivity."
+  }
+}
