@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+
 import torch
 
 from src.common.config import load_config
