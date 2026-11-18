@@ -164,3 +164,26 @@ The full regional `n_paths`, conditional RMSE, signed bias and share of in-grid 
 The qualitative pattern previously observed in the original figures is that alpha=0.99 has a much flatter stock surface than the model hedge. That **visual interpretation** is not itself a measured numerical diagnosis. The numerical diagnostics should be run and inspected before attributing the flattening to input normalization, effective tail sample size, BatchNorm statistics, or policy optimization. Those are competing hypotheses, not demonstrated causes.
 
 Do **not** modify the architecture, loss function, or training config at this stage, and do not launch multi-seed E2cs until the diagnosis is reviewed. E4 robustness training remains isolated in its own branch.
+
+## Original 200K visual-path audit and BN follow-up (2026-11-18)
+
+Two separately uploaded NPZ files, e2cs_095_pnl.npz and e2cs_099_pnl.npz, contain identical k=15 visual_spot and visual_variance arrays (200,000 states), allowing paired comparisons without resimulation. The uploaded NPZ files are not committed to GitHub.
+
+| State subset | Paths | Stock mean alpha 0.95 | Stock mean alpha 0.99 | Variance-swap mean alpha 0.95 | Variance-swap mean alpha 0.99 |
+|---|---:|---:|---:|---:|---:|
+| All | 200,000 | 0.12072 | 0.03876 | 45.47 | -0.57 |
+| V=0 | 110,950 | 0.15170 | 0.03538 | 50.44 | -7.83 |
+| V=0 and 99 <= S <= 101 | 33,708 | 0.34599 | 0.04650 | 283.93 | -7.31 |
+| Figure grid S in [95,103], V in [0.02,0.14] | 32,588 | 0.09388 | 0.04865 | 35.03 | 5.84 |
+
+The strong near-strike, zero-variance position gap is present on 16.85% of the original 200K visual paths. This does not establish a failure of tail-risk optimization; it does establish that the difference is not an artifact of sparse Figure 8/9 grid points.
+
+Current E2cs simpler input features are raw (S_k, V_k). In the original visual sample the spot standard deviation is 3.955 and variance standard deviation is 0.0796 (approximately 49.7 times smaller). First-layer BatchNorm normalizes activations, but cannot guarantee equal learning sensitivity to both raw inputs. This is a testable optimization concern, not proof of a feature bug.
+
+Next experiment: python -m scripts.diagnose_e2cs_original_bn --npz-95 /path/e2cs_095_pnl.npz --npz-99 /path/e2cs_099_pnl.npz
+
+That script uses the existing, corrected simpler seed-0 checkpoints, checks that frozen-BN outputs reproduce the actual saved visual positions, compares frozen running moments against moments of the entire original 200K visual-state sample, and compares within-figure-grid model hedge errors under frozen BN versus non-mutating sample-moment BN.
+
+Crucial limitations: sample-moment BN calculated from OOS data is a look-ahead counterfactual, not a valid deployed strategy or OOS CVaR result. The NPZ contains only k=15 market states plus terminal losses, not complete trajectories for re-evaluating all trades.
+
+If a controlled retraining ablation is eventually warranted, retain the original raw-input seed-0 result. Test deterministic input scaling as a separately labeled E2cs-only implementation variant, while keeping two features, simpler architecture, market, hedge legs and CVaR objective. Changing YAML alone cannot change existing hard-coded features; the training inputs and all plot/diagnostic grid inputs must be changed consistently. Do not simultaneously modify BatchNorm, training batch, network width and simulator.
