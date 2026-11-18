@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "status": "frozen",
+  "experiment": "E2cs independent post-training BatchNorm recalibration",
+  "calibration": {
+    "paths": 200000,
+    "seed": 928372
+  },
+  "oos": {
+    "paths": 1000000,
+    "seed": 314160
+  },
+  "mutation_scope": "Only BatchNorm running_mean and running_var buffers; learned weights and BN affine parameters frozen.",
+  "alpha95": {
+    "oos_original": {
+      "mean_loss": 0.6090602834006211,
+      "std_loss": 0.2492908422631397,
+      "cvar95": 0.9574178785273753,
+      "cvar99": 1.0842392217120915
+    },
+    "oos_recalibrated": {
+      "mean_loss": 0.6091454261896259,
+      "std_loss": 0.21859688911064146,
+      "cvar95": 0.8564336072420413,
+      "cvar99": 0.9202752822604916
+    },
+    "k15": {
+      "stock_correlation": 0.987466730206043,
+      "varswap_correlation": 0.9947316738822438,
+      "mean_abs_change_stock": 0.018875496911389622,
+      "mean_abs_change_varswap": 15.033170439816645
+    },
+    "surface": {
+      "original_global_peak": {
+        "value": 0.32417317624218067,
+        "spot": 99.4
+      },
+      "recalibrated_global_peak": {
+        "value": 0.2987674884859576,
+        "spot": 99.7
+      },
+      "original_peak_v003": {
+        "value": 0.24982832614075604,
+        "spot": 99
+      },
+      "recalibrated_peak_v003": {
+        "value": 0.24308440745960574,
+        "spot": 99.5
+      }
+    }
+  },
+  "alpha99": {
+    "oos_original": {
+      "mean_loss": 0.6088997393677102,
+      "std_loss": 0.2888418311300312,
+      "cvar95": 0.9224600661463724,
+      "cvar99": 0.9622054174495533
+    },
+    "oos_recalibrated": {
+      "mean_loss": 0.6089728536217998,
+      "std_loss": 0.2836109329325829,
+      "cvar95": 0.8871641310648836,
+      "cvar99": 0.9079161678529841
+    },
+    "k15": {
+      "stock_correlation": 0.7474297637574304,
+      "varswap_correlation": 0.7199079528300866,
+      "mean_abs_change_stock": 0.029946647951322555,
+      "mean_abs_change_varswap": 38.11874738688138
+    },
+    "surface": {
+      "original_global_peak": {
+        "value": 0.11663433188862632,
+        "spot": 96.8
+      },
+      "recalibrated_global_peak": {
+        "value": 0.1644339506562557,
+        "spot": 98.7
+      },
+      "original_peak_v003": {
+        "value": 0.10752255480194936,
+        "spot": 96.5
+      },
+      "recalibrated_peak_v003": {
+        "value": 0.15668023194834482,
+        "spot": 98.4
+      }
+    }
+  },
+  "reporting_decision": "Keep original frozen checkpoint evaluation as the direct replication result. Report recalibration as a diagnostic/sensitivity result and BN inference sensitivity as a limitation; do not silently replace the primary result.",
+  "retraining_decision": "No E2cs retraining required solely to match Figure 9."
+}
