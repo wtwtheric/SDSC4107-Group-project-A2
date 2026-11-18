@@ -31,14 +31,9 @@ def test_bn_counterfactual_does_not_mutate_statistics() -> None:
         for _ in range(10):
             step(torch.randn(128, 2, dtype=torch.float64))
     step.eval()
-    before = {
-        key: value.clone()
-        for key, value in step.state_dict().items()
-    }
+    before = {key: value.clone() for key, value in step.state_dict().items()}
     x = torch.randn(200, 2, dtype=torch.float64)
-    result = _batchnorm_diagnostics(
-        step, x, torch.tensor([1.0, 100.0], dtype=torch.float64)
-    )
+    result = _batchnorm_diagnostics(step, x, torch.tensor([1.0, 100.0], dtype=torch.float64))
     assert result["bn1"]["num_batches_tracked"] == 10
     assert result["bn2"]["num_batches_tracked"] == 10
     assert result["bn1"]["standardized_mean_shift_median"] >= 0.0
