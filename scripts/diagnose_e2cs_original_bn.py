@@ -20,9 +20,8 @@ from typing import Any
 import numpy as np
 import torch
 from scipy.interpolate import RegularGridInterpolator
-from torch.nn import functional as F
-
 from scripts.diagnose_e2cs_support_bn import _load_policies
+from torch.nn import functional as F
 
 
 def _load_data(path: Path) -> dict[str, np.ndarray]:
