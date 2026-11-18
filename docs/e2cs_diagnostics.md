@@ -187,3 +187,96 @@ That script uses the existing, corrected simpler seed-0 checkpoints, checks that
 Crucial limitations: sample-moment BN calculated from OOS data is a look-ahead counterfactual, not a valid deployed strategy or OOS CVaR result. The NPZ contains only k=15 market states plus terminal losses, not complete trajectories for re-evaluating all trades.
 
 If a controlled retraining ablation is eventually warranted, retain the original raw-input seed-0 result. Test deterministic input scaling as a separately labeled E2cs-only implementation variant, while keeping two features, simpler architecture, market, hedge legs and CVaR objective. Changing YAML alone cannot change existing hard-coded features; the training inputs and all plot/diagnostic grid inputs must be changed consistently. Do not simultaneously modify BatchNorm, training batch, network width and simulator.
+
+
+## Independent post-training BatchNorm calibration experiment (2026-11-18)
+
+### Why this experiment is needed
+
+The corrected alpha=0.99 simpler-policy checkpoint is architecturally valid and reproduces the archived k=15 visual positions. However, when its pre-BN activations are measured on independent Heston states, BN2's median standardized running-mean discrepancy is materially larger than for alpha=0.95. A non-mutating sample-moment counterfactual also changes the alpha=0.99 k=15 hedge positions substantially. This is evidence of inference-statistics sensitivity, not proof that the original checkpoint is incorrectly trained.
+
+**This BatchNorm sensitivity is recorded as an implementation limitation of the E2cs seed-0 replication.** It may contribute to the visibly lower and left-shifted alpha=0.99 stock-hedge peak in Figure 9. It does not, by itself, explain the full difference from the model hedge or invalidate the separately measured OOS CVaR99 improvement.
+
+### Controlled recalibration design
+
+A separate branch, \`exp/e2cs-bn-calibration\`, contains a post-training recalibration ablation. It does not alter the original seed-0 checkpoints or original NPZ results.
+
+For each of alpha=0.95 and alpha=0.99:
+
+1. Load the original corrected simpler-policy checkpoint and its saved config.
+2. Generate 200,000 new Heston QE-M calibration paths using calibration seed \`928372\`. These paths are distinct from the archived 200,000 visual paths and from the OOS evaluation paths.
+3. For each of the 30 date-specific MLPs, estimate BN1's full-sample pre-BN activation mean and unbiased variance; install these as BN1 running buffers.
+4. Pass the same calibration states through the now-calibrated BN1 and frozen FC2; estimate BN2's pre-BN moments and install BN2 running buffers.
+5. Do not update Linear weights, BN affine parameters (\`weight\` / \`bias\`), input features, output scales, optimizer state, or training objective. No gradient step is performed.
+6. Evaluate original and recalibrated policies on the same newly generated 1,000,000 Heston OOS paths using OOS seed \`314160\`. The calibration and OOS seeds are different. The paired paths ensure the comparison isolates the inference-buffer change.
+7. Report mean loss, standard deviation, VaR, CVaR95, CVaR99, paired loss differences, worst-tail overlap, k=15 position changes/correlations, and stock/variance-swap surface peak diagnostics.
+
+The calibration uses full-sample moments rather than an EMA over mini-batches. PyTorch's unbiased variance convention is used for \`running_var\`. BN1 is calibrated before BN2 because BN2's input distribution depends on BN1's inference transformation. The script records pre- and post-calibration moment discrepancies at every time step.
+
+### Reproduction command
+
+From the repository root, with the corrected seed-0 checkpoints available locally:
+
+\`\`\`bash
+python -m scripts.run_e2cs_bn_recalibration \\
+  --checkpoint-root backups/e2cs_simple_seed0/e2cs \\
+  --calibration-paths 200000 \\
+  --calibration-batch-size 25000 \\
+  --calibration-seed 928372 \\
+  --oos-paths 1000000 \\
+  --oos-batch-size 25000 \\
+  --oos-seed 314160 \\
+  --device cuda \\
+  --output results/e2cs_bn_calibration_seed0
+\`\`\`
+
+Use \`--device cpu\` if CUDA is unavailable. The original checkpoints are read-only inputs. Recalibrated checkpoint copies and the JSON report are written under the separate output directory. The report includes source and output SHA-256 hashes.
+
+### Interpretation rules
+
+- If recalibration moves the alpha=0.99 surface peak toward the original model peak and improves paired OOS CVaR without materially worsening mean loss, that supports BN running-statistics mismatch as a contributor. It does not establish that the original training objective or architecture was wrong.
+- If the surface changes but OOS CVaR worsens, the original frozen checkpoint remains the primary replication result; the recalibrated variant is a sensitivity ablation only.
+- If both hedge surfaces and OOS loss metrics barely change, BN mismatch is unlikely to be a material explanation for the Figure 9 discrepancy.
+- Alpha=0.95 is a control. Large changes in both policies would suggest that the calibration procedure or sample definition needs review.
+- The recalibrated model is not a replacement for the original model unless the group explicitly decides to report it as a separate implementation variant.
+
+### Current status and limitation
+
+The calibration helper, paired OOS experiment script, and unit tests have been added to this branch. **The full 200K-calibration / 1M-OOS experiment has not yet been run.** Therefore, no recalibration improvement or deterioration is claimed at this stage. The existing BN sensitivity evidence remains a limitation to disclose in the replication report, regardless of the outcome of this ablation.
+
+This is a post-training normalization ablation, not retraining. Retraining is deferred until this controlled experiment is completed and reviewed.
+
+## Independent BN recalibration result and freeze decision (2026-11-18)
+
+The controlled post-training BatchNorm recalibration experiment has now been run on GPU with 200,000 independent calibration paths (seed 928372) and 1,000,000 independent paired OOS paths (seed 314160). Only BN running_mean/running_var buffers were changed; weights, BN affine parameters, features, output scaling, market dynamics and objective were frozen.
+
+### OOS loss results
+
+| Policy | Metric | Original | Recalibrated | Change |
+|---|---|---:|---:|---:|
+| alpha=.95 | mean loss | 0.609060 | 0.609145 | +0.014% |
+| alpha=.95 | CVaR95 | 0.957418 | 0.856434 | -10.55% |
+| alpha=.95 | CVaR99 | 1.084239 | 0.920275 | -15.12% |
+| alpha=.99 | mean loss | 0.608900 | 0.608973 | +0.012% |
+| alpha=.99 | CVaR95 | 0.922460 | 0.887164 | -3.83% |
+| alpha=.99 | CVaR99 | 0.962205 | 0.907916 | -5.64% |
+
+The mean loss is essentially unchanged while tail risk falls materially for both policies. This indicates a systematic train/eval BatchNorm-statistics effect rather than a failed alpha=.99 weight solution alone.
+
+### Figure-9 / hedge-surface effect
+
+For alpha=.99 the stock global peak changes from 0.11663 at S=96.8 to 0.16443 at S=98.7. At V=.03 the peak changes from 0.10752 at S=96.5 to 0.15668 at S=98.4. In contrast, alpha=.95 changes only modestly: global peak 0.32417 at S=99.4 to 0.29877 at S=99.7; at V=.03, 0.24983 at S=99.0 to 0.24308 at S=99.5.
+
+Thus BN recalibration removes part of the unusually low/left-shifted alpha=.99 peak, but does not eliminate the economic risk-aversion pattern. After recalibration, at V=.03 the alpha=.99 peak remains only ~64.5% of the alpha=.95 peak and remains about 1.1 spot units to the left. This remains qualitatively consistent with the paper's statement that higher risk aversion flattens the call-spread hedge and behaves like a downward barrier/strike shift.
+
+At k=15, alpha=.95 original/recalibrated positions remain highly correlated (stock 0.9875, variance swap 0.9947), while alpha=.99 is substantially more sensitive (stock 0.7474, variance swap 0.7199). This supports reporting BN inference sensitivity as an implementation limitation.
+
+### Replication interpretation
+
+The paper explicitly uses BatchNorm before each activation, Adam with learning rate .005 and batch size 256. Our A1/A2 stabilized recipe keeps the same two-hidden-layer 17-unit architecture and .005 initial learning rate, but uses batch 1024 and cosine decay for continuity with the validated A1 implementation. The paper does not specify a post-training running-statistics recalibration procedure. Therefore the recalibrated checkpoint should be reported as a diagnostic / implementation ablation rather than silently replacing the primary seed-0 replication result.
+
+### Decision
+
+Freeze the existing E2cs training weights, features, architecture, Heston parameters and A1-compatible training recipe. Do not retrain solely to make Figure 9 visually closer to the paper. The current evidence shows that a material part of the discrepancy is attributable to BatchNorm inference statistics and can be reduced without changing learned weights, while the economically meaningful high-alpha flattening remains.
+
+A paper-fidelity retrain with batch 256 / constant lr=.005 may be run only as an optional sensitivity experiment if compute/time permits. It must be labeled separately because it intentionally departs from the A1-stabilized recipe and changes two optimization hyperparameters at once. It is not required to accept the current E2cs replication as a comprehensive but non-exact reproduction.
