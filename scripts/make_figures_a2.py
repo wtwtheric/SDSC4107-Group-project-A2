@@ -19,10 +19,21 @@ from pathlib import Path
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--only", choices=("e2", "e2cs", "e3", "e4", "all"), default="e4")
+    parser.add_argument(
+        "--only",
+        choices=("e2", "e2cs", "e2cs-diagnostics", "e3", "e4", "all"),
+        default="e4",
+    )
     parser.add_argument("--figures-dir", type=Path, default=Path("figures"))
     parser.add_argument("--e2-dir", type=Path, default=Path("results/e2/0"))
     parser.add_argument("--e2cs-dir", type=Path, default=Path("results/e2cs"))
+    parser.add_argument(
+        "--e2cs-checkpoint-root",
+        type=Path,
+        default=Path("backups/e2cs_simple_seed0/e2cs"),
+    )
+    parser.add_argument("--e2cs-report-dir", type=Path, default=Path("reports/e2cs"))
+    parser.add_argument("--e2cs-device", default="cpu")
     parser.add_argument("--e3-dir", type=Path, default=Path("results/e3/0"))
     parser.add_argument("--e4-data-root", type=Path, default=Path("backups"))
     parser.add_argument("--e4-report-dir", type=Path, default=Path("reports/e4"))
@@ -62,6 +73,20 @@ def main() -> int:
                 ],
                 check=True,
             )
+        elif job == "e2cs-diagnostics":
+            from scripts.diagnose_e2cs import analyze
+            from src.common.seed import resolve_device
+
+            report = analyze(
+                checkpoint_root=args.e2cs_checkpoint_root,
+                config_path=Path("configs/exp/e2cs.yaml"),
+                output_dir=args.e2cs_report_dir,
+                figures_dir=args.figures_dir / "e2cs_diagnostics",
+                seed=args.seed,
+                step=15,
+                device=resolve_device(args.e2cs_device),
+            )
+            print(f"saved E2cs diagnostics for seed {report['seed']}")
         elif job == "e3":
             from scripts.make_e3_figures import plot_saved
 
