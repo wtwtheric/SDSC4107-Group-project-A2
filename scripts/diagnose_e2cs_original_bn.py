@@ -26,8 +26,13 @@ from torch.nn import functional as F
 
 def _load_data(path: Path) -> dict[str, np.ndarray]:
     fields = (
-        "visual_spot", "visual_variance", "visual_stock_delta", "visual_varswap_delta",
-        "model_spot_grid", "model_variance_grid", "model_stock_delta_grid",
+        "visual_spot",
+        "visual_variance",
+        "visual_stock_delta",
+        "visual_varswap_delta",
+        "model_spot_grid",
+        "model_variance_grid",
+        "model_stock_delta_grid",
         "model_varswap_delta_grid",
     )
     with np.load(path, allow_pickle=False) as z:
@@ -43,10 +48,7 @@ def frozen_and_batch_moments(
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     """Use actual frozen weights; never change checkpoint buffers or parameters."""
     step_net.eval()
-    original_buffers = {
-        name: value.detach().clone()
-        for name, value in step_net.named_buffers()
-    }
+    original_buffers = {name: value.detach().clone() for name, value in step_net.named_buffers()}
     z1 = step_net.fc1(state)
     y1_frozen = torch.relu(step_net.bn1(z1))
     z2 = step_net.fc2(y1_frozen)
@@ -74,15 +76,25 @@ def frozen_and_batch_moments(
     # visual-state sample, without mutating moving averages.
     y1 = torch.relu(
         F.batch_norm(
-            z1, None, None, step_net.bn1.weight, step_net.bn1.bias,
-            training=True, eps=step_net.bn1.eps,
+            z1,
+            None,
+            None,
+            step_net.bn1.weight,
+            step_net.bn1.bias,
+            training=True,
+            eps=step_net.bn1.eps,
         )
     )
     z2_new = step_net.fc2(y1)
     y2 = torch.relu(
         F.batch_norm(
-            z2_new, None, None, step_net.bn2.weight, step_net.bn2.bias,
-            training=True, eps=step_net.bn2.eps,
+            z2_new,
+            None,
+            None,
+            step_net.bn2.weight,
+            step_net.bn2.bias,
+            training=True,
+            eps=step_net.bn2.eps,
         )
     )
     alternative = step_net.out(y2) * out_scale
@@ -96,14 +108,20 @@ def frozen_and_batch_moments(
 
 
 def _grid_error(
-    s: np.ndarray, v: np.ndarray, values: np.ndarray,
-    sg: np.ndarray, vg: np.ndarray, model_grid: np.ndarray,
+    s: np.ndarray,
+    v: np.ndarray,
+    values: np.ndarray,
+    sg: np.ndarray,
+    vg: np.ndarray,
+    model_grid: np.ndarray,
 ) -> dict[str, Any]:
     inside = (s >= sg[0]) & (s <= sg[-1]) & (v >= vg[0]) & (v <= vg[-1])
     if not inside.any():
         raise ValueError("No market states within model hedge grid")
     interp = RegularGridInterpolator(
-        (sg, vg), model_grid, bounds_error=True,
+        (sg, vg),
+        model_grid,
+        bounds_error=True,
     )(np.column_stack((s[inside], v[inside])))
     error = values[inside] - interp
     return {
@@ -116,15 +134,27 @@ def _grid_error(
 
 
 def analyze(
-    *, npz95: Path, npz99: Path, checkpoint_root: Path,
-    output: Path, seed: int = 0, step: int = 15,
+    *,
+    npz95: Path,
+    npz99: Path,
+    checkpoint_root: Path,
+    output: Path,
+    seed: int = 0,
+    step: int = 15,
 ) -> dict[str, Any]:
     a = _load_data(npz95)
     b = _load_data(npz99)
-    if any(not np.array_equal(a[key], b[key]) for key in (
-        "visual_spot", "visual_variance", "model_spot_grid", "model_variance_grid",
-        "model_stock_delta_grid", "model_varswap_delta_grid",
-    )):
+    if any(
+        not np.array_equal(a[key], b[key])
+        for key in (
+            "visual_spot",
+            "visual_variance",
+            "model_spot_grid",
+            "model_variance_grid",
+            "model_stock_delta_grid",
+            "model_varswap_delta_grid",
+        )
+    ):
         raise ValueError("The two policies do not share identical visual paths/model grids")
     s = np.asarray(a["visual_spot"], dtype=np.float64)
     v = np.asarray(a["visual_variance"], dtype=np.float64)
@@ -140,28 +170,44 @@ def analyze(
         original, alternative, bn = frozen_and_batch_moments(
             policy.steps[step], state, policy.out_scale
         )
-        stored = np.column_stack((
-            saved["visual_stock_delta"], saved["visual_varswap_delta"]
-        )).astype(np.float64)
+        stored = np.column_stack(
+            (saved["visual_stock_delta"], saved["visual_varswap_delta"])
+        ).astype(np.float64)
         consistency = np.abs(original - stored)
         original_errors = {
             "stock": _grid_error(
-                s, v, original[:, 0], a["model_spot_grid"],
-                a["model_variance_grid"], a["model_stock_delta_grid"]
+                s,
+                v,
+                original[:, 0],
+                a["model_spot_grid"],
+                a["model_variance_grid"],
+                a["model_stock_delta_grid"],
             ),
             "variance_swap": _grid_error(
-                s, v, original[:, 1], a["model_spot_grid"],
-                a["model_variance_grid"], a["model_varswap_delta_grid"]
+                s,
+                v,
+                original[:, 1],
+                a["model_spot_grid"],
+                a["model_variance_grid"],
+                a["model_varswap_delta_grid"],
             ),
         }
         alternative_errors = {
             "stock": _grid_error(
-                s, v, alternative[:, 0], a["model_spot_grid"],
-                a["model_variance_grid"], a["model_stock_delta_grid"]
+                s,
+                v,
+                alternative[:, 0],
+                a["model_spot_grid"],
+                a["model_variance_grid"],
+                a["model_stock_delta_grid"],
             ),
             "variance_swap": _grid_error(
-                s, v, alternative[:, 1], a["model_spot_grid"],
-                a["model_variance_grid"], a["model_varswap_delta_grid"]
+                s,
+                v,
+                alternative[:, 1],
+                a["model_spot_grid"],
+                a["model_variance_grid"],
+                a["model_varswap_delta_grid"],
             ),
         }
         results[alpha] = {
@@ -206,20 +252,25 @@ def main() -> int:
     parser.add_argument("--npz-95", type=Path, required=True)
     parser.add_argument("--npz-99", type=Path, required=True)
     parser.add_argument(
-        "--checkpoint-root", type=Path,
+        "--checkpoint-root",
+        type=Path,
         default=Path("backups/e2cs_simple_seed0/e2cs"),
     )
     parser.add_argument(
-        "--output", type=Path,
+        "--output",
+        type=Path,
         default=Path("reports/e2cs/e2cs_original_bn_counterfactual.json"),
     )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--step", type=int, default=15)
     args = parser.parse_args()
     result = analyze(
-        npz95=args.npz_95, npz99=args.npz_99,
-        checkpoint_root=args.checkpoint_root, output=args.output,
-        seed=args.seed, step=args.step,
+        npz95=args.npz_95,
+        npz99=args.npz_99,
+        checkpoint_root=args.checkpoint_root,
+        output=args.output,
+        seed=args.seed,
+        step=args.step,
     )
     for alpha, record in result["policies"].items():
         print(
