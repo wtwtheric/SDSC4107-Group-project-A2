@@ -107,9 +107,7 @@ def recalibrate_batchnorm_from_features(
 
     for step_index, step_net in enumerate(policy.steps):
         x = features_cpu[:, step_index, :]
-        z1 = _collect_module_outputs(
-            step_net.fc1, x, batch_size=batch_size, device=target_device
-        )
+        z1 = _collect_module_outputs(step_net.fc1, x, batch_size=batch_size, device=target_device)
         bn1 = step_net.bn1
         bn2 = step_net.bn2
         if bn1.running_mean is None or bn1.running_var is None:
@@ -117,9 +115,7 @@ def recalibrate_batchnorm_from_features(
         if bn2.running_mean is None or bn2.running_var is None:
             raise ValueError(f"Step {step_index}: BN2 does not track running statistics")
 
-        bn1_before = _compare_moments(
-            z1, bn1.running_mean, bn1.running_var, bn1.eps
-        )
+        bn1_before = _compare_moments(z1, bn1.running_mean, bn1.running_var, bn1.eps)
         bn1_mean, bn1_var = _sample_moments(z1)
         bn1.running_mean.copy_(bn1_mean.to(device=target_device))
         bn1.running_var.copy_(bn1_var.to(device=target_device))
@@ -136,9 +132,7 @@ def recalibrate_batchnorm_from_features(
                     step_net.fc2(hidden1).detach().to(device="cpu", dtype=torch.float64)
                 )
         z2 = torch.cat(z2_parts, dim=0)
-        bn2_before = _compare_moments(
-            z2, bn2.running_mean, bn2.running_var, bn2.eps
-        )
+        bn2_before = _compare_moments(z2, bn2.running_mean, bn2.running_var, bn2.eps)
         bn2_mean, bn2_var = _sample_moments(z2)
         bn2.running_mean.copy_(bn2_mean.to(device=target_device))
         bn2.running_var.copy_(bn2_var.to(device=target_device))
