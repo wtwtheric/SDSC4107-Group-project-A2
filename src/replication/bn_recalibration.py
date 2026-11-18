@@ -123,6 +123,7 @@ def recalibrate_batchnorm_from_features(
         bn1_mean, bn1_var = _sample_moments(z1)
         bn1.running_mean.copy_(bn1_mean.to(device=target_device))
         bn1.running_var.copy_(bn1_var.to(device=target_device))
+        bn1_after = _compare_moments(z1, bn1.running_mean, bn1.running_var, bn1.eps)
 
         # BN1 now uses its newly calibrated moments; this defines the input
         # distribution that BN2 must normalize at inference time.
@@ -141,13 +142,16 @@ def recalibrate_batchnorm_from_features(
         bn2_mean, bn2_var = _sample_moments(z2)
         bn2.running_mean.copy_(bn2_mean.to(device=target_device))
         bn2.running_var.copy_(bn2_var.to(device=target_device))
+        bn2_after = _compare_moments(z2, bn2.running_mean, bn2.running_var, bn2.eps)
 
         report.append(
             {
                 "step": step_index,
                 "n_calibration_paths": int(features_cpu.shape[0]),
                 "bn1_before_recalibration": bn1_before,
+                "bn1_after_recalibration": bn1_after,
                 "bn2_before_recalibration_after_bn1_update": bn2_before,
+                "bn2_after_recalibration": bn2_after,
                 "bn1_calibrated_mean_abs": float(bn1_mean.abs().mean()),
                 "bn1_calibrated_var_median": float(bn1_var.median()),
                 "bn2_calibrated_mean_abs": float(bn2_mean.abs().mean()),
