@@ -34,6 +34,19 @@ jobs:
             reports/e2cs/
             figures/e2cs_diagnostics/
           if-no-files-found: error
+      - name: Diagnose E2cs k15 state support, BatchNorm and training
+        if: success() && github.ref == 'refs/heads/feat/e2cs-diagnostics'
+        run: python -m scripts.diagnose_e2cs_support_bn --n-paths 40000
+      - name: Upload E2cs k15 support and BN diagnostics
+        if: success() && github.ref == 'refs/heads/feat/e2cs-diagnostics'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2cs-support-bn-training
+          path: |
+            reports/e2cs/e2cs_support_bn_training.json
+            figures/e2cs_diagnostics/e2cs_k15_path_support.png
+            figures/e2cs_diagnostics/e2cs_training_cvar.png
+          if-no-files-found: error
       - name: Render E4 seed-0 figures and sensitivity tables
         if: success() && github.ref == 'refs/heads/exp/a2-seed0-batch'
         run: python -m scripts.make_figures_a2 --only e4 --seeds 0
