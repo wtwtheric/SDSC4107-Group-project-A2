@@ -47,11 +47,15 @@ def training_diagnostics(log_path: Path) -> dict[str, Any]:
         match = pattern.search(line)
         if match and active:
             step, lr, last_batch, nwindow, mean = match.groups()
-            result[active].append({
-                "step": int(step), "lr": float(lr),
-                "last_batch_cvar": float(last_batch), "window_n": int(nwindow),
-                "mean_training_cvar": float(mean),
-            })
+            result[active].append(
+                {
+                    "step": int(step),
+                    "lr": float(lr),
+                    "last_batch_cvar": float(last_batch),
+                    "window_n": int(nwindow),
+                    "mean_training_cvar": float(mean),
+                }
+            )
     summary: dict[str, Any] = {}
     for alpha in ALPHAS:
         series = result[alpha]
@@ -79,8 +83,9 @@ def _load_policies(checkpoint_root: Path, seed: int, device: torch.device):
         if config["policy"].get("recurrent", True) or config["policy"].get("norm") != "batch":
             raise ValueError(f"{folder}: expected corrected simpler policy with BatchNorm")
         market = market_from_cfg(config)
-        policy = policy_from_cfg(config, market.n_features, market.d, device,
-                                 recurrent=False, n_features_override=2)
+        policy = policy_from_cfg(
+            config, market.n_features, market.d, device, recurrent=False, n_features_override=2
+        )
         policy.load_state_dict(
             torch.load(folder / "policy.pt", map_location=device, weights_only=True),
             strict=True,
@@ -91,8 +96,12 @@ def _load_policies(checkpoint_root: Path, seed: int, device: torch.device):
 
 
 def _sample_states(
-    cfg: dict[str, Any], count: int, chunk: int, seed: int,
-    step: int, pnl: Path | None,
+    cfg: dict[str, Any],
+    count: int,
+    chunk: int,
+    seed: int,
+    step: int,
+    pnl: Path | None,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     """Use original saved visual spots/variance if supplied; else fresh simulation."""
     if pnl is not None:
@@ -112,7 +121,9 @@ def _sample_states(
         seed_everything(seed)
         m = market_from_cfg(cfg)
         world = CallSpreadWorld(
-            m, float(cfg["payoff"]["strike1"]), float(cfg["payoff"]["strike2"]),
+            m,
+            float(cfg["payoff"]["strike1"]),
+            float(cfg["payoff"]["strike2"]),
             device="cpu",
         )
         s_parts, v_parts = [], []
@@ -138,8 +149,9 @@ def _sample_states(
     return spots, vars_, source
 
 
-def _batchnorm_diagnostics(step_net: torch.nn.Module, inputs: torch.Tensor,
-                           out_scale: torch.Tensor) -> dict[str, Any]:
+def _batchnorm_diagnostics(
+    step_net: torch.nn.Module, inputs: torch.Tensor, out_scale: torch.Tensor
+) -> dict[str, Any]:
     """Compare running moments with current state-distribution moments.
 
     A batch-statistics counterfactual is a diagnostic ONLY. It is not an
@@ -176,15 +188,25 @@ def _batchnorm_diagnostics(step_net: torch.nn.Module, inputs: torch.Tensor,
         # num_batches_tracked or running mean/variance.
         y1 = torch.relu(
             functional.batch_norm(
-                z1, None, None, step_net.bn1.weight, step_net.bn1.bias,
-                training=True, eps=step_net.bn1.eps,
+                z1,
+                None,
+                None,
+                step_net.bn1.weight,
+                step_net.bn1.bias,
+                training=True,
+                eps=step_net.bn1.eps,
             )
         )
         z2_batch = step_net.fc2(y1)
         y2 = torch.relu(
             functional.batch_norm(
-                z2_batch, None, None, step_net.bn2.weight, step_net.bn2.bias,
-                training=True, eps=step_net.bn2.eps,
+                z2_batch,
+                None,
+                None,
+                step_net.bn2.weight,
+                step_net.bn2.bias,
+                training=True,
+                eps=step_net.bn2.eps,
             )
         )
         current_batch = step_net.out(y2) * out_scale
@@ -201,19 +223,18 @@ def _batchnorm_diagnostics(step_net: torch.nn.Module, inputs: torch.Tensor,
 
 def _q(data: np.ndarray) -> dict[str, float]:
     probs = (0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99)
-    return {f"q{int(q*100):02d}": float(np.quantile(data, q)) for q in probs}
+    return {f"q{int(q * 100):02d}": float(np.quantile(data, q)) for q in probs}
 
 
-def support_metrics(spots: np.ndarray, variances: np.ndarray,
-                    grid_spot: np.ndarray, grid_var: np.ndarray) -> dict[str, Any]:
+def support_metrics(
+    spots: np.ndarray, variances: np.ndarray, grid_spot: np.ndarray, grid_var: np.ndarray
+) -> dict[str, Any]:
     """Proportion of real simulated states supported by Figures 8/9's grid."""
     in_s = (spots >= grid_spot[0]) & (spots <= grid_spot[-1])
     in_v = (variances >= grid_var[0]) & (variances <= grid_var[-1])
     mask = in_s & in_v
     # Explicit local zones have fixed, interpretable geometric boundaries.
-    model_peak_zone = (
-        (spots >= 99.3) & (spots <= 100.3) & (variances >= 0.02) & (variances <= 0.04)
-    )
+    model_peak_zone = (spots >= 99.3) & (spots <= 100.3) & (variances >= 0.02) & (variances <= 0.04)
     shifted_peak_zone = (
         (spots >= 96.3) & (spots <= 97.3) & (variances >= 0.02) & (variances <= 0.04)
     )
@@ -228,9 +249,7 @@ def support_metrics(spots: np.ndarray, variances: np.ndarray,
         "fraction_in_model_peak_neighborhood": float(model_peak_zone.mean()),
         "fraction_in_shifted_peak_neighborhood": float(shifted_peak_zone.mean()),
         "fraction_in_S_99_to_101": float(((spots >= 99) & (spots <= 101)).mean()),
-        "fraction_in_V_0p02_to_0p04": float(
-            ((variances >= 0.02) & (variances <= 0.04)).mean()
-        ),
+        "fraction_in_V_0p02_to_0p04": float(((variances >= 0.02) & (variances <= 0.04)).mean()),
     }
 
 
@@ -246,19 +265,19 @@ def _weighted_comparison(
 ) -> dict[str, Any]:
     """Conditional error within the depicted grid, evaluated at sampled states."""
     mask = (
-        (spots >= grid_spot[0]) & (spots <= grid_spot[-1])
-        & (vars_ >= grid_var[0]) & (vars_ <= grid_var[-1])
+        (spots >= grid_spot[0])
+        & (spots <= grid_spot[-1])
+        & (vars_ >= grid_var[0])
+        & (vars_ <= grid_var[-1])
     )
-    inputs = torch.as_tensor(
-        np.column_stack((spots, vars_)), dtype=torch.float64
-    )
+    inputs = torch.as_tensor(np.column_stack((spots, vars_)), dtype=torch.float64)
     valid = np.column_stack((spots[mask], vars_[mask]))
-    stock_model = RegularGridInterpolator(
-        (grid_spot, grid_var), model_stock, bounds_error=True
-    )(valid)
-    var_model = RegularGridInterpolator(
-        (grid_spot, grid_var), model_varswap, bounds_error=True
-    )(valid)
+    stock_model = RegularGridInterpolator((grid_spot, grid_var), model_stock, bounds_error=True)(
+        valid
+    )
+    var_model = RegularGridInterpolator((grid_spot, grid_var), model_varswap, bounds_error=True)(
+        valid
+    )
     model = np.column_stack((stock_model, var_model))
     out = {}
     for alpha, policy in policies.items():
@@ -283,24 +302,29 @@ def _weighted_comparison(
             "path_weighted_within_grid": per_leg,
             "stock_actual_positions_quantiles": _q(values[:, 0]),
             "varswap_actual_positions_quantiles": _q(values[:, 1]),
-            "batchnorm": _batchnorm_diagnostics(
-                policy.steps[step], inputs, policy.out_scale
-            ),
+            "batchnorm": _batchnorm_diagnostics(policy.steps[step], inputs, policy.out_scale),
         }
     return out
 
 
 def _figures(
-    path: Path, spots: np.ndarray, vars_: np.ndarray, grid_spot: np.ndarray,
-    grid_var: np.ndarray, fit: dict[str, Any],
+    path: Path,
+    spots: np.ndarray,
+    vars_: np.ndarray,
+    grid_spot: np.ndarray,
+    grid_var: np.ndarray,
+    fit: dict[str, Any],
     training: dict[str, Any],
 ) -> None:
     path.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(8.8, 6.3), constrained_layout=True)
     heat = ax.hist2d(
-        spots, vars_, bins=(80, 80),
+        spots,
+        vars_,
+        bins=(80, 80),
         range=((grid_spot[0], grid_spot[-1]), (0.0, max(0.2, float(np.quantile(vars_, 0.99))))),
-        cmap="viridis", cmin=1,
+        cmap="viridis",
+        cmin=1,
     )[3]
     fig.colorbar(heat, ax=ax, label="Fresh k=15 simulated paths per bin")
     ax.axvline(99.8, color="white", linestyle="--", linewidth=1, label="Model stock peak S=99.8")
@@ -321,7 +345,9 @@ def _figures(
         ax.plot(
             [q["step"] for q in points],
             [q["mean_training_cvar"] for q in points],
-            marker="o", linewidth=1.6, label=name,
+            marker="o",
+            linewidth=1.6,
+            label=name,
         )
     ax.set(xlabel="Training iteration", ylabel="Mean stochastic training CVaR")
     ax.set_title("E2cs training history (not fixed validation)")
@@ -332,9 +358,17 @@ def _figures(
 
 
 def analyze(
-    *, checkpoint_root: Path, config_path: Path, output_dir: Path,
-    figures_dir: Path, seed: int, step: int, n_paths: int,
-    simulation_seed: int, batch_size: int, pnl: Path | None = None,
+    *,
+    checkpoint_root: Path,
+    config_path: Path,
+    output_dir: Path,
+    figures_dir: Path,
+    seed: int,
+    step: int,
+    n_paths: int,
+    simulation_seed: int,
+    batch_size: int,
+    pnl: Path | None = None,
 ) -> dict[str, Any]:
     cfg = load_config(str(config_path))
     policies = _load_policies(checkpoint_root, seed, torch.device("cpu"))
@@ -342,17 +376,33 @@ def analyze(
     grid_var = np.linspace(0.02, 0.14, 61)
     market = market_from_cfg(cfg)
     model_stock, model_varswap = _model_delta_grids(
-        market, float(cfg["payoff"]["strike1"]), float(cfg["payoff"]["strike2"]),
-        step, grid_spot, grid_var,
+        market,
+        float(cfg["payoff"]["strike1"]),
+        float(cfg["payoff"]["strike2"]),
+        step,
+        grid_spot,
+        grid_var,
     )
     spots, vars_, provenance = _sample_states(
-        cfg, n_paths, batch_size, simulation_seed, step, pnl,
+        cfg,
+        n_paths,
+        batch_size,
+        simulation_seed,
+        step,
+        pnl,
     )
     support = support_metrics(spots, vars_, grid_spot, grid_var)
     if support["fraction_inside_both_ranges"] == 0:
         raise ValueError("No sampled market states fall within the E2cs figure grid")
     weighted = _weighted_comparison(
-        spots, vars_, model_stock, model_varswap, grid_spot, grid_var, policies, step,
+        spots,
+        vars_,
+        model_stock,
+        model_varswap,
+        grid_spot,
+        grid_var,
+        policies,
+        step,
     )
     training = training_diagnostics(checkpoint_root / "seed_0_master.log")
     report = {
@@ -391,8 +441,9 @@ def analyze(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--checkpoint-root", type=Path,
-                        default=Path("backups/e2cs_simple_seed0/e2cs"))
+    parser.add_argument(
+        "--checkpoint-root", type=Path, default=Path("backups/e2cs_simple_seed0/e2cs")
+    )
     parser.add_argument("--config", type=Path, default=Path("configs/exp/e2cs.yaml"))
     parser.add_argument("--output-dir", type=Path, default=Path("reports/e2cs"))
     parser.add_argument("--figures-dir", type=Path, default=Path("figures/e2cs_diagnostics"))
@@ -401,16 +452,23 @@ def main() -> int:
     parser.add_argument("--n-paths", type=int, default=40000)
     parser.add_argument("--simulation-seed", type=int, default=928371)
     parser.add_argument("--batch-size", type=int, default=5000)
-    parser.add_argument("--pnl", type=Path, default=None,
-                        help="Optional actual archived 0.95/0/pnl.npz (visual_spot/variance)")
+    parser.add_argument(
+        "--pnl",
+        type=Path,
+        default=None,
+        help="Optional actual archived 0.95/0/pnl.npz (visual_spot/variance)",
+    )
     args = parser.parse_args()
     analyze(
         checkpoint_root=args.checkpoint_root,
         config_path=args.config,
         output_dir=args.output_dir,
         figures_dir=args.figures_dir,
-        seed=args.seed, step=args.step, n_paths=args.n_paths,
-        simulation_seed=args.simulation_seed, batch_size=args.batch_size,
+        seed=args.seed,
+        step=args.step,
+        n_paths=args.n_paths,
+        simulation_seed=args.simulation_seed,
+        batch_size=args.batch_size,
         pnl=args.pnl,
     )
     return 0
