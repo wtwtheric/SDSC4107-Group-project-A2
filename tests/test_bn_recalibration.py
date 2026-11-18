@@ -29,9 +29,7 @@ def test_recalibration_changes_only_bn_running_moments() -> None:
     features[..., 0] = 100.0 + 4.0 * features[..., 0]
     features[..., 1] = torch.clamp(0.04 + 0.08 * features[..., 1], min=0.0)
 
-    report = recalibrate_batchnorm_from_features(
-        policy, features, batch_size=777, device="cpu"
-    )
+    report = recalibrate_batchnorm_from_features(policy, features, batch_size=777, device="cpu")
     after = policy.state_dict()
     assert report["only_bn_running_moments_changed"]
     assert len(report["changed_buffers"]) == 3 * 4
@@ -75,6 +73,4 @@ def test_recalibration_is_independent_of_chunk_size() -> None:
 def test_recalibration_rejects_recurrent_and_wrong_feature_shapes() -> None:
     policy = _policy()
     with pytest.raises(ValueError):
-        recalibrate_batchnorm_from_features(
-            policy, torch.randn(100, 3, 3, dtype=torch.float64)
-        )
+        recalibrate_batchnorm_from_features(policy, torch.randn(100, 3, 3, dtype=torch.float64))
