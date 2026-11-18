@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 import torch
 
 from src.replication.bn_recalibration import recalibrate_batchnorm_from_features
@@ -74,7 +75,7 @@ def test_recalibration_is_independent_of_chunk_size() -> None:
 
 def test_recalibration_rejects_recurrent_and_wrong_feature_shapes() -> None:
     policy = _policy()
-    with torch.raises(ValueError):
+    with pytest.raises(ValueError):
         recalibrate_batchnorm_from_features(
             policy, torch.randn(100, 3, 3, dtype=torch.float64)
         )
