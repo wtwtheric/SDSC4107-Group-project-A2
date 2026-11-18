@@ -149,6 +149,60 @@ def _evaluate_pair(
     }
 
 
+@torch.no_grad()
+def _surface_summary(
+    policy: torch.nn.Module,
+    *,
+    step: int,
+    device: torch.device,
+) -> dict[str, Any]:
+    spot = np.linspace(95.0, 103.0, 81)
+    variance = np.linspace(0.02, 0.14, 61)
+    ss, vv = np.meshgrid(spot, variance, indexing="ij")
+    states = torch.as_tensor(
+        np.column_stack((ss.ravel(), vv.ravel())),
+        dtype=torch.float64,
+        device=device,
+    )
+    policy.eval()
+    output = policy.steps[step](states) * policy.out_scale
+    stock = output[:, 0].cpu().numpy().reshape(ss.shape)
+    varswap = output[:, 1].cpu().numpy().reshape(ss.shape)
+
+    def peak_at_variance(surface: np.ndarray, target_v: float) -> dict[str, float]:
+        j = int(np.argmin(np.abs(variance - target_v)))
+        i = int(np.argmax(surface[:, j]))
+        return {
+            "target_variance": float(target_v),
+            "actual_variance": float(variance[j]),
+            "peak_spot": float(spot[i]),
+            "peak_value": float(surface[i, j]),
+            "min_value": float(surface[:, j].min()),
+            "max_value": float(surface[:, j].max()),
+        }
+
+    return {
+        "grid": {
+            "spot_min": float(spot.min()),
+            "spot_max": float(spot.max()),
+            "variance_min": float(variance.min()),
+            "variance_max": float(variance.max()),
+        },
+        "stock_global_max": float(stock.max()),
+        "stock_global_peak_spot": float(spot[np.unravel_index(np.argmax(stock), stock.shape)[0]]),
+        "stock_peak_at_variance_0_03": peak_at_variance(stock, 0.03),
+        "stock_peak_at_variance_0_08": peak_at_variance(stock, 0.08),
+        "varswap_global_max": float(varswap.max()),
+        "varswap_global_peak_spot": float(
+            spot[np.unravel_index(np.argmax(varswap), varswap.shape)[0]]
+        ),
+        "stock_surface": stock.tolist(),
+        "varswap_surface": varswap.tolist(),
+        "spot_grid": spot.tolist(),
+        "variance_grid": variance.tolist(),
+    }
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     root = Path(args.checkpoint_root)
     output = Path(args.output)
@@ -200,8 +254,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         policy_out.mkdir(parents=True, exist_ok=True)
         shutil.copy2(folder / "config.yaml", policy_out / "config.yaml")
         torch.save(calibrated.state_dict(), policy_out / "policy.pt")
+        original_surface = _surface_summary(original, step=15, device=device)
+        calibrated_surface = _surface_summary(calibrated, step=15, device=device)
         results["policies"][alpha] = {
             "source_checkpoint": str(folder / "policy.pt"),
+            "surface_original": original_surface,
+            "surface_recalibrated": calibrated_surface,
             "source_sha256": _sha256(folder / "policy.pt"),
             "recalibrated_checkpoint": str(policy_out / "policy.pt"),
             "recalibrated_sha256": _sha256(policy_out / "policy.pt"),
