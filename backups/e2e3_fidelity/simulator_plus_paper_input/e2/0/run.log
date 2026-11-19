@@ -1,0 +1,32 @@
+13:22:29 INFO    exp=e2 seed=0 kind=e2 device=cuda
+13:22:29 INFO    config=configs/fidelity/e2e3/simulator_plus_paper_input_e2.yaml -> results/e2e3_fidelity/simulator_plus_paper_input/e2/0
+13:22:29 INFO    training E2 comparison policy alpha=0.50
+13:22:30 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000 validation_paths=0 validation_seed=8675309
+13:24:34 INFO      iter 2500/30000 lr=0.00492 train_cvar=2.4262 (last 2500 avg 2.4834)
+13:26:42 INFO      iter 5000/30000 lr=0.0047 train_cvar=2.3839 (last 2500 avg 2.4223)
+13:28:47 INFO      iter 7500/30000 lr=0.00434 train_cvar=2.2541 (last 2500 avg 2.3710)
+13:30:52 INFO      iter 10000/30000 lr=0.00388 train_cvar=2.2262 (last 2500 avg 2.2860)
+13:32:57 INFO      iter 12500/30000 lr=0.00333 train_cvar=2.0311 (last 2500 avg 2.1681)
+13:35:04 INFO      iter 15000/30000 lr=0.00275 train_cvar=1.8679 (last 2500 avg 1.9972)
+13:37:08 INFO      iter 17500/30000 lr=0.00217 train_cvar=1.8509 (last 2500 avg 1.8316)
+13:39:14 INFO      iter 20000/30000 lr=0.00163 train_cvar=1.6475 (last 2500 avg 1.7031)
+13:41:17 INFO      iter 22500/30000 lr=0.00116 train_cvar=1.5620 (last 2500 avg 1.6013)
+13:43:19 INFO      iter 25000/30000 lr=0.000801 train_cvar=1.5232 (last 2500 avg 1.5273)
+13:45:20 INFO      iter 27500/30000 lr=0.000577 train_cvar=1.3975 (last 2500 avg 1.4712)
+13:47:25 INFO      iter 30000/30000 lr=0.0005 train_cvar=1.4390 (last 2500 avg 1.4339)
+13:47:25 INFO    training E2 primary policy alpha=0.99
+13:47:25 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000 validation_paths=0 validation_seed=8675309
+13:49:29 INFO      iter 2500/30000 lr=0.00492 train_cvar=5.3635 (last 2500 avg 5.6688)
+13:51:33 INFO      iter 5000/30000 lr=0.0047 train_cvar=5.5892 (last 2500 avg 5.3936)
+13:53:41 INFO      iter 7500/30000 lr=0.00434 train_cvar=5.1647 (last 2500 avg 5.3716)
+13:55:49 INFO      iter 10000/30000 lr=0.00388 train_cvar=5.0293 (last 2500 avg 5.3537)
+13:57:52 INFO      iter 12500/30000 lr=0.00333 train_cvar=5.0238 (last 2500 avg 5.3259)
+13:59:55 INFO      iter 15000/30000 lr=0.00275 train_cvar=5.4739 (last 2500 avg 5.2999)
+14:02:01 INFO      iter 17500/30000 lr=0.00217 train_cvar=5.1986 (last 2500 avg 5.2337)
+14:04:04 INFO      iter 20000/30000 lr=0.00163 train_cvar=4.8449 (last 2500 avg 5.0957)
+14:06:08 INFO      iter 22500/30000 lr=0.00116 train_cvar=4.6586 (last 2500 avg 4.9759)
+14:08:12 INFO      iter 25000/30000 lr=0.000801 train_cvar=4.7586 (last 2500 avg 4.8693)
+14:10:19 INFO      iter 27500/30000 lr=0.000577 train_cvar=4.4561 (last 2500 avg 4.7284)
+14:12:30 INFO      iter 30000/30000 lr=0.0005 train_cvar=4.4221 (last 2500 avg 4.6056)
+14:12:31 INFO    E2 eval q=1.6918 p50=1.4196 p99=4.6171 | q-normalized CVaR50: alpha99=1.3574 alpha50=-0.2722 | CVaR99: alpha99=2.9253 alpha50=3.9286
+14:12:33 INFO    done runtime=50m 2s passed=False -> results/e2e3_fidelity/simulator_plus_paper_input/e2/0/metrics.json

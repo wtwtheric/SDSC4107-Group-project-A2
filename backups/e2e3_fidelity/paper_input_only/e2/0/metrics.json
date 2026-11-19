@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "exp": "e2",
+  "seed": 0,
+  "git_commit": "dc98850",
+  "dirty": false,
+  "created_at": "2026-11-19T05:49:48+00:00",
+  "runtime_sec": 3479.193,
+  "device": "cuda",
+  "torch_version": "2.11.0+cu130",
+  "n_paths": 100000,
+  "config_sha256": "4d5408333d201feaefafef47abedba46ffc924c54e8c2a3010092329f7d58867",
+  "metrics": {
+    "price": 4.638691622931525,
+    "cvar05_own": 1.5505423421372393,
+    "cvar99_own": 2.946857697820853,
+    "cvar05_other": 0.5543508979604604,
+    "cvar99_other": 3.999945923216591,
+    "q": 1.6918339251106715,
+    "price_alpha50": 2.246184823071132,
+    "price_alpha99": 4.638691622931525,
+    "mean_raw_loss_alpha50": 1.694144743846952,
+    "mean_raw_loss_alpha99": 1.6946984567010082,
+    "mean_abs_hedging_error_alpha50": 0.5672546089163427,
+    "mean_abs_hedging_error_alpha99": 1.6713340981739955
+  },
+  "checks": {
+    "price99_band": false,
+    "price50_reference_band": false,
+    "cvar50_tradeoff": true,
+    "cvar99_tradeoff": true,
+    "mean_loss_alpha50_near_q": true,
+    "mean_loss_alpha99_near_q": true,
+    "price_translation_alpha50": true,
+    "price_translation_alpha99": true
+  },
+  "passed": false
+}

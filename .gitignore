@@ -29,7 +29,7 @@ results/
 !backups/
 !backups/**
 backups/**/*.npz
-!backups/**/*.pt
+backups/**/*.pt
 readme-autodl.md
 
 # 编辑器 / 系统
