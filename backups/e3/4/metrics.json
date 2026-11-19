@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0",
+  "exp": "e3",
+  "seed": 4,
+  "git_commit": "f65e886",
+  "dirty": true,
+  "created_at": "2026-11-19T22:42:15+08:00",
+  "runtime_sec": 3590.001,
+  "device": "cuda",
+  "torch_version": "2.8.0+cu128",
+  "n_paths": 1000000,
+  "config_sha256": "d4d2e0f9acef4ee2a6d5d9e6a0c5fe7cd82cc298db64fb34f6a50c1d0cf7d0ba",
+  "metrics": {
+    "price_recurrent": 4.168029963836684,
+    "price_simpler": 4.220183152609723,
+    "cvar_recurrent": 4.171662879150297,
+    "cvar_simpler": 4.220636844560121,
+    "mean_loss_recurrent": 0.0007517687439214247,
+    "mean_loss_simpler": 0.0007320620970074574,
+    "mean_cost_recurrent": 1.1376771684693392,
+    "mean_cost_simpler": 1.2192059405065558,
+    "mean_stock_cost_recurrent": 1.0792362490797298,
+    "mean_varswap_cost_recurrent": 0.05844091938961028,
+    "mean_stock_cost_simpler": 1.1493933964934653,
+    "mean_varswap_cost_simpler": 0.0698125440130911,
+    "mean_turnover_recurrent": 2430.1950005056533,
+    "mean_turnover_simpler": 2508.3342217027566,
+    "q_zero_cost_reference": 1.6918339251106715,
+    "visual_step": 15.0,
+    "visual_paths": 200000.0,
+    "raw_mean_loss_recurrent": 2.831887014494232,
+    "raw_mean_loss_simpler": 2.913517407223713,
+    "mean_excess_loss_diagnostic_recurrent": 0.0007517687439214247,
+    "mean_excess_loss_diagnostic_simpler": 0.0007320620970074574,
+    "figure5_mean_loss_recurrent": 0.0007517687439214247,
+    "figure5_mean_loss_simpler": 0.0007320620970074574,
+    "figure5_mean_loss_proxy_recurrent": 0.0007517687439214247,
+    "figure5_mean_loss_proxy_simpler": 0.0007320620970074574,
+    "signed_terminal_hedging_loss_recurrent": -1.3361429493424513,
+    "signed_terminal_hedging_loss_simpler": -1.3066657453860084,
+    "cvar_shortfall_recurrent": 0.0036329153136125266,
+    "cvar_shortfall_simpler": 0.00045369195039899035
+  },
+  "checks": {
+    "finite_prices": true,
+    "nonnegative_transaction_costs": true,
+    "common_oos_path_count": true,
+    "independent_calibration_oos_seeds": true,
+    "independent_validation_seed": true,
+    "finite_validation_cvar": true
+  },
+  "passed": true,
+  "operational_passed": true,
+  "paper_target_checks": {
+    "recurrent_price_in_paper_band": false,
+    "simpler_price_in_paper_band": false
+  },
+  "paper_target_passed": false,
+  "economic_direction_checks": {
+    "recurrent_price_lower_than_simpler": true,
+    "recurrent_oos_cvar_lower_than_simpler": true,
+    "recurrent_mean_positive_loss_proxy_lower_than_simpler": false
+  },
+  "independent_evaluation": {
+    "calibration_paths": 1000000,
+    "calibration_seed": 271828,
+    "oos_paths": 1000000,
+    "oos_seed": 314159,
+    "device": "cuda",
+    "runtime_sec": 6.848,
+    "validation_paths": 10000,
+    "validation_seed": 8675309,
+    "validation_metrics": {
+      "recurrent": {
+        "mean_raw_loss": 2.831726760186379,
+        "cvar": 4.148213666946771
+      },
+      "simpler": {
+        "mean_raw_loss": 2.9122032566691223,
+        "cvar": 4.189174406297367
+      }
+    }
+  }
+}
