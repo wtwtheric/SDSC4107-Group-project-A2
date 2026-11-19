@@ -13,7 +13,6 @@ from pathlib import Path
 
 import numpy as np
 import torch
-
 from src.common.seed import resolve_device, seed_everything
 from src.replication.e1 import q_price
 from src.replication.env_heston import HestonMarket, HestonWorld
