@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import torch
-
 from src.common.seed import seed_everything
 from src.replication.env_heston import (
     HestonMarket,
