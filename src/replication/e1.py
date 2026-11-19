@@ -42,6 +42,8 @@ def market_from_cfg(cfg: dict[str, Any]) -> HestonMarket:
         n_steps=int(cfg["n_steps"]),
         eps=float(cfg.get("eps", 0.0)),
         d=int(m.get("d", 2)),
+        simulator=str(m.get("simulator", "qem")),
+        feature_set=str(m.get("feature_set", "current")),
     )
 
 
