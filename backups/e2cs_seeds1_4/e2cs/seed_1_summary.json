@@ -1,0 +1,26 @@
+{
+  "exp": "e2cs",
+  "seed": 1,
+  "device": "cuda",
+  "n_paths": 1000000,
+  "metrics": {
+    "price_alpha95": 1.0047479506797208,
+    "price_alpha99": 0.9690546942184514,
+    "q_model_call_spread": 0.6104624677310682,
+    "mean_loss_alpha95": 0.6096363514703808,
+    "mean_loss_alpha99": 0.6097002322982908,
+    "cvar95_alpha95": 1.0047479506797208,
+    "cvar99_alpha95": 1.151163603688341,
+    "cvar95_alpha99": 0.9204747913377342,
+    "cvar99_alpha99": 0.9690546942184514,
+    "visual_step": 15.0,
+    "visual_paths": 200000.0
+  },
+  "checks": {
+    "finite_prices": true,
+    "finite_policy_positions": true,
+    "model_surface_finite": true,
+    "common_oos_path_count": true
+  },
+  "runtime_sec": 3415.7157129645348
+}

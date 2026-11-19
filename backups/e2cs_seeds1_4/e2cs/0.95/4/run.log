@@ -1,0 +1,41 @@
+16:56:00 INFO    E2CS seed=4 device=cuda config=configs/exp/e2cs.yaml
+16:56:00 INFO    training call-spread policy alpha=0.95
+16:56:01 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000 validation_paths=0 validation_seed=8675309
+16:58:32 INFO      iter 2500/30000 lr=0.00492 train_cvar=1.0105 (last 2500 avg 1.0675)
+17:01:03 INFO      iter 5000/30000 lr=0.0047 train_cvar=0.9366 (last 2500 avg 0.9437)
+17:03:33 INFO      iter 7500/30000 lr=0.00434 train_cvar=0.8843 (last 2500 avg 0.9096)
+17:06:02 INFO      iter 10000/30000 lr=0.00388 train_cvar=0.8990 (last 2500 avg 0.8910)
+17:08:32 INFO      iter 12500/30000 lr=0.00333 train_cvar=0.8968 (last 2500 avg 0.8826)
+17:11:02 INFO      iter 15000/30000 lr=0.00275 train_cvar=0.8783 (last 2500 avg 0.8774)
+17:13:31 INFO      iter 17500/30000 lr=0.00217 train_cvar=0.8751 (last 2500 avg 0.8730)
+17:16:01 INFO      iter 20000/30000 lr=0.00163 train_cvar=0.8570 (last 2500 avg 0.8690)
+17:18:31 INFO      iter 22500/30000 lr=0.00116 train_cvar=0.8671 (last 2500 avg 0.8659)
+17:21:01 INFO      iter 25000/30000 lr=0.000801 train_cvar=0.8596 (last 2500 avg 0.8634)
+17:23:32 INFO      iter 27500/30000 lr=0.000577 train_cvar=0.8605 (last 2500 avg 0.8613)
+17:26:04 INFO      iter 30000/30000 lr=0.0005 train_cvar=0.8486 (last 2500 avg 0.8604)
+17:26:04 INFO    training call-spread policy alpha=0.99
+17:26:04 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000 validation_paths=0 validation_seed=8675309
+17:28:35 INFO      iter 2500/30000 lr=0.00492 train_cvar=1.1351 (last 2500 avg 1.4210)
+17:31:04 INFO      iter 5000/30000 lr=0.0047 train_cvar=0.9972 (last 2500 avg 1.0888)
+17:33:34 INFO      iter 7500/30000 lr=0.00434 train_cvar=0.9634 (last 2500 avg 0.9936)
+17:36:07 INFO      iter 10000/30000 lr=0.00388 train_cvar=0.9475 (last 2500 avg 0.9564)
+17:38:38 INFO      iter 12500/30000 lr=0.00333 train_cvar=0.9258 (last 2500 avg 0.9448)
+17:41:08 INFO      iter 15000/30000 lr=0.00275 train_cvar=0.9179 (last 2500 avg 0.9383)
+17:43:39 INFO      iter 17500/30000 lr=0.00217 train_cvar=0.9552 (last 2500 avg 0.9313)
+17:46:11 INFO      iter 20000/30000 lr=0.00163 train_cvar=0.9282 (last 2500 avg 0.9259)
+17:48:41 INFO      iter 22500/30000 lr=0.00116 train_cvar=0.9207 (last 2500 avg 0.9199)
+17:51:15 INFO      iter 25000/30000 lr=0.000801 train_cvar=0.9347 (last 2500 avg 0.9160)
+17:53:48 INFO      iter 27500/30000 lr=0.000577 train_cvar=0.9078 (last 2500 avg 0.9123)
+17:56:20 INFO      iter 30000/30000 lr=0.0005 train_cvar=0.8978 (last 2500 avg 0.9104)
+17:56:20 INFO      OOS evaluation 100000/1000000 paths
+17:56:21 INFO      OOS evaluation 200000/1000000 paths
+17:56:21 INFO      OOS evaluation 300000/1000000 paths
+17:56:21 INFO      OOS evaluation 400000/1000000 paths
+17:56:22 INFO      OOS evaluation 500000/1000000 paths
+17:56:22 INFO      OOS evaluation 600000/1000000 paths
+17:56:22 INFO      OOS evaluation 700000/1000000 paths
+17:56:23 INFO      OOS evaluation 800000/1000000 paths
+17:56:23 INFO      OOS evaluation 900000/1000000 paths
+17:56:23 INFO      OOS evaluation 1000000/1000000 paths
+17:56:32 INFO    E2CS eval q=0.61046 price95=0.96914 price99=0.97119 | CVaR99(95-policy)=1.07359 CVaR99(99-policy)=0.97119
+17:56:33 INFO    E2CS completed in 1h 0m
