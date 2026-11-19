@@ -89,9 +89,9 @@ def _sample_exact_cir_transition(
     one_minus_decay = 1.0 - decay
     scale = sigma * sigma * one_minus_decay / (4.0 * kappa)
     df = 4.0 * kappa * theta / (sigma * sigma)
-    noncentrality = (
-        4.0 * kappa * decay * variance / (sigma * sigma * one_minus_decay)
-    ).clamp_min(0.0)
+    noncentrality = (4.0 * kappa * decay * variance / (sigma * sigma * one_minus_decay)).clamp_min(
+        0.0
+    )
     poisson = torch.poisson(noncentrality / 2.0)
     concentration = poisson + df / 2.0
     rate = torch.full_like(concentration, 0.5)
@@ -188,9 +188,7 @@ class HestonWorld:
             var_np = variance.cpu().numpy()
             t_np = time.cpu().numpy()
             decay = np.expm1(-m.kappa * m.dt)
-            accrual = (
-                (var_np[:, :-1] - m.theta) * (-decay / m.kappa) + m.theta * m.dt
-            )
+            accrual = (var_np[:, :-1] - m.theta) * (-decay / m.kappa) + m.theta * m.dt
             integrated = np.zeros_like(var_np)
             integrated[:, 1:] = np.cumsum(accrual, axis=1)
             varswap = integrated + varswap_price_total(var_np, t_np[None, :], m.maturity)
@@ -203,12 +201,9 @@ class HestonWorld:
                 device=self.device,
             )
             tau = (m.maturity - time).clamp_min(0.0)
-            continuation = (
-                (variance - m.theta)
-                / m.kappa
-                * (1.0 - torch.exp(-m.kappa * tau.unsqueeze(0)))
-                + m.theta * tau.unsqueeze(0)
-            )
+            continuation = (variance - m.theta) / m.kappa * (
+                1.0 - torch.exp(-m.kappa * tau.unsqueeze(0))
+            ) + m.theta * tau.unsqueeze(0)
             varswap_tensor = integrated_tensor + continuation
 
         return HestonPaths(

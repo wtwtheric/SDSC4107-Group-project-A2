@@ -180,10 +180,14 @@ def main() -> int:
         item = results[name]
         print(
             name,
-            "payoff_mean=", round(item["payoff"]["mean"], 6),
-            "V15_zero=", round(item["variance_mid"]["zero_fraction"], 6),
-            "V15<.02=", round(item["variance_mid"]["below_0_02_fraction"], 6),
-            "S2_mid_drift=", round(item["variance_swap"]["mid_relative_drift"], 6),
+            "payoff_mean=",
+            round(item["payoff"]["mean"], 6),
+            "V15_zero=",
+            round(item["variance_mid"]["zero_fraction"], 6),
+            "V15<.02=",
+            round(item["variance_mid"]["below_0_02_fraction"], 6),
+            "S2_mid_drift=",
+            round(item["variance_swap"]["mid_relative_drift"], 6),
         )
     print("sanity_checks=", checks, "passed=", results["passed"])
     return 0 if results["passed"] else 2

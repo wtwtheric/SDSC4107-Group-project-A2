@@ -66,9 +66,7 @@ def _compact_summary(root: Path, variant: str) -> dict[str, Any]:
         "e3": {
             "price_recurrent": e3m["price_recurrent"],
             "price_simpler": e3m["price_simpler"],
-            "price_gap_simpler_minus_recurrent": (
-                e3m["price_simpler"] - e3m["price_recurrent"]
-            ),
+            "price_gap_simpler_minus_recurrent": (e3m["price_simpler"] - e3m["price_recurrent"]),
             "cvar_recurrent": e3m["cvar_recurrent"],
             "cvar_simpler": e3m["cvar_simpler"],
             "mean_cost_recurrent": e3m["mean_cost_recurrent"],
@@ -103,8 +101,10 @@ def main() -> int:
     # The other two arms can share this artifact because the audit itself does not
     # depend on the network feature set.
     audit_path = args.output_root / "simulator_audit.json"
-    if variant == "simulator_only" and not args.skip_audit and not (
-        args.resume and audit_path.is_file()
+    if (
+        variant == "simulator_only"
+        and not args.skip_audit
+        and not (args.resume and audit_path.is_file())
     ):
         _run(
             [
