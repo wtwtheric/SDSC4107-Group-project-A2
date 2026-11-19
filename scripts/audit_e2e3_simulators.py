@@ -126,24 +126,47 @@ def main() -> int:
     if args.paths < 1 or args.batch_size < 1:
         raise ValueError("--paths and --batch-size must be positive")
 
+    qem = summarize(
+        "qem",
+        n_paths=args.paths,
+        batch_size=args.batch_size,
+        seed=args.seed,
+        device=device,
+    )
+    paper_sbk = summarize(
+        "paper_sbk",
+        n_paths=args.paths,
+        batch_size=args.batch_size,
+        seed=args.seed,
+        device=device,
+    )
+    paper_q = float(paper_sbk["analytic_q"])
+    s2_0 = float(paper_sbk["variance_swap"]["s2_0"])
+    checks = {
+        "paper_terminal_spot_martingale_within_2pct": (
+            abs(float(paper_sbk["spot_terminal"]["mean"]) / 100.0 - 1.0) < 0.02
+        ),
+        "paper_payoff_mean_within_3pct_of_analytic_q": (
+            abs(float(paper_sbk["payoff"]["mean"]) / paper_q - 1.0) < 0.03
+        ),
+        "paper_mid_variance_mean_within_5pct_of_theta": (
+            abs(float(paper_sbk["variance_mid"]["mean"]) / 0.04 - 1.0) < 0.05
+        ),
+        "paper_mid_varswap_mean_within_3pct_of_s20": (
+            abs(float(paper_sbk["variance_swap"]["mid_mean"]) / s2_0 - 1.0) < 0.03
+        ),
+        "paper_terminal_varswap_mean_within_3pct_of_s20": (
+            abs(float(paper_sbk["variance_swap"]["terminal_mean"]) / s2_0 - 1.0) < 0.03
+        ),
+    }
     results = {
         "schema_version": "1.0",
         "purpose": "E2/E3 simulator-only distribution audit",
         "device": str(device),
-        "qem": summarize(
-            "qem",
-            n_paths=args.paths,
-            batch_size=args.batch_size,
-            seed=args.seed,
-            device=device,
-        ),
-        "paper_sbk": summarize(
-            "paper_sbk",
-            n_paths=args.paths,
-            batch_size=args.batch_size,
-            seed=args.seed,
-            device=device,
-        ),
+        "qem": qem,
+        "paper_sbk": paper_sbk,
+        "sanity_checks": checks,
+        "passed": all(checks.values()),
         "interpretation_note": (
             "paper_sbk uses exact CIR endpoint transitions and the simplified "
             "Broadie-Kaya approximation stated in Section 5.2.2; it is not the "
@@ -162,7 +185,8 @@ def main() -> int:
             "V15<.02=", round(item["variance_mid"]["below_0_02_fraction"], 6),
             "S2_mid_drift=", round(item["variance_swap"]["mid_relative_drift"], 6),
         )
-    return 0
+    print("sanity_checks=", checks, "passed=", results["passed"])
+    return 0 if results["passed"] else 2
 
 
 if __name__ == "__main__":
