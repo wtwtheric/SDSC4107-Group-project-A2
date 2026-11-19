@@ -209,3 +209,15 @@ pytest 收集期即 ImportError（exit 2）。`d0024f3` 在 Install 步骤补 `n
 - Added Kaggle clone, environment, evaluation, figure-generation, and push instructions in `docs/e2_kaggle.md`.
 
 Validation status: code changes are prepared on `exp/e2-output-eval`. Runtime pytest and Kaggle GPU evaluation must still be run before treating the outputs as validated results.
+
+
+---
+
+## E2cs five-seed robustness completion (2026-11-19)
+
+- Archived corrected simpler-policy E2cs seeds 1–4 under `backups/e2cs_seeds1_4/`; seed 0 remains under `backups/e2cs_simple_seed0/`.
+- Consolidated the original five-seed checkpoint results in `docs/e2cs_multiseed_summary.md` and the machine-readable aggregate in `reports/e2cs/e2cs_multiseed_summary.json`.
+- The alpha=.99 policy reduces CVaR99 relative to the alpha=.95 policy in 5/5 seeds by 0.132714 ± 0.033466 on the primary one-million-path evaluations.
+- Seed 3 is the main alpha=.99 numerical outlier, but retains the same direction of tail-risk improvement.
+- Independent post-training BN recalibration across all five seeds strongly reduces tail-risk dispersion while preserving the flatter, left-shifted alpha=.99 hedge. Original checkpoints remain the formal replication outputs; recalibration remains a diagnostic.
+- E2cs is frozen. No further retraining is required solely to match Figures 8–9.

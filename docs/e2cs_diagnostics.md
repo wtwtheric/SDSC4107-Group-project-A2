@@ -1,5 +1,7 @@
 # E2cs corrected simpler-policy seed-0 diagnostics
 
+> **Multi-seed update (2026-11-19):** corrected E2cs seeds 0–4 are complete. See [E2cs five-seed robustness summary](e2cs_multiseed_summary.md). The sections below preserve the detailed seed-0 diagnostic history.
+
 ## Scope and provenance
 
 This analysis exclusively uses the corrected E2cs simpler-network seed-0 checkpoints in `backups/e2cs_simple_seed0/e2cs/0.95/0` and `.../0.99/0`. The original batch E2cs recurrent attempt is excluded. The correction matters because Figures 8–9 of *Deep Hedging* compare the model hedge against a per-time-step, feed-forward policy based on the current spot price and instantaneous variance, `F_k(S_k,V_k)`.
@@ -163,7 +165,7 @@ The full regional `n_paths`, conditional RMSE, signed bias and share of in-grid 
 
 The qualitative pattern previously observed in the original figures is that alpha=0.99 has a much flatter stock surface than the model hedge. That **visual interpretation** is not itself a measured numerical diagnosis. The numerical diagnostics should be run and inspected before attributing the flattening to input normalization, effective tail sample size, BatchNorm statistics, or policy optimization. Those are competing hypotheses, not demonstrated causes.
 
-Do **not** modify the architecture, loss function, or training config at this stage, and do not launch multi-seed E2cs until the diagnosis is reviewed. E4 robustness training remains isolated in its own branch.
+The seed-0 diagnosis has now been reviewed and the frozen recipe has been run for seeds 1–4. Do **not** modify the architecture, loss function, or training config or launch further E2cs retraining solely to match the paper figures. The consolidated five-seed result is documented in [e2cs_multiseed_summary.md](e2cs_multiseed_summary.md).
 
 ## Original 200K visual-path audit and BN follow-up (2026-11-18)
 
@@ -280,3 +282,10 @@ The paper explicitly uses BatchNorm before each activation, Adam with learning r
 Freeze the existing E2cs training weights, features, architecture, Heston parameters and A1-compatible training recipe. Do not retrain solely to make Figure 9 visually closer to the paper. The current evidence shows that a material part of the discrepancy is attributable to BatchNorm inference statistics and can be reduced without changing learned weights, while the economically meaningful high-alpha flattening remains.
 
 A paper-fidelity retrain with batch 256 / constant lr=.005 may be run only as an optional sensitivity experiment if compute/time permits. It must be labeled separately because it intentionally departs from the A1-stabilized recipe and changes two optimization hyperparameters at once. It is not required to accept the current E2cs replication as a comprehensive but non-exact reproduction.
+
+
+## Multi-seed completion (2026-11-19)
+
+Corrected E2cs seeds 0–4 are complete under the frozen recipe. The alpha=.99 policy lowers both CVaR95 and CVaR99 relative to the alpha=.95 policy in all five seeds. The primary alpha=.99 CVaR99 is 0.991589 ± 0.052823, while CVaR99 under the alpha=.95 policy is 1.124302 ± 0.070055; the paired reduction is 0.132714 ± 0.033466. Seed 3 is the main numerical outlier, but retains the same direction of improvement.
+
+Independent BN recalibration across all five seeds sharply reduces cross-seed dispersion while preserving the flatter and left-shifted alpha=.99 hedge. This strengthens the seed-0 conclusion that BatchNorm inference statistics are a material implementation sensitivity, but the original checkpoint evaluations remain the formal replication outputs. See [E2cs five-seed robustness summary](e2cs_multiseed_summary.md) and `reports/e2cs/e2cs_multiseed_summary.json` for the consolidated tables and machine-readable aggregates.
