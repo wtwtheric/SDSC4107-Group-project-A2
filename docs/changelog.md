@@ -221,3 +221,16 @@ Validation status: code changes are prepared on `exp/e2-output-eval`. Runtime py
 - Seed 3 is the main alpha=.99 numerical outlier, but retains the same direction of tail-risk improvement.
 - Independent post-training BN recalibration across all five seeds strongly reduces tail-risk dispersion while preserving the flatter, left-shifted alpha=.99 hedge. Original checkpoints remain the formal replication outputs; recalibration remains a diagnostic.
 - E2cs is frozen. No further retraining is required solely to match Figures 8–9.
+
+
+---
+
+## E3 five-seed robustness completion (2026-11-20)
+
+- Archived and reviewed the frozen QE-M/current-input E3 baseline for seeds 0–4 under `backups/e3/`.
+- Added `docs/e3_multiseed_summary.md` and `reports/e3/e3_multiseed_summary.json`.
+- The recurrent policy has a lower independently calibrated price in 5/5 seeds. The five-seed price gap is 0.057864 ± 0.003902.
+- The recurrent raw mean-loss advantage is almost entirely explained by lower transaction costs; the pre-cost mean-loss difference is only 0.000225 ± 0.000131.
+- Centered Figure 5 distributions overlap strongly because each policy is plotted at its own independently calibrated price. The overlap is stable across seeds, not an isolated failed run.
+- Completed the three simulator/input fidelity controls. Paper inputs raise both E3 prices toward the paper; the simulator-only change has little effect. None recovers the paper's large 1.2309 recurrent–simpler gap.
+- E3 is frozen as a stable qualitative but incomplete quantitative reproduction. No further retraining is required solely to force agreement with Figure 5.
