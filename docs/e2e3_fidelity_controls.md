@@ -1,6 +1,6 @@
 # E2/E3 paper-fidelity control experiment
 
-Status: prepared; full GPU runs not yet executed.
+Status: completed; all three seed-0 control arms were executed and reviewed.
 
 ## Goal
 
@@ -134,3 +134,18 @@ This is a controlled diagnosis, not a search for the visually closest plot.
 No arm should replace the baseline merely because a plotted histogram looks
 closer. Quantitative decisions should use 1M-path prices, tail CVaRs and E3
 price gaps together with the histogram shape.
+
+
+## Completed results
+
+| Arm | E3 recurrent price | E3 simpler price | Gap |
+|---|---:|---:|---:|
+| QE-M/current baseline seed 0 | 4.1707 | 4.2261 | 0.0554 |
+| simulator only | 4.2278 | 4.2903 | 0.0625 |
+| paper input only | 5.6320 | 5.8553 | 0.2234 |
+| simulator + paper input | 5.6836 | 5.8017 | 0.1181 |
+| paper reference | 5.5137 | 6.7446 | 1.2309 |
+
+The paper-style simulator alone has little effect on E3. The paper input is the main reason the absolute prices move toward the paper, but neither the input-only nor combined arm reproduces the large recurrent–simpler price gap. The input-only arm is slightly closer to the paper than the combined arm on both absolute-price error and gap.
+
+These controls are retained as sensitivity evidence and do not replace the five-seed QE-M/current baseline. Full interpretation is consolidated in [e3_multiseed_summary.md](e3_multiseed_summary.md).
