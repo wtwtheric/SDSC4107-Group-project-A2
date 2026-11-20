@@ -13,6 +13,8 @@ experiment artifacts and datasets. It is separate from the working directories:
 - `backups/e2cs_seeds1_4/` stores the frozen-recipe E2cs seed 1–4 metrics,
   figures, logs, and independent BatchNorm recalibration reports. The
   consolidated five-seed interpretation is in `docs/e2cs_multiseed_summary.md`.
+- `backups/e3/` stores the E3 baseline artifacts for seeds 0–4. Seed 0 also retains the independent-evaluation diagnostic under `independent_evaluation_diagonostics/`; seeds 1–4 include the integrated evaluation outputs and Figure 5. The consolidated interpretation is in `docs/e3_multiseed_summary.md`.
+- `backups/e2e3_fidelity/` stores the three seed-0 simulator/input control arms used for the E2/E3 fidelity sensitivity analysis.
 - `backups/data/` stores only datasets intentionally selected for archival.
 
 The repository is public. Files copied here become public. Use Git LFS for
