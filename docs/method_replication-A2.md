@@ -246,3 +246,19 @@ Observed full-grid log-log slopes: BS 0.711082 (R² 0.999080); Heston 0.653363 (
 The A2 plots are now independent of model training. Use scripts/make_figures_a2.py as a shared entry point; it dispatches to the specialist E2, E2cs, E3 and E4 plotting modules. E3 Figure 5 plotting has been extracted from scripts/run_e3.py to scripts/make_e3_figures.py; numerical evaluation and checkpoints remain unchanged. E4 plots and sensitivity CSVs come directly from the saved epsilon summary JSON files, without re-running any simulations.
 
 E4 multi-seed robustness (seeds 1–4) is the next separate training step. E2cs hedge-shape diagnostics and colormap adjustments will be developed separately after the E4 robustness branch is started; do not overwrite the original corrected simpler seed-0 results.
+
+
+## 12. E3 final five-seed result
+
+The frozen QE-M/current-input E3 experiment is complete for seeds 0–4. Each seed trains both recurrent and simpler policies for 30,000 iterations and uses independent one-million-path calibration and OOS samples.
+
+| Metric | Recurrent | Simpler | Difference |
+|---|---:|---:|---:|
+| Indifference price | 4.1646 ± 0.0056 | 4.2225 ± 0.0040 | 0.0579 ± 0.0039 |
+| OOS raw-loss CVaR99 | 4.1646 ± 0.0059 | 4.2219 ± 0.0033 | 0.0572 ± 0.0049 |
+| Raw mean loss | 2.8419 ± 0.0161 | 2.9236 ± 0.0076 | 0.0817 ± 0.0119 |
+| Mean transaction cost | 1.1477 ± 0.0161 | 1.2292 ± 0.0075 | 0.0815 ± 0.0120 |
+
+The recurrent policy is better on price, raw-loss CVaR, raw mean loss and mean transaction cost in all five seeds. The raw mean-loss difference is almost entirely a transaction-cost difference. This supports the qualitative transaction-cost mechanism but not the paper's reported magnitude: the paper price gap is 1.2309, compared with 0.0579 in the baseline.
+
+Three seed-0 fidelity controls isolate simulator and input effects. Paper inputs move both prices substantially toward the paper, while the paper-style simulator alone changes little. However, the architecture gap remains small in every arm. The five-seed baseline is retained as the formal robustness result and the controls are reported as sensitivity evidence. See `docs/e3_multiseed_summary.md` for complete results, provenance and interpretation.
