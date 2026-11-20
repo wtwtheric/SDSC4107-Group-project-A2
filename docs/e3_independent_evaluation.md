@@ -1,5 +1,7 @@
 # E3 single-entry workflow
 
+> Status: E3 seeds 0–4 and the simulator/input fidelity controls are complete. The frozen multi-seed conclusion is in [e3_multiseed_summary.md](e3_multiseed_summary.md). This file retains the evaluation definitions and workflow.
+
 `scripts/run_e3.py` is the only E3 entry point. It supports both a full run and an evaluation-only run using saved checkpoints.
 
 ## Full run
@@ -69,7 +71,7 @@ Let L be the terminal loss from the Heston environment, including proportional t
 
 The calibration and OOS samples are independent by seed and shared between recurrent and simpler policies. This provides an independent-price/OOS-risk estimate but does not guarantee exact numerical agreement with the paper.
 
-## Current replication status
+## Seed-0 replication status (historical starting point)
 
 The existing seed-0 result has recurrent price 4.1707 and simpler price 4.2261, below the plan's target bands [5.2, 5.8] and [6.4, 7.1]. The uncentered OOS raw mean losses are 2.8704 and 2.9323, respectively. The signed mean terminal losses are -1.3002 and -1.2938. The provisional Figure 5 Mean Loss* positive-part proxies are 0.000770 and 0.000753 (recurrent and simpler respectively). The realized CVaR shortfalls are -0.0040 and -0.0027. The recurrent policy has a slightly lower price and raw mean loss, while the simpler policy has a slightly lower (more negative) realized CVaR shortfall. The price gap remains small. The result is therefore a valid evaluation run, not yet a quantitative reproduction of the paper's Figure 5 target values.
 
@@ -131,7 +133,7 @@ The E3 config enables 10,000 fixed validation paths for future training runs. Th
 ### Current scope and limitations
 
 - This correction is evaluation-only for the existing seed-0 models; model weights, architecture, features, Heston generator, optimizer, and training hyperparameters are unchanged.
-- Seed 1-4 are intentionally deferred until the remaining A2 experiments have been reviewed.
+- Seeds 1–4 have completed under the frozen QE-M/current-input recipe. Their aggregate result and the final freeze decision are documented in `docs/e3_multiseed_summary.md`.
 - Numerical agreement with the paper is assessed separately from implementation fidelity and economic interpretation. The observed price gap remains a replication limitation, not a reason to alter the evaluation definition.
 
 
@@ -144,3 +146,10 @@ The E3 config enables 10,000 fixed validation paths for future training runs. Th
 - `economic_direction_checks`: relative recurrent-vs-simpler price, OOS CVaR, and positive-part proxy comparisons. These are diagnostic interpretations, never operational pass/fail gates.
 
 Existing artifacts can be updated without simulation or retraining using `python -m scripts.run_e3 --finalize-only --run-dir results-e3`, after refreshing this branch. This updates `metrics.json` only. Regenerate the figure with `--plot-only`; do not rerun the 1M-path calibration solely to change the label.
+
+
+## Final five-seed status
+
+E3 seeds 0–4 are complete. The recurrent policy has a lower independently calibrated price in 5/5 seeds. The five-seed mean prices are 4.1646 for recurrent and 4.2225 for simpler, giving a gap of 0.0579 ± 0.0039. This direction is stable, but the gap is much smaller than the paper reference of 1.2309 and the centered hedging-error distributions largely overlap.
+
+The simulator/input controls are also complete. Paper inputs raise the overall E3 price level substantially, whereas the simulator-only change has little effect. None of the controls recovers the paper's large architecture gap. E3 is therefore frozen as a partial qualitative reproduction; see [e3_multiseed_summary.md](e3_multiseed_summary.md) for the complete table and interpretation.
