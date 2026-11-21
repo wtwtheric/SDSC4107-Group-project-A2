@@ -218,37 +218,37 @@ This does **not** change training noise. Training still uses batch 1024, so an (
 
 For development and smoke tests, 100k evaluation remains acceptable. Final tables/figures should use the 1M common-path evaluation after the methodology is frozen.
 
-## 9. Multi-seed rule after the controlled comparison
+## 9. Multi-seed rule and completed formal runs
 
-Formal E2 remains a five-seed experiment: seeds 0–4, identical configuration for every seed.
+Formal E2 uses seeds 0–4 with an identical frozen configuration per seed. The seed-0 fractional comparison was reviewed before the remaining formal runs began; seeds 1–4 and their one-million-path evaluations are now complete.
 
-Do not start seeds 1–4 until the seed-0 fractional comparison is reviewed. The decision rule is not "choose whichever result is closer to 3.49"; the purpose is to determine whether the mathematically correct empirical estimator materially changes optimisation.
+Fractional CVaR is retained for all formal alpha=.99 E2/E3 runs and alpha=.95/.99 call-spread runs. E1 alpha=.50 did not require retraining because its tail mass is exactly 512 at batch 1024.
 
-If Fractional CVaR is retained, all formal (\alpha=0.99) E2/E3 runs and (\alpha=0.95/0.99) call-spread runs must use it. E1 (\alpha=0.50) does not require retraining because its tail mass is exactly 512 at batch 1024.
+The completed E2 five-seed mean prices are 1.9432 ± 0.0007 for alpha=.50 and 2.6595 ± 0.0053 for alpha=.99. The risk-ordering checks are stable, but the alpha=.99 result remains below the paper-target band [3.2, 3.8]. This is frozen as a quantitative discrepancy rather than tuned away.
 
-## 10. Remaining A2 sequence
+## 10. Completed A2 sequence
 
-1. Complete seed-0 ceil-vs-fractional controlled comparison.
-2. Freeze the CVaR implementation.
-3. Run E2 seeds 1–4 and final 1M common-path evaluations.
-4. Implement and run E2 call spread ((K_1=100,K_2=101), (\alpha=0.95,0.99)).
-5. Run E3 with (\varepsilon=0.01,\alpha=0.99).
-6. Run E4-BS then E4-Heston on the paper epsilon grid.
-7. Run the low-friction E4 extension only after the main grid is stable.
+1. Completed the seed-0 ceil-versus-fractional controlled comparison.
+2. Froze the fractional CVaR implementation.
+3. Completed E2 seeds 0–4 and final 1M common-path evaluations.
+4. Implemented and completed the E2 call-spread experiment for alpha=.95 and .99 across seeds 0–4.
+5. Completed E3 at epsilon=.01 and alpha=.99 across seeds 0–4.
+6. Completed E4-BS and E4-Heston on the five-point paper epsilon grid across seeds 0–4.
+7. Retained the low-friction E4 extension as optional rather than a prerequisite for freezing the main replication.
 
+The authoritative seed registry is `docs/experiments-e2-e4.md`.
 
-## 11. E4 seed-0 asymptotic analysis and A2 figure pipeline (2026-11-17)
+## 11. E4 five-seed asymptotic analysis and A2 figure pipeline
 
-The original Section 10 sequence above is retained as the historical working plan. E4 seed 0 has since completed for both Black–Scholes (d=1) and Heston (d=2). Our results and numerical deviations are analyzed in docs/e4_seed0_analysis.md, with full provenance in backups/e4bs/seed_0_epsilon_summary.json and backups/e4h/seed_0_epsilon_summary.json.
+E4 is complete for seeds 0–4 in both Black–Scholes (d=1) and Heston (d=2). Full provenance is stored in `backups/e4bs/seed_<seed>_epsilon_summary.json` and `backups/e4h/seed_<seed>_epsilon_summary.json`; the consolidated analysis is in `docs/e4_robustness_analysis.md`.
 
-Observed full-grid log-log slopes: BS 0.711082 (R² 0.999080); Heston 0.653363 (R² 0.998083). Both broadly agree with the theoretical 2/3 scaling, although both marginally miss the project's numerical tolerance bands. Sensitivity over epsilon subsets and the limitations of the risk-neutral p0 baseline are documented in the E4 analysis file.
+Across independently fitted seed-level regressions, the full-grid log-log slope is 0.7129 ± 0.0017 for Black–Scholes and 0.6469 ± 0.0173 for Heston. The theoretical continuous-time exponent is 2/3. Black–Scholes is exceptionally stable. Heston seeds 0, 1, 2 and 4 cluster near .655, while seed 3 is lower at .6160 because its small-epsilon increments remain higher. Seed 3 passes the engineering and monotonicity checks and is retained as genuine seed sensitivity.
 
-The A2 plots are now independent of model training. Use scripts/make_figures_a2.py as a shared entry point; it dispatches to the specialist E2, E2cs, E3 and E4 plotting modules. E3 Figure 5 plotting has been extracted from scripts/run_e3.py to scripts/make_e3_figures.py; numerical evaluation and checkpoints remain unchanged. E4 plots and sensitivity CSVs come directly from the saved epsilon summary JSON files, without re-running any simulations.
+The A2 plots are independent of model training. Use `scripts/make_figures_a2.py` as the shared entry point; it dispatches to the specialist E2, E2cs, E3 and E4 plotting modules. E3 Figure 5 plotting is in `scripts/make_e3_figures.py`. E4 plots and sensitivity CSVs come directly from the saved epsilon summary JSON files, without re-running simulations.
 
-E4 multi-seed robustness (seeds 1–4) is the next separate training step. E2cs hedge-shape diagnostics and colormap adjustments will be developed separately after the E4 robustness branch is started; do not overwrite the original corrected simpler seed-0 results.
+E4 is frozen. No further retraining or seed exclusion will be used to force the fitted slope toward 2/3.
 
-
-## 12. E3 final five-seed result
+## 12. E3 final five-seed result## 12. E3 final five-seed result
 
 The frozen QE-M/current-input E3 experiment is complete for seeds 0–4. Each seed trains both recurrent and simpler policies for 30,000 iterations and uses independent one-million-path calibration and OOS samples.
 
@@ -262,3 +262,17 @@ The frozen QE-M/current-input E3 experiment is complete for seeds 0–4. Each se
 The recurrent policy is better on price, raw-loss CVaR, raw mean loss and mean transaction cost in all five seeds. The raw mean-loss difference is almost entirely a transaction-cost difference. This supports the qualitative transaction-cost mechanism but not the paper's reported magnitude: the paper price gap is 1.2309, compared with 0.0579 in the baseline.
 
 Three seed-0 fidelity controls isolate simulator and input effects. Paper inputs move both prices substantially toward the paper, while the paper-style simulator alone changes little. However, the architecture gap remains small in every arm. The five-seed baseline is retained as the formal robustness result and the controls are reported as sensitivity evidence. See `docs/e3_multiseed_summary.md` for complete results, provenance and interpretation.
+
+## 13. Final A2 freeze decision
+
+| Experiment | Final interpretation |
+|---|---|
+| E2 core | Stable qualitative risk-preference result; alpha=.50 price reproduced, alpha=.99 absolute price below the paper target |
+| E2 call spread | Alpha=.99 improves CVaR99 in 5/5 seeds; hedge shape is qualitatively flatter/left-shifted but seed and BatchNorm sensitive |
+| E3 | Recurrent is lower-cost/lower-price in 5/5 seeds; the direction is reproduced but the paper's large architecture gap is not |
+| E4-BS | Strong cross-seed sublinear scaling, with fitted exponent consistently above 2/3 on the finite grid |
+| E4-Heston | Approximate two-thirds-type scaling with greater low-epsilon seed sensitivity |
+
+E2–E4 are frozen as of 2026-11-21. “Frozen” means no additional training solely to improve paper agreement. It does not convert partial numerical reproduction into a pass. Seed-level results, source commits and artifact locations are indexed in `docs/experiments-e2-e4.md`.
+
+Large pathwise `pnl.npz` arrays are intentionally excluded from Git to keep the repository practical to clone. Compact metrics, resolved configurations, logs, reports and canonical figures remain version controlled.
