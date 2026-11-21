@@ -248,7 +248,7 @@ The A2 plots are independent of model training. Use `scripts/make_figures_a2.py`
 
 E4 is frozen. No further retraining or seed exclusion will be used to force the fitted slope toward 2/3.
 
-## 12. E3 final five-seed result## 12. E3 final five-seed result
+## 12. E3 final five-seed result
 
 The frozen QE-M/current-input E3 experiment is complete for seeds 0–4. Each seed trains both recurrent and simpler policies for 30,000 iterations and uses independent one-million-path calibration and OOS samples.
 
