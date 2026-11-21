@@ -1,0 +1,41 @@
+# E2 call spread: paired CVaR policies on common QE-M paths.
+exp: e2cs
+kind: e2cs
+seeds: [0, 1, 2, 3, 4]
+device: auto
+n_steps: 30
+batch: 1024
+eps: 0.0
+alpha: 0.95
+payoff:
+  type: normalized_call_spread
+  strike1: 100.0
+  strike2: 101.0
+policy:
+  name: recurrent
+  hidden: 17
+  recurrent: true
+  norm: layer
+  out_scale: [1.0, 100.0]
+market:
+  model: heston
+  d: 2
+  s0: 100.0
+  k: 100.0
+  t: 0.08219178082191781
+  kappa: 1.0
+  theta: 0.04
+  sigma: 2.0
+  rho: -0.7
+  v0: 0.04
+train:
+  n_iter: 30000
+  lr: 0.005
+  lr_schedule: cosine
+  lr_min: 5.0e-4
+  log_every: 2500
+  eval_paths: 1000000
+  eval_batch_size: 25000
+  eval_seed: 314159
+  visual_paths: 200000
+  visual_step: 15

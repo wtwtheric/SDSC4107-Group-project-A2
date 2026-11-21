@@ -1,0 +1,33 @@
+# E4-BS: entropic-risk asymptotics in Black-Scholes d=1.
+exp: e4bs
+kind: e4
+seeds: [0, 1, 2, 3, 4]
+device: auto
+n_steps: 30
+batch: 1024
+eps: 0.015625
+eps_grid: [0.015625, 0.0078125, 0.00390625, 0.001953125, 0.0009765625]
+policy:
+  name: recurrent
+  hidden: 16
+  recurrent: true
+  norm: layer
+  out_scale: 1.0
+market:
+  model: bs
+  d: 1
+  s0: 100.0
+  k: 100.0
+  t: 0.08219178082191781
+  sigma: 0.2
+risk:
+  lambda: 1.0
+train:
+  n_iter: 30000
+  lr: 0.005
+  lr_schedule: cosine
+  lr_min: 5.0e-4
+  log_every: 2500
+  eval_paths: 100000
+  eval_batch_size: 10000
+  eval_seed: 271828
