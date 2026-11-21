@@ -1,13 +1,21 @@
-"""Heston d=2（标的 + 方差互换）世界：论文 §5.2 的离散时间市场。
+"""Heston d=2 (stock + variance swap) environment used by A1/A2 experiments.
 
-- 路径用 pfhedge.stochastic.generate_heston（Andersen QE-M，dt = 1/365，31 个时点）。
-- 第二只对冲工具严格按论文 (5.3)–(5.4)：
-      S²_k = ∫_0^{t_k} V_s ds + L(t_k, V_k),  L(t,v) = (v−b)/α·(1−e^{−α(T−t)}) + b(T−t)
-  它是固定到期日 T 的方差互换的期望总方差（鞅），t=0 时 = bT ≈ 0.0033；
-  ∫V ds 每步取条件期望 (v−b)(1−e^{−αΔ})/α + bΔ，故 E[S²_{k+1}|F_k] = S²_k 严格成立
-  （左矩形会带来状态相关漂移，见模块内 simulate 的注释）。
-- 特征（spec §5.1 冻结）：d=2 为 [log(S_k/S_0), t_k/T, S²_k/S²_0]；d=1 去掉末项。
-- 成本按名义本金（论文 (5.7)）：c_k = Σ_i ε |δ_i,k − δ_i,k−1| S_i,k，δ_−1 = 0 计入。
+Two simulation/feature modes are supported so paper-fidelity effects can be
+isolated without changing the validated baseline:
+
+- simulator="qem" (default): PFHedge Andersen QE-M paths, with the existing
+  conditional-mean variance-integral construction used by the baseline.
+- simulator="paper_sbk": exact CIR endpoint transitions (non-central chi-square)
+  followed by the paper's simplified Broadie-Kaya discretization: integrated
+  variance is replaced by a left-point sum and the stock transition uses the
+  Heston conditional log-price identity with that approximate integral.
+
+Feature sets:
+- feature_set="current" (default): [log(S/S0), t/T, S2/S2_0].
+- feature_set="paper": [log(S), V], matching Section 5.2.2 of the paper.
+
+Existing configs omit both fields and therefore remain byte-for-byte equivalent
+in behaviour to the original QE-M/current-input baseline.
 """
 
 from __future__ import annotations
@@ -26,7 +34,7 @@ from src.replication.pricing import PAPER, varswap_price_total
 
 @dataclass(frozen=True)
 class HestonMarket:
-    """市场与实验口径；默认值 = 论文 §5.2。"""
+    """Market and experiment convention; numerical defaults match paper Section 5.2."""
 
     kappa: float = PAPER.kappa
     theta: float = PAPER.theta
@@ -39,6 +47,8 @@ class HestonMarket:
     n_steps: int = 30
     eps: float = 0.0
     d: int = 2
+    simulator: str = "qem"
+    feature_set: str = "current"
 
     @property
     def dt(self) -> float:
@@ -46,6 +56,8 @@ class HestonMarket:
 
     @property
     def n_features(self) -> int:
+        if self.d == 2 and self.feature_set == "paper":
+            return 2
         return 3 if self.d == 2 else 2
 
     def time_grid(self, dtype: torch.dtype, device: torch.device) -> Tensor:
@@ -53,14 +65,91 @@ class HestonMarket:
 
 
 class HestonPaths(NamedTuple):
-    spot: Tensor  # (B, n+1)
-    variance: Tensor  # (B, n+1)
-    varswap: Tensor  # (B, n+1)：论文 (5.4) 的 S²（期望总方差，鞅）
-    time: Tensor  # (n+1,)
+    spot: Tensor
+    variance: Tensor
+    varswap: Tensor
+    time: Tensor
+
+
+def _sample_exact_cir_transition(
+    variance: Tensor,
+    *,
+    kappa: float,
+    theta: float,
+    sigma: float,
+    dt: float,
+) -> Tensor:
+    """Sample the exact CIR endpoint transition via the Poisson-mixture identity.
+
+    If X ~ noncentral-chi-square(df, lambda), then conditional on
+    N ~ Poisson(lambda/2), X is central chi-square with df+2N degrees
+    of freedom. A central chi-square is Gamma(shape=df/2+N, rate=1/2).
+    """
+    decay = float(np.exp(-kappa * dt))
+    one_minus_decay = 1.0 - decay
+    scale = sigma * sigma * one_minus_decay / (4.0 * kappa)
+    df = 4.0 * kappa * theta / (sigma * sigma)
+    noncentrality = (4.0 * kappa * decay * variance / (sigma * sigma * one_minus_decay)).clamp_min(
+        0.0
+    )
+    poisson = torch.poisson(noncentrality / 2.0)
+    concentration = poisson + df / 2.0
+    rate = torch.full_like(concentration, 0.5)
+    chi_square = torch.distributions.Gamma(concentration, rate).sample()
+    return scale * chi_square
+
+
+def _generate_paper_sbk(
+    market: HestonMarket,
+    *,
+    n_paths: int,
+    dtype: torch.dtype,
+    device: torch.device,
+) -> tuple[Tensor, Tensor, Tensor]:
+    """Generate paper-style simplified Broadie-Kaya Heston paths.
+
+    The paper states that it samples the CIR transition exactly and then uses
+    a simplified Broadie-Kaya scheme, corresponding to replacing V in the
+    stock SDE by a piecewise-constant process and the variance integral by a
+    sum. We implement precisely that stated approximation on the daily grid.
+
+    For I_k = V_k * dt, the Heston identity gives
+      d log S = -I/2 + rho/sigma * (dV-kappa*theta*dt+kappa*I)
+                + sqrt(1-rho^2)*sqrt(I)*Z.
+    """
+    m = market
+    spot = torch.empty((n_paths, m.n_steps + 1), dtype=dtype, device=device)
+    variance = torch.empty_like(spot)
+    integrated = torch.zeros_like(spot)
+    spot[:, 0] = m.s0
+    variance[:, 0] = m.v0
+    rho_orth = float(np.sqrt(max(0.0, 1.0 - m.rho * m.rho)))
+
+    for k in range(m.n_steps):
+        v_now = variance[:, k]
+        v_next = _sample_exact_cir_transition(
+            v_now,
+            kappa=m.kappa,
+            theta=m.theta,
+            sigma=m.sigma,
+            dt=m.dt,
+        )
+        integrated_step = v_now.clamp_min(0.0) * m.dt
+        normal = torch.randn(n_paths, dtype=dtype, device=device)
+        correlated_term = (m.rho / m.sigma) * (
+            v_next - v_now - m.kappa * m.theta * m.dt + m.kappa * integrated_step
+        )
+        orthogonal_term = rho_orth * torch.sqrt(integrated_step) * normal
+        log_return = -0.5 * integrated_step + correlated_term + orthogonal_term
+        spot[:, k + 1] = spot[:, k] * torch.exp(log_return)
+        variance[:, k + 1] = v_next
+        integrated[:, k + 1] = integrated[:, k] + integrated_step
+
+    return spot, variance, integrated
 
 
 class HestonWorld:
-    """离散时间 Heston 世界；d=1 只有标的腿，d=2 加方差互换腿。"""
+    """Discrete-time Heston world; d=2 adds the variance-swap hedge leg."""
 
     def __init__(
         self,
@@ -71,46 +160,72 @@ class HestonWorld:
         self.market = market
         self.device = torch.device(device)
         self.dtype = dtype
+        if market.simulator not in {"qem", "paper_sbk"}:
+            raise ValueError(f"unknown Heston simulator={market.simulator!r}")
+        if market.feature_set not in {"current", "paper"}:
+            raise ValueError(f"unknown Heston feature_set={market.feature_set!r}")
+        if market.feature_set == "paper" and market.d != 2:
+            raise ValueError("paper feature set [log(S), V] is defined here only for d=2")
 
-    # ---------------------------------------------------------------- 模拟
     def simulate(self, n_paths: int) -> HestonPaths:
-        """采样 n_paths 条路径；随机数走全局 torch RNG（seed_everything 已设好）。"""
+        """Sample paths using the configured simulator and global torch RNG."""
         m = self.market
-        spot, variance = generate_heston(
-            n_paths=n_paths,
-            n_steps=m.n_steps + 1,
-            init_state=(m.s0, m.v0),
-            kappa=m.kappa,
-            theta=m.theta,
-            sigma=m.sigma,
-            rho=m.rho,
-            dt=m.dt,
-            dtype=self.dtype,
-            device=self.device,
-        )
         time = m.time_grid(self.dtype, self.device)
-        var_np = variance.cpu().numpy()
-        t_np = time.cpu().numpy()
-        # ∫_0^{t_k} V ds：每步用条件期望 ∫_Δ V ds = (v−b)(1−e^{−αΔ})/α + bΔ
-        # （CIR 精确转移的一阶矩；用左矩形会引入 −(V_j−b)αΔ²/2 的状态相关偏差，
-        #  使 S² 不再是鞅，网络可借机套利 —— 见 docs/b0.md 的鞅检查。）
-        decay = np.expm1(-m.kappa * m.dt)  # e^{−αΔ} − 1 < 0
-        accrual = (var_np[:, :-1] - m.theta) * (-decay / m.kappa) + m.theta * m.dt
-        integrated = np.zeros_like(var_np)
-        integrated[:, 1:] = np.cumsum(accrual, axis=1)
-        varswap = integrated + varswap_price_total(var_np, t_np[None, :], m.maturity)
+
+        if m.simulator == "qem":
+            spot, variance = generate_heston(
+                n_paths=n_paths,
+                n_steps=m.n_steps + 1,
+                init_state=(m.s0, m.v0),
+                kappa=m.kappa,
+                theta=m.theta,
+                sigma=m.sigma,
+                rho=m.rho,
+                dt=m.dt,
+                dtype=self.dtype,
+                device=self.device,
+            )
+            var_np = variance.cpu().numpy()
+            t_np = time.cpu().numpy()
+            decay = np.expm1(-m.kappa * m.dt)
+            accrual = (var_np[:, :-1] - m.theta) * (-decay / m.kappa) + m.theta * m.dt
+            integrated = np.zeros_like(var_np)
+            integrated[:, 1:] = np.cumsum(accrual, axis=1)
+            varswap = integrated + varswap_price_total(var_np, t_np[None, :], m.maturity)
+            varswap_tensor = torch.as_tensor(varswap, dtype=self.dtype, device=self.device)
+        else:
+            spot, variance, integrated_tensor = _generate_paper_sbk(
+                m,
+                n_paths=n_paths,
+                dtype=self.dtype,
+                device=self.device,
+            )
+            tau = (m.maturity - time).clamp_min(0.0)
+            continuation = (variance - m.theta) / m.kappa * (
+                1.0 - torch.exp(-m.kappa * tau.unsqueeze(0))
+            ) + m.theta * tau.unsqueeze(0)
+            varswap_tensor = integrated_tensor + continuation
+
         return HestonPaths(
             spot=spot,
             variance=variance,
-            varswap=torch.as_tensor(varswap, dtype=self.dtype, device=self.device),
+            varswap=varswap_tensor,
             time=time,
         )
 
-    # ---------------------------------------------------------------- 特征
     def features(self, paths: HestonPaths) -> Tensor:
-        """(B, n, f)：只到 k = n−1（k = n 不交易）。"""
+        """Return the configured per-date information set for dates 0..n-1."""
         m = self.market
         n = m.n_steps
+        if m.feature_set == "paper":
+            return torch.stack(
+                [
+                    torch.log(paths.spot[:, :n]),
+                    paths.variance[:, :n],
+                ],
+                dim=-1,
+            )
+
         log_ret = torch.log(paths.spot[:, :n] / m.s0)
         t_norm = (paths.time[:n] / m.maturity).unsqueeze(0).expand(n_paths(paths.spot), n)
         if m.d == 1:
@@ -118,9 +233,7 @@ class HestonWorld:
         ratio = paths.varswap[:, :n] / paths.varswap[:, :1]
         return torch.stack([log_ret, t_norm, ratio], dim=-1)
 
-    # ---------------------------------------------------------------- 价格 / 损益
     def prices(self, paths: HestonPaths) -> Tensor:
-        """(B, n+1, d)：对冲工具价格（S¹_k, S²_k），k = 0..n。"""
         if self.market.d == 1:
             return paths.spot.unsqueeze(-1)
         return torch.stack([paths.spot, paths.varswap], dim=-1)
@@ -133,14 +246,12 @@ class HestonWorld:
         return proportional_cost(positions, prices, self.market.eps)
 
     def terminal_loss(self, positions: Tensor, paths: HestonPaths) -> Tensor:
-        """L = Z − Σ_k δ_k·(S_{k+1} − S_k) + 成本（positions (B, n, d)）。"""
         prices = self.prices(paths)[..., : positions.shape[-1]]
         step_pnl = (positions * (prices[:, 1:] - prices[:, :-1])).sum(dim=-1)
         hedge = step_pnl.sum(dim=-1)
         return self.payoff(paths) - hedge + self.cost(positions, paths)
 
     def realized_variance(self, paths: HestonPaths) -> Tensor:
-        """(B,)：全区间年化已实现方差 365·Σ (Δlog S)² / (n·Δ) → 用于 B0 对拍。"""
         log_ret = torch.log(paths.spot[:, 1:] / paths.spot[:, :-1])
         return log_ret.pow(2).sum(dim=-1) / self.market.maturity
 

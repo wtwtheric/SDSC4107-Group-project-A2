@@ -1,22 +1,23 @@
-# A2 Next-Stage Implementation Plan
+# A2 Implementation Plan — Completed and Frozen
 
-> **Status:** Working plan for the remaining A2 experiments  
-> **Last updated:** 2026-11-15  
-> **Scope:** E2 completion, E2 call spread, E3, E4-BS, E4-Heston, and the low-friction E4 extension.  
-> **This document does not replace** `docs/plan.md`, `docs/spec.md`, or `docs/method_replication-A2.md`. It translates their experiment targets and the current A2 implementation into an actionable development sequence.
+> **Status:** Historical implementation plan; formal E2–E4 seeds 0–4 are completed and frozen  
+> **Last updated:** 2026-11-21  
+> **Scope:** E2 core, E2 call spread, E3, E4-BS, E4-Heston, and the completed fidelity diagnostics.  
+> **Current registry:** `docs/experiments-e2-e4.md`  
+> **This document does not replace** `docs/plan.md`, `docs/spec.md`, or `docs/method_replication-A2.md`. Sections describing implementation gates are retained as the record of how the completed work was organised.
 
 ---
 
 ## 1. Purpose and relationship to existing documents
 
-This file is the implementation-level plan for the remaining A2 work.
+This file records the implementation plan used for the now-completed A2 work. It is no longer a list of pending GPU experiments.
 
 | Document | Authority |
 |---|---|
 | `docs/plan.md` | Research scope, paper targets, numerical acceptance criteria, and project-level decisions |
 | `docs/spec.md` | Repository conventions, experiment IDs, result schemas, directory layout, and Git workflow |
 | `docs/method_replication-A2.md` | A2 methodology, frozen QE-M simulator, variance-swap information set, fractional CVaR, and documented deviations |
-| `docs/plan_A2_next.md` | Implementation sequence, code changes, tests, experiment gates, outputs, and operational rules for the remaining A2 work |
+| `docs/plan_A2_next.md` | Historical implementation sequence, code changes, tests, experiment gates, outputs, and operational rules used for A2 |
 
 If a numerical target or scope decision appears inconsistent, `docs/plan.md` remains authoritative. If a file or directory convention appears inconsistent, follow `docs/spec.md` unless the team explicitly approves a change.
 
@@ -39,25 +40,23 @@ The current `main` branch already contains the main reusable components:
 
 A2 should reuse these components rather than duplicate the Heston simulator, network, or metrics implementation.
 
-### 2.2 E2 core — currently running
+### 2.2 E2 core — completed and frozen
 
-As of 2026-11-15, the formal E2 run has progressed to its third seed. The training logs observed so far do not show a large departure from seed 0.
+The formal E2 experiment is complete for seeds 0–4. Every seed used the fractional-CVaR implementation and a fresh one-million-path OOS evaluation.
 
-This is encouraging as a training-stability observation, but it is **not yet a numerical validation result**. Final judgement requires all five seeds and their formal out-of-sample evaluations.
-
-| Item | Status |
+| Item | Final status |
 |---|---|
-| E2 objective | Heston d=2, zero transaction cost, α=0.50 vs α=0.99 |
-| Simulator | Andersen QE-M, shared with E1 and planned E3 |
-| Training recipe | A1 validated recipe; batch 1024, 30,000 iterations, cosine LR |
+| E2 objective | Heston d=2, zero transaction cost, alpha=.50 vs alpha=.99 |
+| Simulator | Andersen QE-M, shared with the frozen E1–E3 baseline |
+| Training recipe | Batch 1024, 30,000 iterations, cosine learning-rate schedule |
 | CVaR estimator | Fractional empirical CVaR |
-| Seeds | Formal run has reached seed 2; full batch not yet signed off |
-| OOS evaluation | 1M paths per formal seed, as specified by the current A2 run plan |
-| Validation | Pending full metrics and cross-seed summary |
+| Seeds | 0–4 complete |
+| OOS evaluation | 1,000,000 paths per seed complete |
+| Price alpha=.50 | 1.9432 ± 0.0007; paper-level result reproduced |
+| Price alpha=.99 | 2.6595 ± 0.0053; below the paper-target band [3.2, 3.8] |
+| Final judgement | Frozen qualitative/partial reproduction; absolute alpha=.99 price criterion not passed |
 
-Do not edit the running AutoDL workspace, overwrite its config, or change the source commit while the formal process is active. Record the exact Git commit SHA and the actual runtime config used by the runner when archiving the results.
-
-The older seed-0 result recorded in Section 6 of `docs/method_replication-A2.md` belongs to the earlier ceil-CVaR run. It must not be presented as the final fractional-CVaR E2 result. Update that method note after the current formal E2 run has completed and been reviewed.
+The risk-ordering checks are stable across the five archived evaluations, but E2 is not labelled as a full numerical pass. Exact seed-level results and provenance are recorded in `docs/experiments-e2-e4.md` and `backups/e2/`. No further retraining will be used solely to force the alpha=.99 price toward the paper.
 
 ### 2.3 Frozen common settings for E1–E3
 
@@ -149,7 +148,7 @@ figures/fig07_e2_common_q.png
 Figure 6 should show the own-indifference-price hedging-error distributions. Figure 7 should show the common risk-neutral-price comparison. Captions must state which loss/hedging-error sign convention is plotted.
 
 After completion:
-- append the formal E2 row to `docs/experiments.md`;
+- append the formal E2 row to `docs/experiments-e2-e4.md`;
 - update the E2 status and final numerical table in `docs/method_replication-A2.md`;
 - archive the run logs, configs, metrics, and `pnl.npz`;
 - do not mark E2 as passed until all numerical checks have been reviewed.
@@ -215,7 +214,7 @@ configs/exp/e2cs.yaml
 tests/test_e2cs.py
 ```
 
-Use the single `e2cs.yaml` as the shared base configuration and run it twice with α=0.95 and α=0.99 (through an explicit config override or CLI argument recorded in the resolved `config.yaml`). This follows the existing repository config convention. The runner should train the two policies using paired seeds and the same training recipe. Evaluate them on common QE-M paths. Save the recurrent policy checkpoints and the positions required for the strategy-shape figures.
+Use the single `e2cs.yaml` as the shared base configuration and run it twice with α=0.95 and α=0.99 (through an explicit config override or CLI argument recorded in the resolved `config.yaml`). This follows the existing repository config convention. The runner should train the two policies using paired seeds and the same training recipe. Evaluate them on common QE-M paths. Save the simpler (non-recurrent) policy checkpoints and the direct stock-position surfaces required for paper Figures 8–9.
 
 ### 4.4 Required unit tests
 
@@ -248,16 +247,19 @@ Save and compare:
 
 for α=0.95 and α=0.99.
 
-Because the policy is semi-recurrent, its position at time k depends on the preceding policy positions as well as the current market features. Do not construct a plot by feeding an isolated time-k state into the network while silently setting the recurrent input to zero.
+For the paper's Figures 8–9, use the simpler feed-forward policy
+\[
+\delta_k^\theta=F^{\theta_k}(I_k),\qquad I_k=(S_k,V_k),
+\]
+with no previous hedge position as an input. Each trading date has its own network parameters. Evaluate the trained network directly on a regular (S,V) grid at k=15; do not infer the surface by interpolating pathwise conditional medians. This produces the actual policy function and avoids unsupported extrapolation into empty bins.
 
-Preferred extraction:
-1. Generate a fixed QE-M visualisation path set.
-2. Run each complete path through the frozen policy.
-3. At a pre-specified time (initially the midpoint, k=15), examine positions conditional on the same spot and variance-swap-state bins.
-4. Plot conditional medians and dispersion bands, and show the number of observations in each bin.
-5. Use the same paths, bins, and plotting limits for α=0.95 and α=0.99.
+The stock-position figures must be separate:
+- Figure 8: model stock hedge, α=0.95 NN stock hedge, and NN-minus-model difference.
+- Figure 9: model stock hedge, α=0.99 NN stock hedge, and NN-minus-model difference.
 
-A separate visualisation sample (e.g. 100k–200k paths) is acceptable if storing all 1M pathwise positions is unnecessarily expensive. The formal 1M OOS evaluation remains the source for tail-risk metrics.
+Use the same compact state grid, camera angle, diverging red-blue colour map, and comparable colour scales in both figures. Keep path-count plots as supplementary support diagnostics only.
+
+A separate visualisation sample (e.g. 100k–200k paths) remains useful for path-support diagnostics. The formal 1M OOS evaluation remains the source for tail-risk metrics.
 
 The exact quantitative definition of “position band width” should be finalised against the paper's Figures 8–9 before it is used as an acceptance threshold. Do not invent a numerical threshold. Report the visual comparison and a clearly defined width statistic.
 
@@ -274,12 +276,35 @@ Final figures:
 
 ```text
 figures/fig08_e2cs_stock_position.png
-figures/fig09_e2cs_varswap_position.png
+figures/fig09_e2cs_stock_position.png
 ```
 
 The paper's qualitative target is a narrower hedge-position region at α=0.99. There is no separate paper price target specified here. Report prices and risk metrics, but do not claim success from price proximity alone.
 
 ---
+
+
+### 4.7 Independent seed-0 execution
+
+The seed-0 batch runner supports independent experiment selection:
+- `--only e2cs`: train both E2CS policies and generate Figures 8–9.
+- `--only e3`: run E3 only.
+- `--only e4`: run E4-BS and E4-Heston only.
+- `--only e4bs` or `--only e4h`: run one E4 variant.
+- `--only figures`: regenerate Figures 8–9 from existing E2CS outputs.
+
+For example, E2CS can run on a separate GPU while E3/E4 continue in another process:
+
+```bash
+nohup python -u -m scripts.run_a2_seed0_batch \\
+  --seed 0 \\
+  --only e2cs \\
+  --device cuda \\
+  --out results/a2_seed0_formal \\
+  > /root/autodl-tmp/a2_seed0_e2cs.log 2>&1 &
+```
+
+Do not launch two jobs that write to the same experiment output folder at the same time. Independent GPUs are fine when each experiment writes to its intended E2CS/E3/E4 subdirectories and the active source checkout is not modified during execution.
 
 ## 5. Gate C — E3 transaction costs: recurrent vs simpler
 
@@ -372,7 +397,7 @@ Final comparison table/figure:
 figures/fig05_e3_architecture_comparison.png
 ```
 
-Update `docs/experiments.md` and the A2 method note after the five-seed results have been reviewed.
+Update `docs/experiments-e2-e4.md` and the A2 method note after the five-seed results have been reviewed.
 
 ---
 
@@ -592,7 +617,7 @@ Use PNG, 300 dpi, English axis labels and legends. Put the conclusion in the cap
 ### 9.3 Experiment registry and backups
 
 After each formal experiment is reviewed:
-- append one row to `docs/experiments.md`;
+- append one row to `docs/experiments-e2-e4.md`;
 - include experiment ID, seed/ε/cost, exact commit, runtime, one-sentence result, and pass/partial/fail status;
 - make every figure and table traceable to a registry row;
 - back up results and checkpoints outside Git (private storage or an archived ZIP);
@@ -602,69 +627,42 @@ Never describe a run as reproducible if its source commit, resolved config, seed
 
 ---
 
-## 10. Execution order and gates
+## 10. Execution order and gates — final status
 
-| Gate | Work | Exit condition |
+| Gate | Work | Final status |
 |---|---|---|
-| A | Finish E2 core seeds 0–4 | All five formal runs and 1M OOS metrics reviewed; distributional crossing and price checks reported |
-| B | Implement E2 call spread | Payoff tests, smoke tests, and policy-position extraction validated |
-| C | Run E2 call spread | α=0.95/0.99 results and Figures 8–9 reviewed across seeds |
-| D | Implement and run E3 | Recurrent/simpler comparison, cost accounting, and five-seed summary complete |
-| E | Implement and run E4-BS | Five ε levels, seed-level prices, and BS slope reviewed |
-| F | Implement and run E4-Heston | Five ε levels, seed-level prices, and Heston slope reviewed |
-| G | Low-friction extension | Precision criterion assessed; report slope only if resolvable |
-| H | Final A2 synthesis | Method note, experiment registry, figures, and findings draft agree |
+| A | Finish E2 core seeds 0–4 | **Completed and frozen**; 1M OOS metrics reviewed and the alpha=.99 price discrepancy retained |
+| B | Implement E2 call spread | **Completed**; payoff tests, runners and policy-position extraction validated |
+| C | Run E2 call spread | **Completed and frozen**; alpha=.95/.99 results reviewed across seeds 0–4 |
+| D | Implement and run E3 | **Completed and frozen**; recurrent/simpler comparison and five-seed summary reviewed |
+| E | Implement and run E4-BS | **Completed and frozen**; five epsilon levels and five seed-level slopes reviewed |
+| F | Implement and run E4-Heston | **Completed and frozen**; five epsilon levels and five seed-level slopes reviewed |
+| G | Low-friction extension | Not required for the frozen main-grid replication; remains an optional extension |
+| H | Final A2 synthesis | Result documents complete; PR and merge-commit closeout remain |
 
-### Work that can proceed while E2 is running
-
-Safe parallel preparation:
-- draft E2 call-spread payoff tests and the separate runner design;
-- prepare E3 config and test design;
-- prepare the E4 entropic-objective tests and regression utility;
-- review the original paper Figures 5 and 8–11 to finalise figure extraction and captions;
-- draft the result-aggregation scripts without touching the active run directory.
-
-Do **not**:
-- change the active E2 source checkout or runtime config;
-- overwrite files used by the AutoDL process;
-- start formal E2CS/E3/E4 training before their code and smoke tests pass;
-- change the QE-M simulator or the frozen E1–E3 training recipe merely because a later seed differs slightly;
-- tune parameters only to move results closer to paper reference values.
+The earlier restrictions on editing an active AutoDL checkout are no longer operational because formal training has ended. They remain relevant as provenance: the runs were kept on pinned source revisions and their resolved configurations were archived. No further formal GPU work is planned before merge.
 
 ---
 
-## 11. Recommended development branches
+## 11. Branch integration record
 
-Follow the branch and PR conventions in `docs/spec.md`. Keep the formal AutoDL run pinned to its recorded commit.
+The completed integration branch is `exp/e2e3-fidelity-controls`. Repository comparison confirms that the reviewed tips of the main A2 work branches—including `exp/a2-seed0-batch`, `feat/e3-independent-evaluation`, `fix/e3-evaluation-diagnostics`, `feat/e2cs-diagnostics`, `exp/e2cs-bn-calibration`, and `exp/e4-robustness`—are ancestors of this integration branch.
 
-Suggested isolated branches:
+The older divergent branch `feat/e3-independent-eval-fig5` contains an earlier standalone evaluator/plotter layout. Its functionality was superseded by the integrated `scripts/run_e3.py`, `scripts/make_e3_figures.py`, expanded tests and final E3 documentation. It should not be merged into the frozen integration branch.
 
-```text
-feat/a2-call-spread
-feat/a2-e3
-feat/a2-e4
-```
-
-Each branch should:
-1. start from the reviewed A2 baseline commit;
-2. contain one logically grouped experiment implementation;
-3. pass Ruff and pytest;
-4. include config and tests with the runner;
-5. be reviewed before merging into the stable branch.
-
-The plan document itself can be committed separately as a documentation-only change. Do not merge experimental code into the active formal-run checkout while its process is running.
+The integration branch is ahead of `main` and not behind it. Final integration should use a merge commit so that experiment commit SHAs recorded in the archived metrics remain reachable.
 
 ---
 
-## 12. Immediate next actions
+## 12. Final closeout actions
 
-1. Let the current E2 formal run finish without modifying its runtime environment.
-2. Collect all five `run.log`, `metrics.json`, resolved `config.yaml`, and 1M evaluation outputs.
-3. Confirm the exact source commit and whether all five seeds used the fractional-CVaR implementation.
-4. Produce a seed-level table and cross-seed mean ± standard deviation for the E2 price and both realised CVaR measures.
-5. Update `docs/method_replication-A2.md` and `docs/experiments.md` with the reviewed formal E2 results.
-6. In a separate development branch, implement the call-spread payoff abstraction and its tests.
-7. Run E2CS smoke tests; only then start formal E2CS seeds.
-8. Continue to E3, E4-BS, E4-Heston, and the low-friction extension in the gate order above.
+1. Keep the separate A2 registry in `docs/experiments-e2-e4.md`; do not modify the A1-owned `docs/experiments.md`.
+2. Update the active pull request so that its title and body describe the complete frozen E2–E4 scope rather than pending seed-0 GPU runs.
+3. Run the repository CI on the final documentation head.
+4. Merge `exp/e2e3-fidelity-controls` into this repository's `main` with a merge commit.
+5. Verify the post-merge CI and optionally tag the merge commit as the A2 freeze point.
+6. For the later upstream contribution, clone or fork the A1 group repository afresh, transplant the reviewed A2 source/config/test/document/figure files, run CI in that repository, and open a separate PR after incorporating any newer A1 commits.
 
-**Decision rule:** a stable-looking training curve is necessary but not sufficient. A formal experiment is complete only when its implementation, numerical checks, OOS evaluation, saved artifacts, and provenance all agree.
+Large pathwise `pnl.npz` arrays remain intentionally excluded from Git to avoid unnecessary repository growth and slow clones. Compact metrics, configurations, logs, summaries and figures are retained.
+
+**Decision rule:** completion means that implementation, numerical checks, OOS evaluation, saved artifacts and provenance agree. It does not require every number to match the paper or every optional extension to be run.

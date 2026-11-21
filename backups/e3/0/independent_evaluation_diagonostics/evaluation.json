@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "experiment": "e3",
+  "source_run_dir": "results-e3",
+  "calibration_paths": 1000000,
+  "calibration_seed": 271828,
+  "oos_paths": 1000000,
+  "oos_source": "results-e3/pnl.npz",
+  "oos_seed": 314159,
+  "alpha": 0.99,
+  "device": "cuda",
+  "runtime_sec": 20.556,
+  "metrics": {
+    "recurrent": {
+      "calibration_mean_raw_loss": 2.8687113865589233,
+      "indifference_price": 4.170670358645874,
+      "oos_mean_raw_loss": 2.8704213893219572,
+      "oos_signed_terminal_hedging_loss": -1.3002489693239159,
+      "oos_mean_hedging_error": 1.3002489693239159,
+      "oos_mean_excess_loss_diagnostic": 0.0007701270498328076,
+      "oos_mean_positive_hedging_error": 1.3010190963737491,
+      "oos_realized_cvar_loss": 4.166624664326665,
+      "oos_realized_cvar_shortfall": -0.0040456943192089196,
+      "oos_hedging_error_q01": 0.19745821394136912,
+      "oos_hedging_error_median": 1.0644543821442858,
+      "oos_hedging_error_q99": 4.404712770275839
+    },
+    "simpler": {
+      "calibration_mean_raw_loss": 2.930246962063878,
+      "indifference_price": 4.226090575200555,
+      "oos_mean_raw_loss": 2.932333898741542,
+      "oos_signed_terminal_hedging_loss": -1.2937566764590132,
+      "oos_mean_hedging_error": 1.2937566764590132,
+      "oos_mean_excess_loss_diagnostic": 0.0007526505370833709,
+      "oos_mean_positive_hedging_error": 1.294509326996096,
+      "oos_realized_cvar_loss": 4.223412251076901,
+      "oos_realized_cvar_shortfall": -0.0026783241236539804,
+      "oos_hedging_error_q01": 0.19062759274421337,
+      "oos_hedging_error_median": 1.0557630118223396,
+      "oos_hedging_error_q99": 4.400964446889843
+    }
+  },
+  "fixed_validation": {
+    "paths": 10000,
+    "seed": 8675309,
+    "metrics": {
+      "recurrent": {
+        "mean_raw_loss": 2.866420957527109,
+        "cvar": 4.199008154340209
+      },
+      "simpler": {
+        "mean_raw_loss": 2.922109452095189,
+        "cvar": 4.257086434209395
+      }
+    },
+    "interpretation": "one-off final-checkpoint diagnostic, not a historical training curve"
+  },
+  "definitions": {
+    "indifference_price": "CVaR_alpha(terminal_loss) estimated on independent calibration paths",
+    "figure5_histogram": "indifference_price - OOS terminal_loss",
+    "realized_cvar_shortfall": "CVaR_alpha(OOS terminal_loss - calibration indifference_price)",
+    "oos_mean_raw_loss": "E[L_raw] on the OOS sample",
+    "oos_signed_terminal_hedging_loss": "E[L_raw - p0] on the OOS sample",
+    "figure5_mean_loss_proxy": "E[max(L_raw - p0, 0)] on the OOS sample; a reconstructed positive-part proxy, NOT a verified definition from the paper"
+  }
+}

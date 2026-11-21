@@ -1,0 +1,57 @@
+21:42:25 INFO    E3 seed=4 device=cuda config=configs/exp/e3.yaml
+21:42:25 INFO    training E3 recurrent policy alpha=0.990 eps=0.01
+21:42:26 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000 validation_paths=10000 validation_seed=8675309
+21:44:57 INFO      iter 2500/30000 lr=0.00492 train_cvar=5.0787 (last 2500 avg 5.7885) validation_cvar=4.8732
+21:47:28 INFO      iter 5000/30000 lr=0.0047 train_cvar=4.7059 (last 2500 avg 4.7728) validation_cvar=4.7467
+21:49:58 INFO      iter 7500/30000 lr=0.00434 train_cvar=4.5687 (last 2500 avg 4.6125) validation_cvar=4.5523
+21:52:29 INFO      iter 10000/30000 lr=0.00388 train_cvar=4.2468 (last 2500 avg 4.5197) validation_cvar=4.4048
+21:55:01 INFO      iter 12500/30000 lr=0.00333 train_cvar=4.5200 (last 2500 avg 4.4453) validation_cvar=4.4071
+21:57:31 INFO      iter 15000/30000 lr=0.00275 train_cvar=4.3781 (last 2500 avg 4.3809) validation_cvar=4.3045
+22:00:02 INFO      iter 17500/30000 lr=0.00217 train_cvar=4.3388 (last 2500 avg 4.3296) validation_cvar=4.2827
+22:02:33 INFO      iter 20000/30000 lr=0.00163 train_cvar=4.4978 (last 2500 avg 4.2777) validation_cvar=4.2149
+22:05:04 INFO      iter 22500/30000 lr=0.00116 train_cvar=4.3075 (last 2500 avg 4.2348) validation_cvar=4.1859
+22:07:35 INFO      iter 25000/30000 lr=0.000801 train_cvar=4.1758 (last 2500 avg 4.2033) validation_cvar=4.1501
+22:10:06 INFO      iter 27500/30000 lr=0.000577 train_cvar=4.2464 (last 2500 avg 4.1745) validation_cvar=4.1378
+22:12:37 INFO      iter 30000/30000 lr=0.0005 train_cvar=4.3058 (last 2500 avg 4.1602) validation_cvar=4.1466
+22:12:37 INFO    training E3 simpler policy alpha=0.990 eps=0.01
+22:12:37 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000 validation_paths=10000 validation_seed=8675309
+22:15:00 INFO      iter 2500/30000 lr=0.00492 train_cvar=5.1595 (last 2500 avg 5.5903) validation_cvar=4.8117
+22:17:22 INFO      iter 5000/30000 lr=0.0047 train_cvar=4.7312 (last 2500 avg 4.7191) validation_cvar=4.6954
+22:19:45 INFO      iter 7500/30000 lr=0.00434 train_cvar=4.4607 (last 2500 avg 4.6047) validation_cvar=4.5024
+22:22:08 INFO      iter 10000/30000 lr=0.00388 train_cvar=4.3431 (last 2500 avg 4.5206) validation_cvar=4.4138
+22:24:31 INFO      iter 12500/30000 lr=0.00333 train_cvar=4.5000 (last 2500 avg 4.4571) validation_cvar=4.3557
+22:26:53 INFO      iter 15000/30000 lr=0.00275 train_cvar=4.4019 (last 2500 avg 4.4086) validation_cvar=4.3045
+22:29:16 INFO      iter 17500/30000 lr=0.00217 train_cvar=4.4124 (last 2500 avg 4.3584) validation_cvar=4.3494
+22:31:39 INFO      iter 20000/30000 lr=0.00163 train_cvar=4.5350 (last 2500 avg 4.3152) validation_cvar=4.3037
+22:34:06 INFO      iter 22500/30000 lr=0.00116 train_cvar=4.2694 (last 2500 avg 4.2820) validation_cvar=4.2207
+22:36:44 INFO      iter 25000/30000 lr=0.000801 train_cvar=4.2004 (last 2500 avg 4.2554) validation_cvar=4.2078
+22:39:23 INFO      iter 27500/30000 lr=0.000577 train_cvar=4.2068 (last 2500 avg 4.2282) validation_cvar=4.1874
+22:42:02 INFO      iter 30000/30000 lr=0.0005 train_cvar=4.2204 (last 2500 avg 4.2170) validation_cvar=4.1779
+22:42:03 INFO      E3 common OOS evaluation 100000/1000000
+22:42:03 INFO      E3 common OOS evaluation 200000/1000000
+22:42:04 INFO      E3 common OOS evaluation 300000/1000000
+22:42:04 INFO      E3 common OOS evaluation 400000/1000000
+22:42:05 INFO      E3 common OOS evaluation 500000/1000000
+22:42:05 INFO      E3 common OOS evaluation 600000/1000000
+22:42:06 INFO      E3 common OOS evaluation 700000/1000000
+22:42:06 INFO      E3 common OOS evaluation 800000/1000000
+22:42:07 INFO      E3 common OOS evaluation 900000/1000000
+22:42:07 INFO      E3 common OOS evaluation 1000000/1000000
+22:42:07 INFO    E3 result recurrent=4.17166 simpler=4.22064 | costs recurrent=1.13768 simpler=1.21921
+22:42:09 INFO    calibration paths 100000/1000000
+22:42:09 INFO    calibration paths 200000/1000000
+22:42:10 INFO    calibration paths 300000/1000000
+22:42:10 INFO    calibration paths 400000/1000000
+22:42:10 INFO    calibration paths 500000/1000000
+22:42:10 INFO    calibration paths 600000/1000000
+22:42:11 INFO    calibration paths 700000/1000000
+22:42:11 INFO    calibration paths 800000/1000000
+22:42:11 INFO    calibration paths 900000/1000000
+22:42:12 INFO    calibration paths 1000000/1000000
+22:42:12 INFO    fixed validation paths 10000/10000
+22:42:15 INFO    E3 independent evaluation complete
+22:42:15 INFO    recurrent price=4.168030 mean_raw_loss=2.831887 mean_positive_loss_proxy=0.000752 mean_signed_terminal_loss=-1.336143 realized_cvar_shortfall=0.003633
+22:42:15 INFO    simpler price=4.220183 mean_raw_loss=2.913517 mean_positive_loss_proxy=0.000732 mean_signed_terminal_loss=-1.306666 realized_cvar_shortfall=0.000454
+22:42:15 INFO    Figure: results/e3_seeds1_4/e3/4/fig_05_e3.png
+22:42:15 INFO    Report: results/e3_seeds1_4/e3/4/evaluation.json
+22:42:15 INFO    E3 completed runtime=59m 50s operational_passed=True

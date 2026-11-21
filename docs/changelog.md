@@ -209,3 +209,40 @@ pytest 收集期即 ImportError（exit 2）。`d0024f3` 在 Install 步骤补 `n
 - Added Kaggle clone, environment, evaluation, figure-generation, and push instructions in `docs/e2_kaggle.md`.
 
 Validation status: code changes are prepared on `exp/e2-output-eval`. Runtime pytest and Kaggle GPU evaluation must still be run before treating the outputs as validated results.
+
+
+---
+
+## E2cs five-seed robustness completion (2026-11-19)
+
+- Archived corrected simpler-policy E2cs seeds 1–4 under `backups/e2cs_seeds1_4/`; seed 0 remains under `backups/e2cs_simple_seed0/`.
+- Consolidated the original five-seed checkpoint results in `docs/e2cs_multiseed_summary.md` and the machine-readable aggregate in `reports/e2cs/e2cs_multiseed_summary.json`.
+- The alpha=.99 policy reduces CVaR99 relative to the alpha=.95 policy in 5/5 seeds by 0.132714 ± 0.033466 on the primary one-million-path evaluations.
+- Seed 3 is the main alpha=.99 numerical outlier, but retains the same direction of tail-risk improvement.
+- Independent post-training BN recalibration across all five seeds strongly reduces tail-risk dispersion while preserving the flatter, left-shifted alpha=.99 hedge. Original checkpoints remain the formal replication outputs; recalibration remains a diagnostic.
+- E2cs is frozen. No further retraining is required solely to match Figures 8–9.
+
+
+---
+
+## E3 five-seed robustness completion (2026-11-20)
+
+- Archived and reviewed the frozen QE-M/current-input E3 baseline for seeds 0–4 under `backups/e3/`.
+- Added `docs/e3_multiseed_summary.md` and `reports/e3/e3_multiseed_summary.json`.
+- The recurrent policy has a lower independently calibrated price in 5/5 seeds. The five-seed price gap is 0.057864 ± 0.003902.
+- The recurrent raw mean-loss advantage is almost entirely explained by lower transaction costs; the pre-cost mean-loss difference is only 0.000225 ± 0.000131.
+- Centered Figure 5 distributions overlap strongly because each policy is plotted at its own independently calibrated price. The overlap is stable across seeds, not an isolated failed run.
+- Completed the three simulator/input fidelity controls. Paper inputs raise both E3 prices toward the paper; the simulator-only change has little effect. None recovers the paper's large 1.2309 recurrent–simpler gap.
+- E3 is frozen as a stable qualitative but incomplete quantitative reproduction. No further retraining is required solely to force agreement with Figure 5.
+
+---
+
+## A2 E2–E4 formal freeze and integration closeout (2026-11-21)
+
+- Added the separate A2 registry `docs/experiments-e2-e4.md`; the A1-owned `docs/experiments.md` remains unchanged.
+- Marked E2 core, E2 call spread, E3, E4-BS and E4-Heston seeds 0–4 as complete and frozen. “Frozen” records completion without treating paper-target discrepancies as passes.
+- Updated `docs/plan_A2_next.md` and `docs/method_replication-A2.md` to remove obsolete statements that E2 was still running or that E4 seeds 1–4 remained pending.
+- Recorded the deliberate exclusion of large pathwise `pnl.npz` files to limit repository size and clone time.
+- Audited the repository branch graph. The reviewed A2 branches are ancestors of `exp/e2e3-fidelity-controls`; the older divergent `feat/e3-independent-eval-fig5` implementation is superseded and must not be merged separately.
+- Retargeted PR #12 from `exp/a2-seed0-batch` to `main` and updated its title/body to describe the complete E2–E4 scope.
+- Local `python scripts/ci.py` passed after fetch/pull. Final GitHub Actions CI on the documentation head remains the merge gate.

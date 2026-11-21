@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "experiment": "e3",
+  "status": "frozen_partial_qualitative_reproduction",
+  "baseline": {
+    "simulator": "qem",
+    "feature_set": "current",
+    "alpha": 0.99,
+    "epsilon": 0.01,
+    "training_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "calibration_paths": 1000000,
+    "calibration_seed": 271828,
+    "oos_paths": 1000000,
+    "oos_seed": 314159
+  },
+  "aggregates": {
+    "recurrent_price": {
+      "mean": 4.164608,
+      "sd_sample": 0.005646
+    },
+    "simpler_price": {
+      "mean": 4.222472,
+      "sd_sample": 0.003962
+    },
+    "price_gap_simpler_minus_recurrent": {
+      "mean": 0.057864,
+      "sd_sample": 0.003902,
+      "positive_seeds": 5,
+      "total_seeds": 5
+    },
+    "recurrent_oos_raw_loss_cvar": {
+      "mean": 4.164635,
+      "sd_sample": 0.005861
+    },
+    "simpler_oos_raw_loss_cvar": {
+      "mean": 4.221864,
+      "sd_sample": 0.003341
+    },
+    "raw_mean_loss_gap": {
+      "mean": 0.081715,
+      "sd_sample": 0.01193
+    },
+    "transaction_cost_gap": {
+      "mean": 0.08149,
+      "sd_sample": 0.012004
+    },
+    "pre_cost_mean_loss_gap": {
+      "mean": 0.000225,
+      "sd_sample": 0.000131
+    },
+    "stock_leg_share_of_cost_saving": 0.852237
+  },
+  "paper_reference": {
+    "recurrent_price": 5.5137,
+    "simpler_price": 6.7446,
+    "price_gap": 1.2309
+  },
+  "fidelity_controls": [
+    {
+      "arm": "baseline_seed0",
+      "simulator": "qem",
+      "input": "current",
+      "recurrent_price": 4.170670358645874,
+      "simpler_price": 4.226090575200555,
+      "gap": 0.05542021655468066
+    },
+    {
+      "arm": "simulator_only",
+      "simulator": "paper_sbk",
+      "input": "current",
+      "recurrent_price": 4.227766924361838,
+      "simpler_price": 4.290250471167554,
+      "gap": 0.06248354680571655
+    },
+    {
+      "arm": "paper_input_only",
+      "simulator": "qem",
+      "input": "paper",
+      "recurrent_price": 5.631966837299682,
+      "simpler_price": 5.855334302643893,
+      "gap": 0.2233674653442108
+    },
+    {
+      "arm": "simulator_plus_paper_input",
+      "simulator": "paper_sbk",
+      "input": "paper",
+      "recurrent_price": 5.683621472057885,
+      "simpler_price": 5.8017390091892755,
+      "gap": 0.11811753713139073
+    }
+  ],
+  "decisions": {
+    "formal_result": "five-seed qem/current baseline",
+    "sensitivity_result": "three seed-0 simulator/input controls",
+    "further_training_required": false,
+    "interpretation": "direction reproduced; absolute levels and architecture-gap magnitude not reproduced"
+  },
+  "provenance_notes": [
+    "Seed 0 was trained at feb6c7b; seeds 1-4 record f65e886.",
+    "The E3 training module was unchanged and QE-M/current baseline behaviour was preserved.",
+    "Seeds 1-4 record dirty=true; their saved config hashes are identical."
+  ]
+}

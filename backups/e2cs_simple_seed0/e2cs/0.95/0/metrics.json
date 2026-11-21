@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "exp": "e2cs",
+  "seed": 0,
+  "git_commit": "1e75b7d",
+  "dirty": false,
+  "created_at": "2026-11-16T02:35:14+08:00",
+  "runtime_sec": 2443.36,
+  "device": "cuda",
+  "torch_version": "2.8.0+cu128",
+  "n_paths": 1000000,
+  "config_sha256": "eb58b2ae4e932663458af038d47fc67fb2882d90d17f9ef01bac9dab77adddd0",
+  "metrics": {
+    "price_alpha95": 0.9583396266244244,
+    "price_alpha99": 0.9632783636878014,
+    "q_model_call_spread": 0.6104624677310682,
+    "mean_loss_alpha95": 0.6095696265991636,
+    "mean_loss_alpha99": 0.6094718942371046,
+    "cvar95_alpha95": 0.9583396266244244,
+    "cvar99_alpha95": 1.08733111602582,
+    "cvar95_alpha99": 0.9227809997051483,
+    "cvar99_alpha99": 0.9632783636878014,
+    "visual_step": 15.0,
+    "visual_paths": 200000.0
+  },
+  "checks": {
+    "finite_prices": true,
+    "finite_policy_positions": true,
+    "model_surface_finite": true,
+    "common_oos_path_count": true
+  },
+  "passed": true
+}

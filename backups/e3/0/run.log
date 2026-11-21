@@ -1,0 +1,41 @@
+23:54:47 INFO    E3 seed=0 device=cuda config=configs/exp/e3.yaml
+23:54:47 INFO    training E3 recurrent policy alpha=0.990 eps=0.01
+23:54:49 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000
+23:57:19 INFO      iter 2500/30000 lr=0.00492 train_cvar=5.0479 (last 2500 avg 5.8020)
+23:59:49 INFO      iter 5000/30000 lr=0.0047 train_cvar=4.5329 (last 2500 avg 4.7950)
+00:02:19 INFO      iter 7500/30000 lr=0.00434 train_cvar=4.4336 (last 2500 avg 4.6137)
+00:04:47 INFO      iter 10000/30000 lr=0.00388 train_cvar=4.5149 (last 2500 avg 4.5187)
+00:07:17 INFO      iter 12500/30000 lr=0.00333 train_cvar=4.3366 (last 2500 avg 4.4496)
+00:09:46 INFO      iter 15000/30000 lr=0.00275 train_cvar=4.3556 (last 2500 avg 4.3809)
+00:12:15 INFO      iter 17500/30000 lr=0.00217 train_cvar=4.3038 (last 2500 avg 4.3343)
+00:14:46 INFO      iter 20000/30000 lr=0.00163 train_cvar=4.2089 (last 2500 avg 4.2773)
+00:17:15 INFO      iter 22500/30000 lr=0.00116 train_cvar=4.2657 (last 2500 avg 4.2387)
+00:19:47 INFO      iter 25000/30000 lr=0.000801 train_cvar=4.0568 (last 2500 avg 4.1998)
+00:22:18 INFO      iter 27500/30000 lr=0.000577 train_cvar=4.2008 (last 2500 avg 4.1758)
+00:24:47 INFO      iter 30000/30000 lr=0.0005 train_cvar=4.1577 (last 2500 avg 4.1579)
+00:24:47 INFO    training E3 simpler policy alpha=0.990 eps=0.01
+00:24:47 INFO      lr_schedule=cosine lr=0.005->0.0005 batch=1024 n_iter=30000
+00:27:09 INFO      iter 2500/30000 lr=0.00492 train_cvar=4.9557 (last 2500 avg 5.5663)
+00:29:30 INFO      iter 5000/30000 lr=0.0047 train_cvar=4.6076 (last 2500 avg 4.7119)
+00:31:52 INFO      iter 7500/30000 lr=0.00434 train_cvar=4.4642 (last 2500 avg 4.5976)
+00:34:14 INFO      iter 10000/30000 lr=0.00388 train_cvar=4.5182 (last 2500 avg 4.5157)
+00:36:34 INFO      iter 12500/30000 lr=0.00333 train_cvar=4.4001 (last 2500 avg 4.4583)
+00:38:55 INFO      iter 15000/30000 lr=0.00275 train_cvar=4.2848 (last 2500 avg 4.4105)
+00:41:15 INFO      iter 17500/30000 lr=0.00217 train_cvar=4.3465 (last 2500 avg 4.3693)
+00:43:36 INFO      iter 20000/30000 lr=0.00163 train_cvar=4.3473 (last 2500 avg 4.3140)
+00:45:57 INFO      iter 22500/30000 lr=0.00116 train_cvar=4.2333 (last 2500 avg 4.2841)
+00:48:21 INFO      iter 25000/30000 lr=0.000801 train_cvar=4.1245 (last 2500 avg 4.2504)
+00:50:42 INFO      iter 27500/30000 lr=0.000577 train_cvar=4.2829 (last 2500 avg 4.2301)
+00:53:04 INFO      iter 30000/30000 lr=0.0005 train_cvar=4.2304 (last 2500 avg 4.2198)
+00:53:04 INFO      E3 common OOS evaluation 100000/1000000
+00:53:05 INFO      E3 common OOS evaluation 200000/1000000
+00:53:05 INFO      E3 common OOS evaluation 300000/1000000
+00:53:06 INFO      E3 common OOS evaluation 400000/1000000
+00:53:06 INFO      E3 common OOS evaluation 500000/1000000
+00:53:07 INFO      E3 common OOS evaluation 600000/1000000
+00:53:07 INFO      E3 common OOS evaluation 700000/1000000
+00:53:08 INFO      E3 common OOS evaluation 800000/1000000
+00:53:08 INFO      E3 common OOS evaluation 900000/1000000
+00:53:09 INFO      E3 common OOS evaluation 1000000/1000000
+00:53:09 INFO    E3 result recurrent=4.16662 simpler=4.22341 | costs recurrent=1.17630 simpler=1.23780
+00:53:11 INFO    E3 completed runtime=58m 24s passed=True

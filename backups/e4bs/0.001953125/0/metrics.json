@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "exp": "e4bs",
+  "seed": 0,
+  "git_commit": "feb6c7b",
+  "dirty": false,
+  "created_at": "2026-11-16T02:32:27+08:00",
+  "runtime_sec": 1470.697,
+  "device": "cuda",
+  "torch_version": "2.8.0+cu128",
+  "n_paths": 100000,
+  "config_sha256": "052a52c86e764f9ed4e55cbdedf19d6fb38bcc95aee86a83df2f9d38c7389b71",
+  "metrics": {
+    "eps": 0.001953125,
+    "lambda": 1.0,
+    "price_eps": 2.6774249023580534,
+    "price0": 2.2871506280449694,
+    "price_increment": 0.39027427431308404,
+    "mean_loss": 2.554306149406033,
+    "std_loss": 0.49442075136850727,
+    "eval_seed": 271828.0
+  },
+  "checks": {
+    "finite_price": true,
+    "positive_price_increment": true,
+    "evaluation_path_count": true
+  },
+  "passed": true
+}

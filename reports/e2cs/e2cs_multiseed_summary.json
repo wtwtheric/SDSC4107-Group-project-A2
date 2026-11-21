@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0",
+  "experiment": "E2cs corrected simpler-policy five-seed robustness",
+  "status": "frozen",
+  "training_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "primary_evaluation": {
+    "paths": 1000000,
+    "seed": 314159
+  },
+  "q_model_call_spread": 0.6104624677310682,
+  "primary": {
+    "price_alpha95": {
+      "mean": 0.9765247862295444,
+      "sample_sd": 0.02384336490493072,
+      "min": 0.9518694874067549,
+      "max": 1.0047479506797208
+    },
+    "price_alpha99": {
+      "mean": 0.9915887929491003,
+      "sample_sd": 0.05282343735176971,
+      "min": 0.9632783636878014,
+      "max": 1.0859390094359191
+    },
+    "cvar99_alpha95": {
+      "mean": 1.1243023313084106,
+      "sample_sd": 0.07005546170591362,
+      "min": 1.073593281645919,
+      "max": 1.2357111778969654
+    },
+    "cvar95_alpha99": {
+      "mean": 0.9356979067682932,
+      "sample_sd": 0.030488453321197456,
+      "min": 0.9204747913377342,
+      "max": 0.9901615255750162
+    },
+    "cvar99_reduction_alpha95_minus_alpha99": {
+      "mean": 0.13271353835931018,
+      "sample_sd": 0.03346612667306959,
+      "min": 0.10240450123857758,
+      "max": 0.18210890946988967,
+      "positive_seeds": 5,
+      "total_seeds": 5
+    },
+    "cvar95_reduction_alpha95_minus_alpha99": {
+      "mean": 0.040826879461251166,
+      "sample_sd": 0.02830602147802743,
+      "min": 0.008369879558876026,
+      "max": 0.08427315934198654,
+      "positive_seeds": 5,
+      "total_seeds": 5
+    },
+    "mean_loss_alpha95": {
+      "mean": 0.609579912347499,
+      "sample_sd": 0.0000785130891429489
+    },
+    "mean_loss_alpha99": {
+      "mean": 0.6096796850348655,
+      "sample_sd": 0.0001347390271005614
+    }
+  },
+  "bn_recalibration": {
+    "calibration": {
+      "paths": 200000,
+      "seed": 928372
+    },
+    "oos": {
+      "paths": 1000000,
+      "seed": 314160
+    },
+    "mutation_scope": "Only BatchNorm running_mean and running_var; learned weights and affine parameters frozen.",
+    "alpha95": {
+      "original_cvar95": {
+        "mean": 0.9769848791433928,
+        "sample_sd": 0.024402390609446614
+      },
+      "recalibrated_cvar95": {
+        "mean": 0.8571026363749876,
+        "sample_sd": 0.0003983296599928636
+      },
+      "original_cvar99": {
+        "mean": 1.1251267746781342,
+        "sample_sd": 0.07210264408607558
+      },
+      "recalibrated_cvar99": {
+        "mean": 0.9221852896799902,
+        "sample_sd": 0.0017253284421451358
+      }
+    },
+    "alpha99": {
+      "original_cvar95": {
+        "mean": 0.9355439662835202,
+        "sample_sd": 0.03040180983158673
+      },
+      "recalibrated_cvar95": {
+        "mean": 0.889164552243178,
+        "sample_sd": 0.0012385066084339158
+      },
+      "original_cvar99": {
+        "mean": 0.9908703900955572,
+        "sample_sd": 0.052577692675701636
+      },
+      "recalibrated_cvar99": {
+        "mean": 0.9083754916362349,
+        "sample_sd": 0.0004450823738234692
+      }
+    },
+    "recalibrated_surface_v003": {
+      "alpha99_to_alpha95_peak_ratio": {
+        "mean": 0.6199079236906104,
+        "sample_sd": 0.03774239101756542
+      },
+      "alpha99_minus_alpha95_peak_spot": {
+        "mean": -1.0999999999999972,
+        "sample_sd": 0.30822070014845204
+      }
+    }
+  },
+  "reporting_decision": "Keep original five-seed checkpoint evaluations as the direct replication result; report BN recalibration as a diagnostic/sensitivity result.",
+  "retraining_decision": "E2cs is frozen. No further retraining solely to match the paper figures."
+}

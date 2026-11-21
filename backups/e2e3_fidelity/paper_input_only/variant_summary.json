@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "variant": "paper_input_only",
+  "seed": 0,
+  "e2": {
+    "q": 1.6918339251106715,
+    "price_alpha50": 2.2440197839430236,
+    "price_alpha99": 4.681561834923683,
+    "cvar50_alpha50_excess": 0.552185858832352,
+    "cvar99_alpha50_excess": 4.042078145341337,
+    "cvar50_alpha99_excess": 1.549970136714848,
+    "cvar99_alpha99_excess": 2.9897279098130123,
+    "paper_targets": {
+      "price_alpha50": 1.94,
+      "price_alpha99": 3.49,
+      "figure7_cvar50_alpha50": 0.2531,
+      "figure7_cvar99_alpha50": 2.3631,
+      "figure7_cvar50_alpha99": 0.527,
+      "figure7_cvar99_alpha99": 1.8034
+    }
+  },
+  "e3": {
+    "price_recurrent": 5.631966837299682,
+    "price_simpler": 5.855334302643893,
+    "price_gap_simpler_minus_recurrent": 0.2233674653442108,
+    "cvar_recurrent": 5.635193919332503,
+    "cvar_simpler": 5.853840672040402,
+    "mean_cost_recurrent": 0.8267234541043872,
+    "mean_cost_simpler": 0.755010472732282,
+    "paper_targets": {
+      "price_recurrent": 5.5137,
+      "price_simpler": 6.7446,
+      "price_gap_simpler_minus_recurrent": 1.2309
+    }
+  }
+}
