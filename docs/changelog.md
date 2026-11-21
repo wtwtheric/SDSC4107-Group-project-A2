@@ -234,3 +234,15 @@ Validation status: code changes are prepared on `exp/e2-output-eval`. Runtime py
 - Centered Figure 5 distributions overlap strongly because each policy is plotted at its own independently calibrated price. The overlap is stable across seeds, not an isolated failed run.
 - Completed the three simulator/input fidelity controls. Paper inputs raise both E3 prices toward the paper; the simulator-only change has little effect. None recovers the paper's large 1.2309 recurrent–simpler gap.
 - E3 is frozen as a stable qualitative but incomplete quantitative reproduction. No further retraining is required solely to force agreement with Figure 5.
+
+---
+
+## A2 E2–E4 formal freeze and integration closeout (2026-11-21)
+
+- Added the separate A2 registry `docs/experiments-e2-e4.md`; the A1-owned `docs/experiments.md` remains unchanged.
+- Marked E2 core, E2 call spread, E3, E4-BS and E4-Heston seeds 0–4 as complete and frozen. “Frozen” records completion without treating paper-target discrepancies as passes.
+- Updated `docs/plan_A2_next.md` and `docs/method_replication-A2.md` to remove obsolete statements that E2 was still running or that E4 seeds 1–4 remained pending.
+- Recorded the deliberate exclusion of large pathwise `pnl.npz` files to limit repository size and clone time.
+- Audited the repository branch graph. The reviewed A2 branches are ancestors of `exp/e2e3-fidelity-controls`; the older divergent `feat/e3-independent-eval-fig5` implementation is superseded and must not be merged separately.
+- Retargeted PR #12 from `exp/a2-seed0-batch` to `main` and updated its title/body to describe the complete E2–E4 scope.
+- Local `python scripts/ci.py` passed after fetch/pull. Final GitHub Actions CI on the documentation head remains the merge gate.
