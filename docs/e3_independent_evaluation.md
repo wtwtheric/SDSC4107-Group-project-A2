@@ -2,14 +2,14 @@
 
 > Status: E3 seeds 0–4 and the simulator/input fidelity controls are complete. The frozen multi-seed conclusion is in [e3_multiseed_summary.md](e3_multiseed_summary.md). This file retains the evaluation definitions and workflow.
 
-`scripts/run_e3.py` is the only E3 entry point. It supports both a full run and an evaluation-only run using saved checkpoints.
+`scripts/a2/run_e3.py` is the only E3 entry point. It supports both a full run and an evaluation-only run using saved checkpoints.
 
 ## Full run
 
 From the repository root:
 
 ```bash
-python -m scripts.run_e3 --seed 0 --device cuda
+python -m scripts.a2.run_e3 --seed 0 --device cuda
 ```
 
 This trains recurrent and simpler policies, saves checkpoints and paired OOS terminal losses, estimates each indifference price on a separate calibration sample, evaluates OOS CVaR, and generates Figure 5.
@@ -17,7 +17,7 @@ This trains recurrent and simpler policies, saves checkpoints and paired OOS ter
 ## Re-evaluate existing checkpoints (no retraining)
 
 ```bash
-python -m scripts.run_e3 \
+python -m scripts.a2.run_e3 \
   --eval-only \
   --run-dir results/e3/0 \
   --calibration-paths 1000000 \
@@ -33,7 +33,7 @@ The run directory must contain `config.yaml`, `pnl.npz`, `policy_recurrent.pt`, 
 If the independent evaluation already wrote `evaluation.json` and the Figure 5 PNG, but updating `metrics.json` subsequently failed, use:
 
 ```bash
-python -m scripts.run_e3 --finalize-only --run-dir results/e3/0
+python -m scripts.a2.run_e3 --finalize-only --run-dir results/e3/0
 ```
 
 This reads the existing `evaluation.json`, preserves the original training provenance and existing metrics, and updates only `metrics.json`. It does not simulate calibration/validation paths, load model checkpoints, modify the figure, or retrain. Use it only after checking that `evaluation.json` belongs to the same seed-0 run and includes the `fixed_validation` object.
@@ -41,8 +41,8 @@ This reads the existing `evaluation.json`, preserves the original training prove
 ## Regenerate the corrected Figure 5 without recalibration
 
 ```bash
-python -m scripts.run_e3 --plot-only --run-dir results-e3
-python -m scripts.run_e3 --finalize-only --run-dir results-e3
+python -m scripts.a2.run_e3 --plot-only --run-dir results-e3
+python -m scripts.a2.run_e3 --finalize-only --run-dir results-e3
 ```
 
 The first command reads existing `evaluation.json` and `pnl.npz`, regenerates the figure with the provisional Mean Loss* proxy, and does not load models or change samples. The second refreshes `metrics.json` to separate operational from paper-target status. Both commands preserve the existing seed-0 checkpoints and do not rerun the million-path calibration.
@@ -145,7 +145,7 @@ The E3 config enables 10,000 fixed validation paths for future training runs. Th
 - `paper_target_checks` and `paper_target_passed`: the pre-specified quantitative price bands (recurrent 5.2-5.8, simpler 6.4-7.1). For this seed-0 run the expected result is `false`.
 - `economic_direction_checks`: relative recurrent-vs-simpler price, OOS CVaR, and positive-part proxy comparisons. These are diagnostic interpretations, never operational pass/fail gates.
 
-Existing artifacts can be updated without simulation or retraining using `python -m scripts.run_e3 --finalize-only --run-dir results-e3`, after refreshing this branch. This updates `metrics.json` only. Regenerate the figure with `--plot-only`; do not rerun the 1M-path calibration solely to change the label.
+Existing artifacts can be updated without simulation or retraining using `python -m scripts.a2.run_e3 --finalize-only --run-dir results-e3`, after refreshing this branch. This updates `metrics.json` only. Regenerate the figure with `--plot-only`; do not rerun the 1M-path calibration solely to change the label.
 
 
 ## Final five-seed status

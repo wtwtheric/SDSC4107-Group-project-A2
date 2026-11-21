@@ -1,10 +1,10 @@
 """Unified A2 plotting entry point. Plot from saved evaluation data only.
 
 Examples:
-    python -m scripts.make_figures_a2 --only e4
-    python -m scripts.make_figures_a2 --only e4 --seeds 0 1 2 3 4
-    python -m scripts.make_figures_a2 --only e3 --e3-dir results/e3/0
-    python -m scripts.make_figures_a2 --only all --e2-dir results/e2/0
+    python -m scripts.a2.make_figures_a2 --only e4
+    python -m scripts.a2.make_figures_a2 --only e4 --seeds 0 1 2 3 4
+    python -m scripts.a2.make_figures_a2 --only e3 --e3-dir results/e3/0
+    python -m scripts.a2.make_figures_a2 --only all --e2-dir results/e2/0
 
 This dispatcher does not train policies or recalculate Monte Carlo prices.
 """
@@ -48,7 +48,7 @@ def main() -> int:
     jobs = ("e2", "e2cs", "e3", "e4") if args.only == "all" else (args.only,)
     for job in jobs:
         if job == "e2":
-            from scripts.make_e2_figures import make_figures
+            from scripts.a2.make_e2_figures import make_figures
 
             make_figures(evaluation_dir=args.e2_dir, figures_dir=args.figures_dir)
         elif job == "e2cs":
@@ -63,7 +63,7 @@ def main() -> int:
                 [
                     sys.executable,
                     "-m",
-                    "scripts.make_e2cs_figures",
+                    "scripts.a2.make_e2cs_figures",
                     "--results",
                     str(args.e2cs_dir),
                     "--figures",
@@ -74,7 +74,7 @@ def main() -> int:
                 check=True,
             )
         elif job == "e2cs-diagnostics":
-            from scripts.diagnose_e2cs import analyze
+            from scripts.a2.diagnose_e2cs import analyze
             from src.common.seed import resolve_device
 
             report = analyze(
@@ -88,12 +88,12 @@ def main() -> int:
             )
             print(f"saved E2cs diagnostics for seed {report['seed']}")
         elif job == "e3":
-            from scripts.make_e3_figures import plot_saved
+            from scripts.a2.make_e3_figures import plot_saved
 
             out = args.figures_dir / "fig05_e3.png"
             print(f"saved {plot_saved(run_dir=args.e3_dir, output=out, bins=args.bins)}")
         elif job == "e4":
-            from scripts.make_e4_figures import make_figures
+            from scripts.a2.make_e4_figures import make_figures
 
             for output in make_figures(
                 data_root=args.e4_data_root,

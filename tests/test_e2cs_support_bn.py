@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 import torch
-from scripts.diagnose_e2cs_support_bn import (
+from scripts.a2.diagnose_e2cs_support_bn import (
     _batchnorm_diagnostics,
     support_metrics,
     training_diagnostics,

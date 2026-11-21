@@ -69,7 +69,7 @@ retuning.
 This implements the *simplified* Broadie-Kaya description stated in the paper.
 It is not the full exact Broadie-Kaya integrated-variance inversion algorithm.
 
-Before training, `scripts.audit_e2e3_simulators` compares QE-M and paper_sbk on
+Before training, `scripts.a2.audit_e2e3_simulators` compares QE-M and paper_sbk on
 200k paths and records terminal spot/payoff tails, V_15 boundary behaviour,
 variance-swap drift and the analytic q reference.
 
@@ -79,7 +79,7 @@ Each arm runs E2 seed 0, a chunked 1M-path E2 evaluation and Figures 6-7, then
 E3 seed 0 including its independent 1M calibration/OOS evaluation and Figure 5.
 
 ```bash
-python -m scripts.run_e2e3_fidelity_control \
+python -m scripts.a2.run_e2e3_fidelity_control \
   --variant simulator_only \
   --device cuda
 ```
@@ -87,11 +87,11 @@ python -m scripts.run_e2e3_fidelity_control \
 Other arms:
 
 ```bash
-python -m scripts.run_e2e3_fidelity_control \
+python -m scripts.a2.run_e2e3_fidelity_control \
   --variant paper_input_only \
   --device cuda
 
-python -m scripts.run_e2e3_fidelity_control \
+python -m scripts.a2.run_e2e3_fidelity_control \
   --variant simulator_plus_paper_input \
   --device cuda
 ```

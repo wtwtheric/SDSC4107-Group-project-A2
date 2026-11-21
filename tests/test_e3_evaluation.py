@@ -4,7 +4,7 @@ import json
 import sys
 
 import numpy as np
-from scripts.run_e3 import (
+from scripts.a2.run_e3 import (
     apply_evaluation_to_metrics,
     main,
     summarize,

@@ -110,7 +110,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "scripts.audit_e2e3_simulators",
+                "scripts.a2.audit_e2e3_simulators",
                 "--paths",
                 str(args.audit_paths),
                 "--batch-size",
@@ -144,7 +144,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "scripts.evaluate_e2",
+                "scripts.a2.evaluate_e2",
                 "--run-dir",
                 str(e2_run),
                 "--output-dir",
@@ -163,7 +163,7 @@ def main() -> int:
         [
             sys.executable,
             "-m",
-            "scripts.make_e2_figures",
+            "scripts.a2.make_e2_figures",
             "--evaluation-dir",
             str(e2_eval),
             "--figures-dir",
@@ -176,7 +176,7 @@ def main() -> int:
         cmd = [
             sys.executable,
             "-m",
-            "scripts.run_e3",
+            "scripts.a2.run_e3",
             "--config",
             cfg["e3"],
             "--seed",

@@ -6,7 +6,7 @@ sample statistics and cannot be used as a new tradable strategy or to claim
 improved OOS CVaR without a separate, properly calibrated evaluation.
 
 Example:
-python -m scripts.diagnose_e2cs_original_bn \
+python -m scripts.a2.diagnose_e2cs_original_bn \
   --npz-95 /path/e2cs_095_pnl.npz --npz-99 /path/e2cs_099_pnl.npz
 """
 
@@ -20,7 +20,7 @@ from typing import Any
 import numpy as np
 import torch
 from scipy.interpolate import RegularGridInterpolator
-from scripts.diagnose_e2cs_support_bn import _load_policies
+from scripts.a2.diagnose_e2cs_support_bn import _load_policies
 from torch.nn import functional as F
 
 

@@ -7,7 +7,7 @@ import json
 
 import numpy as np
 import pytest
-from scripts.make_e4_figures import THEORETICAL_SLOPE, load_grid, make_figures, regression
+from scripts.a2.make_e4_figures import THEORETICAL_SLOPE, load_grid, make_figures, regression
 
 
 def test_regression_recovers_exact_power_law() -> None:

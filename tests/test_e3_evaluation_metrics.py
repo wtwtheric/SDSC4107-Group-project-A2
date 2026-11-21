@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scripts.run_e3 import summarize
+from scripts.a2.run_e3 import summarize
 
 
 def test_e3_summary_separates_raw_and_centered_terminal_loss() -> None:

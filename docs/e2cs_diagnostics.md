@@ -21,7 +21,7 @@ The 99%-trained policy has an 11.41% lower realized CVaR99 on common OOS paths t
 
 ## Figure style and comparability
 
-`scripts/make_e2cs_figures.py` uses blue-white-red (`bwr`) rather than the grey-centered `coolwarm`. The same model/NN hedge color interval is used across Figures 8 and 9. Differences use another shared symmetric interval centered at **zero**, which remains white; blue indicates NN below the model and red indicates NN above it.
+`scripts/a2/make_e2cs_figures.py` uses blue-white-red (`bwr`) rather than the grey-centered `coolwarm`. The same model/NN hedge color interval is used across Figures 8 and 9. Differences use another shared symmetric interval centered at **zero**, which remains white; blue indicates NN below the model and red indicates NN above it.
 
 The model/NN hedge color scale is **not** forced to center on zero, avoiding a misleading grey/white block for small but meaningful stock positions. The 3D renderer uses `shade=False` to avoid lighting-driven color changes. Because the hedges are not signed differences, their color should not be interpreted as two sides of a risk sign.
 
@@ -29,7 +29,7 @@ The original figure assets remain untouched; diagnostics are written to `figures
 
 ## Hedge-shape diagnostics
 
-`scripts/diagnose_e2cs.py` reloads the frozen policy checkpoints with BatchNorm in evaluation mode and directly evaluates the same 81-by-61 uniform `(S,V)` grid used by the original Figures 8–9. It computes the analytical-model hedge using the existing Heston finite-difference pricer. It records **both** the stock and the variance-swap legs.
+`scripts/a2/diagnose_e2cs.py` reloads the frozen policy checkpoints with BatchNorm in evaluation mode and directly evaluates the same 81-by-61 uniform `(S,V)` grid used by the original Figures 8–9. It computes the analytical-model hedge using the existing Heston finite-difference pricer. It records **both** the stock and the variance-swap legs.
 
 For each alpha and hedge leg it reports:
 
@@ -48,13 +48,13 @@ These diagnostics help distinguish a genuine global flattening of the 99%-policy
 From repo root:
 
 ```bash
-python -m scripts.diagnose_e2cs --device cpu
+python -m scripts.a2.diagnose_e2cs --device cpu
 ```
 
 Or via the unified A2 entry point:
 
 ```bash
-python -m scripts.make_figures_a2 --only e2cs-diagnostics --seed 0
+python -m scripts.a2.make_figures_a2 --only e2cs-diagnostics --seed 0
 ```
 
 Outputs:
@@ -98,7 +98,7 @@ https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44038798249/
 
 ## Path-support, BatchNorm and training-convergence investigation (2026-11-18)
 
-A checkpoint-only and independent-path diagnostic has been implemented as `scripts/diagnose_e2cs_support_bn.py`, using the original simple-policy seed-0 weights; the same Heston model parameters and k=15. The initial successful run uses **40,000 newly generated CPU Heston paths, simulation seed 928371**, not the original GPU visual paths in the omitted `pnl.npz`. Results from this run are in GitHub Actions [run 44259116837](https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44259116837); the later regional-error extension is separately verified by CI before acceptance.
+A checkpoint-only and independent-path diagnostic has been implemented as `scripts/a2/diagnose_e2cs_support_bn.py`, using the original simple-policy seed-0 weights; the same Heston model parameters and k=15. The initial successful run uses **40,000 newly generated CPU Heston paths, simulation seed 928371**, not the original GPU visual paths in the omitted `pnl.npz`. Results from this run are in GitHub Actions [run 44259116837](https://github.com/wtwtheric/SDSC4107-Group-project-A2/actions/runs/44259116837); the later regional-error extension is separately verified by CI before acceptance.
 
 ### Market support
 
@@ -140,13 +140,13 @@ Window-mean stochastic training CVaR declines over 30k iterations for both polic
 To reproduce the new independent 40k diagnostic:
 
 ```bash
-python -m scripts.diagnose_e2cs_support_bn --n-paths 40000 --simulation-seed 928371
+python -m scripts.a2.diagnose_e2cs_support_bn --n-paths 40000 --simulation-seed 928371
 ```
 
 To compute state support from the **original** 200k visualization states when `pnl.npz` exists:
 
 ```bash
-python -m scripts.diagnose_e2cs_support_bn --pnl results/e2cs/0.95/0/pnl.npz
+python -m scripts.a2.diagnose_e2cs_support_bn --pnl results/e2cs/0.95/0/pnl.npz
 ```
 
 ### Regional decomposition of the k=15 errors (validated extension)
@@ -182,7 +182,7 @@ The strong near-strike, zero-variance position gap is present on 16.85% of the o
 
 Current E2cs simpler input features are raw (S_k, V_k). In the original visual sample the spot standard deviation is 3.955 and variance standard deviation is 0.0796 (approximately 49.7 times smaller). First-layer BatchNorm normalizes activations, but cannot guarantee equal learning sensitivity to both raw inputs. This is a testable optimization concern, not proof of a feature bug.
 
-Next experiment: python -m scripts.diagnose_e2cs_original_bn --npz-95 /path/e2cs_095_pnl.npz --npz-99 /path/e2cs_099_pnl.npz
+Next experiment: python -m scripts.a2.diagnose_e2cs_original_bn --npz-95 /path/e2cs_095_pnl.npz --npz-99 /path/e2cs_099_pnl.npz
 
 That script uses the existing, corrected simpler seed-0 checkpoints, checks that frozen-BN outputs reproduce the actual saved visual positions, compares frozen running moments against moments of the entire original 200K visual-state sample, and compares within-figure-grid model hedge errors under frozen BN versus non-mutating sample-moment BN.
 
@@ -220,7 +220,7 @@ The calibration uses full-sample moments rather than an EMA over mini-batches. P
 From the repository root, with the corrected seed-0 checkpoints available locally:
 
 \`\`\`bash
-python -m scripts.run_e2cs_bn_recalibration \\
+python -m scripts.a2.run_e2cs_bn_recalibration \\
   --checkpoint-root backups/e2cs_simple_seed0/e2cs \\
   --calibration-paths 200000 \\
   --calibration-batch-size 25000 \\

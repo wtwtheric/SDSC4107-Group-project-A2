@@ -296,7 +296,7 @@ The seed-0 batch runner supports independent experiment selection:
 For example, E2CS can run on a separate GPU while E3/E4 continue in another process:
 
 ```bash
-nohup python -u -m scripts.run_a2_seed0_batch \\
+nohup python -u -m scripts.a2.run_a2_seed0_batch \\
   --seed 0 \\
   --only e2cs \\
   --device cuda \\
@@ -648,7 +648,7 @@ The earlier restrictions on editing an active AutoDL checkout are no longer oper
 
 The completed integration branch is `exp/e2e3-fidelity-controls`. Repository comparison confirms that the reviewed tips of the main A2 work branches—including `exp/a2-seed0-batch`, `feat/e3-independent-evaluation`, `fix/e3-evaluation-diagnostics`, `feat/e2cs-diagnostics`, `exp/e2cs-bn-calibration`, and `exp/e4-robustness`—are ancestors of this integration branch.
 
-The older divergent branch `feat/e3-independent-eval-fig5` contains an earlier standalone evaluator/plotter layout. Its functionality was superseded by the integrated `scripts/run_e3.py`, `scripts/make_e3_figures.py`, expanded tests and final E3 documentation. It should not be merged into the frozen integration branch.
+The older divergent branch `feat/e3-independent-eval-fig5` contains an earlier standalone evaluator/plotter layout. Its functionality was superseded by the integrated `scripts/a2/run_e3.py`, `scripts/a2/make_e3_figures.py`, expanded tests and final E3 documentation. It should not be merged into the frozen integration branch.
 
 The integration branch is ahead of `main` and not behind it. Final integration should use a merge commit so that experiment commit SHAs recorded in the archived metrics remain reachable.
 

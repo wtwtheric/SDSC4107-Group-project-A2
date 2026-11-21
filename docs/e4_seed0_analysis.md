@@ -70,11 +70,11 @@ Assessment: strong seed-0 BS scaling pattern and substantial seed-0 Heston suppo
 
 From the repository root:
 
-    python -m scripts.make_e4_figures --data-root backups --figures-dir figures --report-dir reports/e4 --seeds 0
+    python -m scripts.a2.make_e4_figures --data-root backups --figures-dir figures --report-dir reports/e4 --seeds 0
 
 Or via the unified A2 figure dispatcher:
 
-    python -m scripts.make_figures_a2 --only e4 --seeds 0
+    python -m scripts.a2.make_figures_a2 --only e4 --seeds 0
 
 Outputs are figures/fig10_e4_bs.png and figures/fig11_e4_heston.png, plus reports/e4/e4_epsilon_sensitivity.csv, e4_epsilon_sensitivity.md, e4_price_increments.csv and e4_seed_slopes.csv.
 

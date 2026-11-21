@@ -5,8 +5,8 @@ Read the archived seed-0 checkpoints (two alpha policies), rebuild the same
 positions with the Heston model hedge, and save auditable shape statistics.
 
 Examples:
-    python -m scripts.diagnose_e2cs
-    python -m scripts.diagnose_e2cs --device cuda
+    python -m scripts.a2.diagnose_e2cs
+    python -m scripts.a2.diagnose_e2cs --device cuda
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from typing import Any
 
 import numpy as np
 import torch
-from scripts.make_e2cs_figures import plot_surface_pairs
+from scripts.a2.make_e2cs_figures import plot_surface_pairs
 from src.common.config import load_config
 from src.common.seed import resolve_device
 from src.replication.e1 import market_from_cfg, policy_from_cfg

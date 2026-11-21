@@ -79,7 +79,7 @@ common Heston paths in chunks, and stores terminal losses plus per-step
 position summaries. It does not retain all 1M pathwise positions or retrain.
 
 ```bash
-!python scripts/evaluate_e2.py \
+!python -m scripts.a2.evaluate_e2 \
   --run-dir backups/e2/0 \
   --output-dir results/e2/0/evaluation_1000000 \
   --n-paths 1000000 \
@@ -90,7 +90,7 @@ position summaries. It does not retain all 1M pathwise positions or retrain.
 Then render Figure 6 and Figure 7:
 
 ```bash
-!python scripts/make_e2_figures.py \
+!python -m scripts.a2.make_e2_figures \
   --evaluation-dir results/e2/0/evaluation_1000000
 ```
 

@@ -18,12 +18,12 @@ E1/E2's existing European-call payoff, QE-M simulator, shared fractional CVaR, a
 - `src/replication/e2cs.py`: call-spread world subclass, paired alpha training, chunked common-path OOS evaluation, model hedge grid.
 - `src/replication/e3.py`: paired recurrent/simpler training, common OOS paths, instrument-level transaction-cost breakdown.
 - `src/replication/e4.py`: entropic training for BS d=1 and Heston d=2.
-- `scripts/run_e2cs.py`: writes `results/e2cs/0.95/<seed>/` and `results/e2cs/0.99/<seed>/`.
-- `scripts/run_e3.py`: writes `results/e3/<seed>/`.
-- `scripts/run_e4_grid.py`: writes `results/e4bs/<eps>/<seed>/` and `results/e4h/<eps>/<seed>/`.
-- `scripts/run_a2_seed0_batch.py`: runs E2CS, E3, E4-BS, E4-Heston sequentially on one GPU.
-- `scripts/make_e2cs_figures.py`: makes 3D surfaces and 2D heatmaps.
-- `scripts/archive_a2_seed0.py`: bundles the completed Seed-0 result folders and figures into one ZIP.
+- `scripts/a2/run_e2cs.py`: writes `results/e2cs/0.95/<seed>/` and `results/e2cs/0.99/<seed>/`.
+- `scripts/a2/run_e3.py`: writes `results/e3/<seed>/`.
+- `scripts/a2/run_e4_grid.py`: writes `results/e4bs/<eps>/<seed>/` and `results/e4h/<eps>/<seed>/`.
+- `scripts/a2/run_a2_seed0_batch.py`: runs E2CS, E3, E4-BS, E4-Heston sequentially on one GPU.
+- `scripts/a2/make_e2cs_figures.py`: makes 3D surfaces and 2D heatmaps.
+- `scripts/a2/archive_a2_seed0.py`: bundles the completed Seed-0 result folders and figures into one ZIP.
 - Configs and small runner tests under `configs/exp/` and `tests/`.
 
 ## Run locally or on AutoDL/JupyterLab
@@ -32,20 +32,20 @@ From the repository root after overlaying this package:
 
 ```bash
 python -m pytest tests/test_e2cs.py tests/test_e3.py tests/test_e4.py -q
-python -m ruff check src/replication/e2cs.py src/replication/e3.py src/replication/e4.py scripts/run_e2cs.py scripts/run_e3.py scripts/run_e4_grid.py scripts/run_a2_seed0_batch.py scripts/make_e2cs_figures.py scripts/archive_a2_seed0.py tests/test_e2cs.py tests/test_e3.py tests/test_e4.py
-python -m ruff format --check src/replication/e2cs.py src/replication/e3.py src/replication/e4.py scripts/run_e2cs.py scripts/run_e3.py scripts/run_e4_grid.py scripts/run_a2_seed0_batch.py scripts/make_e2cs_figures.py scripts/archive_a2_seed0.py tests/test_e2cs.py tests/test_e3.py tests/test_e4.py
-python -m scripts.run_a2_seed0_batch --seed 0 --device cuda
+python -m ruff check src/replication/e2cs.py src/replication/e3.py src/replication/e4.py scripts/a2/run_e2cs.py scripts/a2/run_e3.py scripts/a2/run_e4_grid.py scripts/a2/run_a2_seed0_batch.py scripts/a2/make_e2cs_figures.py scripts/a2/archive_a2_seed0.py tests/test_e2cs.py tests/test_e3.py tests/test_e4.py
+python -m ruff format --check src/replication/e2cs.py src/replication/e3.py src/replication/e4.py scripts/a2/run_e2cs.py scripts/a2/run_e3.py scripts/a2/run_e4_grid.py scripts/a2/run_a2_seed0_batch.py scripts/a2/make_e2cs_figures.py scripts/a2/archive_a2_seed0.py tests/test_e2cs.py tests/test_e3.py tests/test_e4.py
+python -m scripts.a2.run_a2_seed0_batch --seed 0 --device cuda
 # after the full batch, one archive is created at results/A2_seed_0_bundle.zip
 ```
 
 To run one stage only:
 
 ```bash
-python -m scripts.run_e2cs --seed 0 --device cuda
-python -m scripts.run_e3 --seed 0 --device cuda
-python -m scripts.run_e4_grid --config configs/exp/e4bs.yaml --seed 0 --device cuda
-python -m scripts.run_e4_grid --config configs/exp/e4h.yaml --seed 0 --device cuda
-python -m scripts.make_e2cs_figures --seed 0
+python -m scripts.a2.run_e2cs --seed 0 --device cuda
+python -m scripts.a2.run_e3 --seed 0 --device cuda
+python -m scripts.a2.run_e4_grid --config configs/exp/e4bs.yaml --seed 0 --device cuda
+python -m scripts.a2.run_e4_grid --config configs/exp/e4h.yaml --seed 0 --device cuda
+python -m scripts.a2.make_e2cs_figures --seed 0
 ```
 
 The batch script is sequential, not parallel. It runs the E2CS figure generation immediately after E2CS, then E3, E4-BS, and E4-Heston. It uses `--resume` by default and skips completed runs with an existing `metrics.json`. A partial E2CS pair is treated as an error rather than silently mixing runs. At the end, it creates one archive at `results/A2_seed_0_bundle.zip`. Use a fresh output directory (`--out results_seed0_retry`) for a clean rerun.

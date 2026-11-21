@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import torch
-from scripts.diagnose_e2cs_original_bn import _grid_error, frozen_and_batch_moments
+from scripts.a2.diagnose_e2cs_original_bn import _grid_error, frozen_and_batch_moments
 from src.replication.net_recurrent import StepMLP
 
 

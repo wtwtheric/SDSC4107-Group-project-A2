@@ -3,8 +3,8 @@
 No market simulation, checkpoint loading, training, or metrics-file mutation is performed.
 
 Examples:
-    python -m scripts.make_e4_figures --data-root backups --seeds 0
-    python -m scripts.make_e4_figures --data-root backups --seeds 0 1 2 3 4
+    python -m scripts.a2.make_e4_figures --data-root backups --seeds 0
+    python -m scripts.a2.make_e4_figures --data-root backups --seeds 0 1 2 3 4
 """
 
 from __future__ import annotations
