@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scripts.diagnose_e2cs import _metrics
-from scripts.make_e2cs_figures import (
+from scripts.a2.diagnose_e2cs import _metrics
+from scripts.a2.make_e2cs_figures import (
     _comparable_norm,
     _symmetric_norm,
     plot_surface_pairs,

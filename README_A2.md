@@ -1,6 +1,6 @@
 # A2 Experiment Plan and Progress
 
-> Last updated: 2026-11-15  
+> Last updated: 2026-11-21
 > Scope: E2 / E2 Call Spread / E3 / E4 implementation, experiments, validation and next actions.  
 > Scientific scope and acceptance criteria remain governed by `docs/plan.md`; collaboration and delivery rules remain governed by `docs/spec.md`.
 
@@ -12,6 +12,26 @@
 4. **E4-BS** — Black–Scholes d=1, entropic risk, epsilon sweep and log–log slope.
 5. **E4-Heston** — repeat the asymptotic experiment in Heston d=2.
 6. **Low-friction extension** — smaller epsilon values only after the main grid, and report a slope only if signal-to-noise is adequate.
+
+### 1.1 A2 script organization
+
+All A2-specific command-line tools are grouped under `scripts/a2/`. The
+complete per-file index is in [`scripts/a2/README.md`](scripts/a2/README.md).
+Use module commands from the repository root:
+
+```bash
+python -m scripts.a2.<module> [options]
+```
+
+| Category | Main modules | Purpose |
+|---|---|---|
+| Experiment runners | `run_a2_seed0_batch`, `run_e2cs`, `run_e3`, `run_e4_grid` | Train and evaluate the formal A2 experiments |
+| Evaluation and figures | `evaluate_e2`, `make_figures_a2`, `make_e2_figures`, `make_e2cs_figures`, `make_e3_figures`, `make_e4_figures` | Re-evaluate frozen policies and regenerate report figures |
+| Controlled diagnostics | `audit_e2e3_simulators`, `run_e2e3_fidelity_control`, `retrain_e2_alpha99_fractional`, `compare_e2_cvar_estimators`, `diagnose_e2cs*`, `run_e2cs_bn_recalibration` | Reproduce the documented simulator, CVaR and BatchNorm checks |
+| Utility | `archive_a2_seed0` | Package selected seed-0 artifacts for transfer |
+
+Shared and A1 tools remain directly under `scripts/`. Historical one-off probes
+remain separate under `scripts/diagnostics/` and are not A2 entry points.
 
 E2 core is implemented and has seed-0 training plus 1M-path evaluation archived. Numerical validation is not complete; diagnose the discrepancy before treating E2 as finished.
 
@@ -54,8 +74,8 @@ These are repository-validated engineering settings, not a claim that the paper 
 - `src/replication/e2.py` — trains CVaR 50% and 99% policies and evaluates both on common held-out paths.
 - `configs/exp/e2.yaml` — E2 config.
 - `tests/test_e2.py` — targeted runner/schema/common-path/price-translation tests.
-- `scripts/evaluate_e2.py` — evaluates frozen checkpoints on fresh common Heston paths in batches.
-- `scripts/make_e2_figures.py` — generates Figures 6 and 7.
+- `scripts/a2/evaluate_e2.py` — evaluates frozen checkpoints on fresh common Heston paths in batches.
+- `scripts/a2/make_e2_figures.py` — generates Figures 6 and 7.
 - `docs/e2_kaggle.md` — Kaggle execution and GitHub backup instructions.
 - `backups/e2/0/` — seed-0 checkpoints, config and training metrics.
 - `backups/e2/0/evaluation_1000000/` — 1M evaluation metrics, PnL archive, config and summary CSV.

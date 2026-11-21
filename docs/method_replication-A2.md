@@ -187,7 +187,7 @@ Because (\alpha=0.50) has integer tail mass at batch 1024, it is not retrained f
 Run:
 
 ```bash
-python -m scripts.retrain_e2_alpha99_fractional \
+python -m scripts.a2.retrain_e2_alpha99_fractional \
   --config configs/exp/e2.yaml \
   --seed 0 \
   --output-dir results/e2_fractional/0 \
@@ -197,7 +197,7 @@ python -m scripts.retrain_e2_alpha99_fractional \
 After training, compare the old ceil checkpoint and new fractional checkpoint on the **same** 1,000,000 fresh QE-M paths:
 
 ```bash
-python -m scripts.compare_e2_cvar_estimators \
+python -m scripts.a2.compare_e2_cvar_estimators \
   --old-run-dir backups/e2/0 \
   --new-run-dir results/e2_fractional/0 \
   --n-paths 1000000 \
@@ -244,7 +244,7 @@ E4 is complete for seeds 0–4 in both Black–Scholes (d=1) and Heston (d=2). F
 
 Across independently fitted seed-level regressions, the full-grid log-log slope is 0.7129 ± 0.0017 for Black–Scholes and 0.6469 ± 0.0173 for Heston. The theoretical continuous-time exponent is 2/3. Black–Scholes is exceptionally stable. Heston seeds 0, 1, 2 and 4 cluster near .655, while seed 3 is lower at .6160 because its small-epsilon increments remain higher. Seed 3 passes the engineering and monotonicity checks and is retained as genuine seed sensitivity.
 
-The A2 plots are independent of model training. Use `scripts/make_figures_a2.py` as the shared entry point; it dispatches to the specialist E2, E2cs, E3 and E4 plotting modules. E3 Figure 5 plotting is in `scripts/make_e3_figures.py`. E4 plots and sensitivity CSVs come directly from the saved epsilon summary JSON files, without re-running simulations.
+The A2 plots are independent of model training. Use `scripts/a2/make_figures_a2.py` as the shared entry point; it dispatches to the specialist E2, E2cs, E3 and E4 plotting modules. E3 Figure 5 plotting is in `scripts/a2/make_e3_figures.py`. E4 plots and sensitivity CSVs come directly from the saved epsilon summary JSON files, without re-running simulations.
 
 E4 is frozen. No further retraining or seed exclusion will be used to force the fitted slope toward 2/3.
 

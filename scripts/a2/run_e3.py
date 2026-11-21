@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 import torch
-from scripts.make_e3_figures import make_figure, plot_saved
+from scripts.a2.make_e3_figures import make_figure, plot_saved
 from src.common.config import dump_runtime_config, load_config
 from src.common.logging import human_secs, setup_logger
 from src.common.metrics import cvar, save_pnl, write_metrics

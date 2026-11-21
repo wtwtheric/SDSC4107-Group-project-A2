@@ -41,7 +41,8 @@ project/
 │   └─ replication/     # env_heston env_bs net_recurrent losses benchmark pricing e1 train smoke
 ├─ configs/exp/         # debug.yaml / e1.yaml / e1d1.yaml
 ├─ tests/
-├─ scripts/             # ci / check_b0 / make_figures / evaluate_e2 / make_e2_figures / ...
+├─ scripts/             # shared and A1 command-line tools
+│   ├─ a2/              # A2 runners, evaluation, figures and controlled diagnostics
 │   └─ diagnostics/     # 一次性诊断探针（追溯用，不参与 CI）
 ├─ figures/             # fig02_loss_hist / fig03_delta_surface / fig04_recurrent_vs_simpler
 ├─ docs/e2_kaggle.md   # E2 Kaggle evaluation and GitHub backup workflow\n├─ backups/             # opt-in GitHub backup copies (LFS for large files)\n├─ reports/             # 英文正文（A2 起建；A1 的正文在 docs/method_replication.md）
@@ -79,7 +80,10 @@ cd E:\cityu\sdsc4107\project
 E1 定稿数字：5 seed price **1.9431 ± 0.0007**（论文 1.94，解析 δ 对冲 1.9346），
 mean loss 1.6913 vs q 1.69183。配方怎么选出来的见 [docs/e1_diagnosis.md](docs/e1_diagnosis.md) §6。
 
-E2 的 Kaggle clone、1M evaluation、Figure 6/7 生成及 GitHub 备份流程见 [docs/e2_kaggle.md](docs/e2_kaggle.md)。
+A2 scripts are grouped under [`scripts/a2/`](scripts/a2/README.md). The experiment
+overview and command index are in [`README_A2.md`](README_A2.md). E2 的 Kaggle
+clone、1M evaluation、Figure 6/7 生成及 GitHub 备份流程见
+[docs/e2_kaggle.md](docs/e2_kaggle.md)。
 
 ## 参考仓库怎么看
 

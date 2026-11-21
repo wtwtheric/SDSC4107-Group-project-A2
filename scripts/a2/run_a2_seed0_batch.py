@@ -24,7 +24,7 @@ def main() -> int:
         help="Run only E2CS, E3, both E4 variants, one E4 variant, or figure generation.",
     )
     args = parser.parse_args()
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     py = sys.executable
     resume = ["--resume"]
     figure_dir = str(Path(args.out) / "figures")
@@ -33,7 +33,7 @@ def main() -> int:
         "e2cs": [
             py,
             "-m",
-            "scripts.run_e2cs",
+            "scripts.a2.run_e2cs",
             "--config",
             "configs/exp/e2cs.yaml",
             "--seed",
@@ -47,7 +47,7 @@ def main() -> int:
         "e3": [
             py,
             "-m",
-            "scripts.run_e3",
+            "scripts.a2.run_e3",
             "--config",
             "configs/exp/e3.yaml",
             "--seed",
@@ -61,7 +61,7 @@ def main() -> int:
         "e4bs": [
             py,
             "-m",
-            "scripts.run_e4_grid",
+            "scripts.a2.run_e4_grid",
             "--config",
             "configs/exp/e4bs.yaml",
             "--seed",
@@ -75,7 +75,7 @@ def main() -> int:
         "e4h": [
             py,
             "-m",
-            "scripts.run_e4_grid",
+            "scripts.a2.run_e4_grid",
             "--config",
             "configs/exp/e4h.yaml",
             "--seed",
@@ -89,7 +89,7 @@ def main() -> int:
         "figures": [
             py,
             "-m",
-            "scripts.make_e2cs_figures",
+            "scripts.a2.make_e2cs_figures",
             "--results",
             str(Path(args.out) / "e2cs"),
             "--figures",
@@ -120,7 +120,7 @@ def main() -> int:
         archive_cmd = [
             py,
             "-m",
-            "scripts.archive_a2_seed0",
+            "scripts.a2.archive_a2_seed0",
             "--results",
             args.out,
             "--figures",
