@@ -58,7 +58,7 @@ The formal E2 experiment is complete for seeds 0–4. Every seed used the fracti
 
 The risk-ordering checks are stable across the five archived evaluations, but E2 is not labelled as a full numerical pass. Exact seed-level results and provenance are recorded in `docs/experiments-e2-e4.md` and `backups/e2/`. No further retraining will be used solely to force the alpha=.99 price toward the paper.
 
-### 2.3 Frozen common settings for E1–E3### 2.3 Frozen common settings for E1–E3
+### 2.3 Frozen common settings for E1–E3
 
 Unless a controlled diagnostic gives a clear reason to change them, retain:
 
